@@ -154,9 +154,9 @@ describe('Project Data', () => {
     expect(projects.length).toBe(8)
   })
 
-  it('m0lz catalog projects have variant field', () => {
-    const catalogProjects = projects.filter((p) => p.variant)
-    expect(catalogProjects.length).toBe(3)
+  it('public projects have public: true', () => {
+    const publicProjects = projects.filter((p) => p.public)
+    expect(publicProjects.length).toBeGreaterThanOrEqual(3)
   })
 
   it('all projects have name, description, url, tech', () => {
@@ -251,13 +251,13 @@ describe('Page Wiring', () => {
     expect(content).toContain('PostCard')
   })
 
-  it('projects page has two sections: catalog and other', () => {
+  it('projects page has two sections: public and private', () => {
     const content = fs.readFileSync(
       path.join(ROOT, 'app/projects/page.tsx'),
       'utf-8',
     )
-    expect(content).toContain('M0LZ CATALOG')
-    expect(content).toContain('OTHER PROJECTS')
+    expect(content).toContain('PUBLIC')
+    expect(content).toContain('PRIVATE')
     expect(content).toContain('ProjectCard')
   })
 

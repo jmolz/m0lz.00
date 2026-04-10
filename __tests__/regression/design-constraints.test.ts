@@ -49,6 +49,8 @@ describe('Design Constraints', () => {
         '#a3a3a3',
         '#e5e5e5',
         '#262626',
+        '#86efac33',
+        '#065f4633',
       ]
       const raw = grep('#[0-9a-fA-F]\\{3,8\\}', ['*.css'], ['app', 'styles'])
       const lines = raw.split('\n').filter(Boolean)

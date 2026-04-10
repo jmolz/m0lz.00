@@ -54,7 +54,7 @@ export function TableOfContents() {
 
   return (
     <nav
-      className="hidden xl:block fixed top-24 right-[max(1rem,calc((100vw-48rem)/2-14rem))] w-48 max-h-[calc(100vh-8rem)] overflow-y-auto text-xs"
+      className="hidden xl:block fixed top-24 right-[max(1rem,calc((100vw-48rem)/2-14rem))] w-48 max-h-[calc(100vh-8rem)] overflow-y-auto text-xs toc-scroll"
     >
       <ul className="border-l border-[var(--border)] space-y-1.5">
         {items.map((item) => (

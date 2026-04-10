@@ -8,6 +8,7 @@ import { compileMDX } from '@/lib/mdx'
 import { mdxComponents } from '@/components/mdx-components'
 import { BranchMark } from '@/components/branch-mark'
 import { TableOfContents } from '@/components/table-of-contents'
+import { ResearchPanel } from '@/components/research-panel'
 
 export async function generateStaticParams() {
   const posts = getAllPosts()
@@ -40,9 +41,16 @@ export default async function PostPage({
   const project = meta.project
     ? projects.find((p) => p.catalogId === meta.project)
     : null
-  const research = meta.project
+  const researchMeta = meta.project
     ? getAllResearch().find((r) => r.project === meta.project)
     : null
+
+  let ResearchContent: Awaited<ReturnType<typeof compileMDX>> | null = null
+  if (researchMeta) {
+    const { getResearch } = await import('@/lib/research')
+    const { content: researchSource } = getResearch(researchMeta.slug)
+    ResearchContent = await compileMDX(researchSource)
+  }
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
@@ -63,7 +71,7 @@ export default async function PostPage({
         </div>
         <p className="text-xs text-[var(--muted)] mt-2">Jacob Molz</p>
 
-        {(project || research) && (
+        {(project || researchMeta) && (
           <div className="mt-4 p-4 border border-[var(--border)] rounded-sm">
             {project && (
               <div className="flex items-center gap-2 mb-2">
@@ -88,24 +96,14 @@ export default async function PostPage({
               {(project?.url || meta.companion_repo || '').replace('https://', '')}
             </a>
 
-            {research && research.sections && research.sections.length > 0 && (
-              <>
-                <p className="text-xs tracking-widest text-[var(--muted)] mt-3 mb-1">
-                  RESEARCH
-                </p>
-                <ul className="space-y-0.5">
-                  {research.sections.map((section) => (
-                    <li key={section.id}>
-                      <Link
-                        href={`/research/${research.slug}#${section.id}`}
-                        className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-                      >
-                        {section.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </>
+            {researchMeta && researchMeta.sections && researchMeta.sections.length > 0 && ResearchContent && (
+              <ResearchPanel
+                slug={researchMeta.slug}
+                title={researchMeta.title}
+                sections={researchMeta.sections}
+              >
+                <ResearchContent components={mdxComponents} />
+              </ResearchPanel>
             )}
           </div>
         )}

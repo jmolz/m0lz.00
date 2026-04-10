@@ -6,12 +6,12 @@ import { ProjectCard } from '@/components/project-card'
 export const metadata: Metadata = {
   title: 'Projects — m0lz',
   description:
-    'Open-source projects and tools by Jacob Molz — the m0lz catalog and other shipped products.',
+    'Projects and tools by Jacob Molz — public open-source work and private products.',
 }
 
 export default function ProjectsPage() {
-  const catalogProjects = projects.filter((p) => p.variant)
-  const otherProjects = projects.filter((p) => !p.variant)
+  const publicProjects = projects.filter((p) => p.public)
+  const privateProjects = projects.filter((p) => !p.public)
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
@@ -22,10 +22,10 @@ export default function ProjectsPage() {
 
       <section className="mb-12">
         <p className="text-xs tracking-widest text-[var(--muted)] mb-6">
-          M0LZ CATALOG
+          PUBLIC
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {catalogProjects.map((project) => (
+          {publicProjects.map((project) => (
             <ProjectCard key={project.name} project={project} />
           ))}
         </div>
@@ -35,10 +35,10 @@ export default function ProjectsPage() {
 
       <section className="mt-12">
         <p className="text-xs tracking-widest text-[var(--muted)] mb-6">
-          OTHER PROJECTS
+          PRIVATE
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {otherProjects.map((project) => (
+          {privateProjects.map((project) => (
             <ProjectCard key={project.name} project={project} />
           ))}
         </div>
