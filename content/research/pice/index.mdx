@@ -1,0 +1,2458 @@
+---
+title: "PICE Research Library"
+description: "Research papers supporting the PICE roadmap — seam analysis, convergence theory, verification frameworks, and architectural investigation."
+project: "m0lz.02"
+sections:
+  - id: "seam-blindspot"
+    title: "The Seam Blindspot: Where Software Really Breaks and What No One Is Building to Fix It"
+  - id: "convergence-analysis"
+    title: "Optimal Verification Passes in Multi-Model AI Evaluation: Convergence Analysis"
+  - id: "originality-analysis"
+    title: "Stack Loops and Arch Experts: Originality Analysis"
+  - id: "self-evolving-verification"
+    title: "Self-Evolving Verification Frameworks: State of the Art and Blueprint for PICE"
+  - id: "claude-code-integration"
+    title: "Claude Code Agent Teams: A Technical Deep-Dive for PICE"
+  - id: "sdk-licensing"
+    title: "Claude Agent SDK Licensing: Analysis for Open Source Integration"
+  - id: "v02-gap-analysis"
+    title: "Stack Loops v0.2: Critical Gap Analysis"
+---
+
+## The Seam Blindspot: Where Software Really Breaks and What No One Is Building to Fix It
+
+
+
+-----
+
+## Executive Summary
+
+Software systems fail overwhelmingly at the boundaries between components — not inside them. Google's analysis of thousands of postmortems reveals that 68% of all outages are triggered by configuration and binary pushes at integration points. AI coding agents make this worse: SWE-Bench Pro shows models achieving only ~23% on multi-file tasks vs. >70% on single-file tasks. Yet the entire verification tooling landscape — from contract testing to architecture analysis to formal methods — systematically underserves these boundaries. The most dangerous failures occur where Component A assumes something about Component B that Component B never explicitly guarantees, and no tool in existence can automatically detect this asymmetry.
+
+This report synthesizes research across seven domains to identify what would make PICE's seam verification genuinely novel and differentiated.
+
+-----
+
+## 1. A Rigorous Taxonomy of Integration Failures
+
+### The twelve empirically validated failure categories
+
+Industry postmortem databases converge on twelve patterns that recur across every major infrastructure:
+
+**1. Configuration/deployment mismatches.** Google SRE data (2010–2017): 31% of outage triggers. 82% of configuration-related triggers stem from manual oversight at boundaries. Configuration changes propagate through integration points where assumptions about environment variables, feature flags, and deployment parameters diverge between producer and consumer.
+
+**2. Binary/version incompatibilities.** Google SRE: 37% of outage triggers. Version skew between services that share interfaces — a producer upgrades its serialization format, but the consumer still expects the old format. This is technically a schema drift issue but manifests as a version management problem.
+
+**3. Protocol/API contract violations.** Adyen's study of 2.43 million API error responses (ICSE-SEIP 2018) identified 11 general causes, dominated by invalid/missing request data and third-party integration failures. Over 60,000 daily errors from integration faults alone at a single large payment company.
+
+**4. Authentication handoff failures.** Empirical studies of microservice systems show 4.55% of all issues relate to authentication and authorization handoffs between services — tokens not propagated, credential formats mismatched, session state not shared correctly across service boundaries.
+
+**5. Cascading failures from dependency chains.** AWS US-EAST-1 (October 2025): a DNS race condition in DynamoDB's management system cascaded across EC2, Lambda, and NLB for 14+ hours. A single seam failure propagating through an entire architecture. Netflix's experience with cascading failures led to the development of Hystrix and resilience patterns specifically targeting integration boundaries.
+
+**6. Retry storm / timeout policy conflicts.** When Service A's retry count multiplied by Service B's timeout exceeds Service B's capacity, the retries themselves become the outage. Documented as a primary failure mode at Netflix, Amazon, and Uber. Michael Nygard (Release It!) calls this "the integration point amplifier."
+
+**7. Service discovery failures.** Validated by >50% of practitioners in Gregor et al.'s survey (ICST 2025, TU Munich/Siemens). Services fail to locate each other due to stale DNS, misconfigured load balancers, or service registry inconsistencies — particularly during deployments when old and new instances coexist.
+
+**8. Health check blind spots.** AWS US-EAST-1 (December 2021): the monitoring system itself failed to failover, masking the outage from operators. Health checks that don't account for dependency health, cold start timing, or partial functionality create false confidence at integration boundaries.
+
+**9. Serialization/schema drift.** When the actual data structure at a service boundary diverges from the documented or expected schema over time. Optional fields that become required in practice, nullable fields that are never actually null, enum values that expand without consumer awareness.
+
+**10. Cold start and ordering dependencies.** Service A assumes Service B is already running. In serverless architectures, cold start latency can push response times past timeout thresholds that work fine after warm-up. In container orchestration, startup ordering is often implicit rather than enforced.
+
+**11. Network topology assumptions.** Deutsch's Eight Fallacies of Distributed Computing (1994) remain validated three decades later: the network is reliable, latency is zero, bandwidth is infinite, the network is secure, topology doesn't change, there is one administrator, transport cost is zero, the network is homogeneous. Every fallacy is an assumption about a seam.
+
+**12. Resource exhaustion at boundaries.** Thread pools, connection pools, and file descriptor limits consumed by slow or hung integration calls. A single slow downstream service can exhaust the connection pool of every upstream caller, turning a performance issue into a complete outage.
+
+### The 23-category academic taxonomy
+
+Gregor et al.'s comprehensive taxonomy (ICST 2025) organizes faults around service lifecycle phases:
+
+- **Service Description Faults** — Incorrect or incomplete API specifications, missing documentation of side effects, undocumented error codes.
+- **Deployment Faults** — Configuration mismatches between environments, missing dependencies, incorrect resource allocation.
+- **Discovery Faults** — Service registry inconsistencies, stale DNS, incorrect load balancer configuration.
+- **Composition Faults** — Incorrect service choreography, missing compensating transactions, incomplete saga implementations.
+- **Binding Faults** — Protocol mismatches, authentication failures, TLS/SSL configuration errors.
+- **Execution Faults** — Timeout violations, retry storms, cascading failures, data consistency violations.
+
+21 of 23 fault categories were experienced by over 50% of surveyed practitioners — confirming these are systemic, not edge cases.
+
+### The cost is staggering
+
+Gartner recognizes "integration technical debt" as a distinct category, finding it leads to poor adaptability and higher costs. The "interoperability tax" is estimated to consume up to 40% of IT budgets across enterprises, with healthcare alone spending $30 billion annually just making systems communicate.
+
+-----
+
+## 2. Contract Verification: Structure vs. Behavior
+
+### The current tooling landscape
+
+**Pact** (created 2013, open source) — The de facto consumer-driven contract testing tool. Generates concrete request/response pairs from consumer tests and verifies them against the actual provider. Supports HTTP, message queues, and GraphQL. Used by companies from startups to enterprises. Limitation: tests structural compatibility (data shape matches), not behavioral correctness (ordering, timing, state transitions).
+
+**Specmatic** (formerly Qontract) — Uses OpenAPI/AsyncAPI/gRPC specifications as executable contracts directly. Performs backward compatibility checking via git-based spec comparison. Ships an MCP server for Claude Code integration. Limitation: limited to spec-defined contracts; can't discover implicit behavioral contracts.
+
+**Spring Cloud Contract** — JVM-ecosystem contract testing. Producer writes contracts in Groovy/YAML; the framework generates tests for both sides. Tightly integrated with Spring Boot. Limitation: JVM-only; manual contract authoring.
+
+**Schemathesis** — Property-based testing for APIs. Automatically generates thousands of test cases from OpenAPI schemas, including edge cases the developer wouldn't think to write. Used by Spotify, JetBrains, Red Hat. Limitation: tests schema compliance, not behavioral invariants.
+
+**Buf** — The leading tool for Protocol Buffer schema management. 53 breaking change rules. Schema registry preventing unintended breaking changes. Adopted by CockroachDB and Netflix. Limitation: protobuf only; structural, not behavioral.
+
+**Session Types** (Honda, Yoshida, Carbone — POPL 2008) — Mathematical framework guaranteeing communication safety, deadlock-freedom, and protocol fidelity. Implementations exist in Rust (mpst-rust, used for Amazon Prime Video protocols), Python, Scala, and TypeScript via the Scribble protocol description language from Imperial College. Limitation: zero adoption in production microservices. Requires protocol formalization that doesn't match how services are actually built.
+
+### The critical gap
+
+| Capability | Pact | Specmatic | Schemathesis | Buf | Session Types |
+|---|---|---|---|---|---|
+| Structural schema validation | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Breaking change detection | ❌ | ✅ | ❌ | ✅ | ❌ |
+| Protocol ordering verification | ❌ | ❌ | Partial | ❌ | ✅ |
+| Behavioral/semantic verification | ❌ | ❌ | ❌ | ❌ | Partial |
+| Cross-service invariant checking | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Failure mode contracts | ❌ | ❌ | ❌ | ❌ | ❌ |
+| Implicit contract inference | ❌ | ❌ | ❌ | ❌ | ❌ |
+
+Every practical tool verifies structural compatibility — that the shape of data matches. None verifies behavioral correctness — that components actually agree on ordering, timing, state transitions, error handling, or capacity. This is the bridge that doesn't exist between session-type theory and industry practice.
+
+The most promising emerging work is **Signadot SmartTests**, which infers API contracts by observing real service interactions rather than requiring manual definition — used by DoorDash to cut integration feedback from 30+ minutes to under 2 minutes. But even Signadot doesn't perform bidirectional assumption comparison.
+
+-----
+
+## 3. AI Agents Are Systematically Blind at Integration Boundaries
+
+### The empirical evidence
+
+**SWE-Bench Pro** (Scale AI, September 2025) tested top models on 1,865 problems requiring patches across multiple files averaging 4.1 files and 107.4 lines. Performance collapsed: models scoring >70% on SWE-Bench Verified achieved only ~23% on SWE-Bench Pro. The failure mode analysis: larger models primarily fail on "semantic or algorithmic correctness in large, multi-file edits" — precisely the seam problem.
+
+**SWE-CI** (March 2026) tested agents on continuous integration maintenance across 233 days of repository evolution. The most common failure pattern was cascading regression: fix one test → break another module → patch that → break something else. The zero-regression rate was below 0.25 for most models. The documented mechanism: "function signatures change but callers are not updated across the codebase."
+
+**CodeRabbit's analysis** of 33,596 agent-authored PRs found unmerged PRs "tend to involve larger, more invasive code changes, touch more files, and often do not pass CI/CD pipeline validation." Analysis of 470 PRs: AI-generated code contains 1.7x more issues, with logic/correctness errors 1.75x more common, business logic errors >2x, and security vulnerabilities 1.5–2x higher.
+
+**GitClear** (211 million lines): code duplication rose 8x in 2024 vs. pre-AI baseline, refactoring collapsed from 24% to below 10%.
+
+### Ten systematic failure modes
+
+1. **Ripple effect blindness** — AI changes one component without updating all dependents. Function signatures change but callers aren't updated; data models evolve but serialization stays stale.
+2. **Context window limitations** — Even with 200K+ tokens, agents can't hold entire system architectures in context. Critical integration information (deployment topology, service discovery, auth flows) often isn't in the code at all.
+3. **Happy path bias** — 43% of patches fix the primary issue but introduce new failures under adverse conditions.
+4. **Code island effect** — AI generates isolated additions rather than integrating with existing code, creating disconnected islands that work individually but don't compose.
+5. **Convention blindness** — AI doesn't internalize implicit project norms, generating "generic defaults" that drift from repository-specific patterns.
+6. **Infrastructure ignorance** — AI generates application code but systematically misses Docker networking, environment variables, service discovery, and CI/CD pipeline requirements.
+7. **Error handling gaps** — AI implements the success path but leaves error boundaries undefined, creating implicit contracts about failure behavior.
+8. **Concurrency blindness** — AI generates code that works under sequential execution but fails under concurrent access at service boundaries.
+9. **State management fragmentation** — AI creates local state management that doesn't synchronize with the broader system's state model.
+10. **Test isolation bias** — AI writes tests that pass in isolation but don't verify integration behavior.
+
+### The root cause
+
+Harvard's research on compositional specification (DafnyComp benchmark) identified it: "LLMs handle local specs but fail under composition." Models treat implementation and specification as independent generation tasks rather than coupled constraints. This is the fundamental reason AI agents fail at seams — they optimize for local correctness, not global structural integrity.
+
+-----
+
+## 4. Architecture Analysis Tools: Structure Without Behavior
+
+### Current tools
+
+**ArchUnit** (open-source, Java) — Checks package structure violations and layering constraints as JUnit tests. Limited to Java bytecode; misses anything not in static type relationships.
+
+**jQAssistant** — Stores structural data in Neo4j for graph-based architecture queries. Powerful but requires manual rule authoring in Cypher.
+
+**Structure101** (acquired by Sonar, October 2024) — Excels at cyclic dependency detection. Being folded into SonarQube Cloud.
+
+**Designite** — Detects 7 architecture smells, 19 design smells, 11 implementation smells. Limited to C# and Java.
+
+**Arcan** (University of Milano-Bicocca) — Most research-advanced tool, extending to microservice smells including cyclic dependencies, hard-coded endpoints, and shared persistence.
+
+**Drift** (2025, open-source Python) — Specifically targets architectural erosion from AI-generated code, measuring structural entropy via a "drift score."
+
+**vFunction** — Combines static and dynamic analysis with AI to map application domains and dependencies at runtime.
+
+### What they miss
+
+| Failure cause | Static tools detect? | Dynamic tools detect? |
+|---|---|---|
+| Forbidden/cyclic dependencies | ✅ | N/A |
+| Shared database coupling | ❌ | Partial |
+| Temporal coupling | ❌ | Partial |
+| Semantic duplication across services | ❌ | ❌ |
+| Retry/cascade patterns | ❌ | Partial |
+| Config drift between environments | ❌ | ❌ |
+| Feature flag coupling | ❌ | ❌ |
+| Cross-cutting concern inconsistency | ❌ | ❌ |
+| AI-accelerated architectural drift | Emerging | ❌ |
+
+WunderGraph's analysis captures it: "There is no widely adopted solution that makes all types of microservice dependencies explicit and manageable at design time."
+
+-----
+
+## 5. Cross-Domain Verification Approaches
+
+### Hardware verification: VIP modules
+
+In chip design, the Verification IP (VIP) ecosystem provides pre-built, reusable protocol verification libraries for every major bus standard (AMBA AXI, PCIe, USB, etc.). Synopsys and Cadence sell VIP modules encoding all protocol rules as executable assertions running continuously at interface boundaries. A synthesizable AMBA AXI protocol checker encodes 44 rules for verifying on-chip communication. SystemVerilog's `interface` construct bundles signals, protocol assertions, bus functional models, and coverage metrics into a single reusable component — verification logic travels with the interface definition.
+
+**Software has no equivalent.** There is no "OpenAPI VIP" or "gRPC VIP" that comprehensively validates every protocol rule at integration boundaries. PICE builds this: seam checks are protocol-specific verification modules that travel with layer boundary definitions.
+
+### Distributed systems formal methods
+
+Amazon has used **TLA+** since 2011 across 10+ production systems (DynamoDB, S3, EBS), finding bugs requiring state traces of 35 steps — impossible to find via testing. Microsoft's **P language** compiles state-machine programs into executable C/C# code, bridging the model-implementation gap. P's **PObserve** feature validates production service logs against formal specifications — runtime conformance checking against design-time models. **Stateright** (Rust) takes the most radical approach: the verified model IS the implementation, deployed as actual network actors after model-checking.
+
+### Stateful API fuzzing
+
+**RESTler** (Microsoft Research) is the first stateful REST API fuzzer. It analyzes OpenAPI specs to infer producer-consumer dependencies among request types, then fuzzes multi-step sequences exercising states only reachable through specific request chains. Found 28 bugs in GitLab and multiple bugs in Azure/Office365. This is hardware-style constrained-random verification applied to API boundaries.
+
+### Safety-critical systems
+
+**DO-178C** (aviation) requires bidirectional traceability between all certification artifacts — from requirements → architecture → code → tests → results. Every integration boundary has complete verification chain evidence. **AUTOSAR** (automotive) provides three interface types with formal checking. Researchers built A2A to automatically model AUTOSAR architectures as timed automata verified by the Uppaal model checker.
+
+### Three transferable concepts
+
+1. **Hardware VIP for software protocols** — Pre-built verification libraries per protocol (REST, gRPC, GraphQL, message queues) encoding all protocol rules as executable assertions, not just schema validation.
+2. **PObserve-style runtime conformance** — Continuous validation of production traffic against formal specifications, checking protocol-level correctness rather than just latency and error rates.
+3. **Supply chain attestation for interface contracts** — Extending Sigstore/SLSA to sign interface contract compliance attestations per build.
+
+-----
+
+## 6. Five Capabilities No One Has Built
+
+After exhaustive research across all domains, five critical capabilities do not exist in any current tool, framework, or research prototype:
+
+### Gap 1: Cross-component assumption asymmetry detection
+
+No tool can automatically discover that Component A assumes X about Component B while Component B doesn't guarantee X. Daikon infers invariants within a single component. Pact tests explicitly written contracts. Garlan et al. identified this as "architectural mismatch" in 1995, but proposed documentation, not automated detection.
+
+**PICE's approach:** Adversarial dual-model evaluation. One model infers consumer assumptions; the other infers provider guarantees. PICE flags asymmetries.
+
+### Gap 2: Automated cross-service implicit contract inference
+
+Daikon-style invariant detection has never been applied at service boundaries using distributed traces. No tool takes production traffic between two services and infers behavioral contracts: "this field is never null in practice," "responses always arrive within 150ms," "this endpoint is always called after that one."
+
+**PICE's approach:** Analyze distributed traces at service boundaries, cluster behavioral patterns, and surface implicit contracts that no one declared.
+
+### Gap 3: Seam drift detection
+
+No tool establishes a behavioral baseline at an integration point and monitors for gradual divergence: response time distributions shifting, optional fields becoming always-present, ordering guarantees weakening.
+
+**PICE's approach:** SLO monitoring for discovered (not declared) behavioral properties.
+
+### Gap 4: Change impact analysis against implicit contracts
+
+No tool evaluates a proposed code change against the corpus of inferred implicit contracts to predict which downstream assumptions it might violate.
+
+**PICE's approach:** Pre-deployment gate that warns "this change moves p95 latency from 180ms to 250ms, and Service B assumes responses within 200ms."
+
+### Gap 5: Adversarial integration test generation
+
+No tool mines implicit assumptions from production behavior and generates targeted tests probing those specific assumptions — "Service A assumes this field is never null; here's a test that sends null."
+
+**PICE's approach:** Targeted assumption validation, not random fuzzing.
+
+-----
+
+## 7. How This Maps to PICE
+
+**Stack Loops** target the twelve failure categories at each technology layer — not just "does the code work" but "do the seams between layers hold." Each Stack Loop iteration includes a seam verification pass checking integration contracts with adjacent layers.
+
+**Arch Experts** own the boundaries around their components, not just the components themselves. Each expert declares what its component provides and what it assumes. The adversarial evaluation model (dual-model) surfaces assumption asymmetries.
+
+**Implicit Contract Inference** (v0.4) synthesizes the research lineages that have never been combined: Daikon + spec mining + distributed tracing + session types + hardware VIP + chaos engineering, orchestrated by AI.
+
+**Self-Evolving Verification** (v0.5) tracks which seam checks catch real issues, which generate noise, and which failure categories are most common in each project — then uses that data to prioritize, tune, and evolve the verification strategy over time.
+
+The differentiation is clear: while every other AI coding tool optimizes for generating correct code within components, PICE is the first to systematically verify that the spaces between components actually hold.
+
+-----
+
+---
+
+## Optimal Verification Passes in Multi-Model AI Evaluation: Convergence Analysis
+
+
+
+-----
+
+## Executive Summary
+
+How many evaluation passes does PICE need per layer to reach a target confidence level? The mathematically grounded answer: **3–5 passes reach the practical confidence ceiling for dual-model LLM verification, and no amount of additional passes can breach ~97% accuracy when evaluator correlation is ρ ≈ 0.3.** This hard limit, derived from the correlated Condorcet Jury Theorem and confirmed by empirical scaling laws from Stanford, DeepMind, and ICML 2025 research, means PICE's strategic advantage lies not in maximizing pass count but in *adaptively allocating* passes based on accumulated evidence. Three novel algorithms emerge from cross-domain synthesis — Bayesian-SPRT adaptive halting, adversarial divergence-triggered scaling, and verification entropy convergence — none of which have been applied to multi-model code verification.
+
+-----
+
+## 1. The Correlated Evaluator Ceiling
+
+### Why independence matters — and why LLMs don't have it
+
+The classical Condorcet Jury Theorem (1785) promises that majority-vote accuracy approaches 100% as the number of independent voters grows, provided each voter is more accurate than random chance. For N independent evaluators each with accuracy p > 0.5, the majority-vote error rate decays exponentially:
+
+```
+ε(N) ≤ exp(−N · D(0.5 ∥ 1−p))
+```
+
+where D is the KL divergence. This is the Chernoff bound — under independence, adding evaluators eliminates error exponentially fast.
+
+**For LLM-based evaluation, this assumption fails catastrophically.**
+
+Kim et al. (ICML 2025, "Correlated Errors in Large Language Models") demonstrated across 350+ LLMs that **models agree on approximately 60% of their errors**, even across different providers and architectures. More striking, Denisov-Blanch et al. (ICML 2025) found correlations of **ρ ≈ 0.35 even on random ASCII strings with forced choice** — proving that shared inductive biases, not shared knowledge, drive correlation. This means Claude and GPT will tend to make the same mistakes on the same code, not independent mistakes.
+
+A companion study, "Consensus is Not Verification" (2025), confirmed: majority voting among LLMs systematically fails on questions where models share systematic biases, even when individual models are more accurate than chance. Consensus ≠ correctness.
+
+### The effective sample size formula
+
+The damage from correlation is quantified by the effective sample size:
+
+```
+n_eff = n / (1 + (n−1)ρ)
+```
+
+As n → ∞, this converges to **1/ρ**. With ρ = 0.3 (a conservative estimate for Claude-GPT correlation on code evaluation), n_eff caps at ~3.3 regardless of how many passes PICE runs. With ρ = 0.35, it caps at ~2.9.
+
+This is not an engineering limitation. It is an information-theoretic bound. Running 100 evaluation passes with correlated models provides the same information as ~3 independent passes.
+
+### The confidence curve
+
+For PICE's dual-model architecture with individual evaluator accuracy p = 0.88 (typical frontier LLM evaluation accuracy on code review tasks) and inter-model correlation ρ = 0.35:
+
+```
+Confidence(N) ≈ C_max · (1 − e^{−λ·N_eff})
+```
+
+where C_max = 1 − ε_irreducible (the ceiling from shared biases plus specification ambiguity) and N_eff = N/(1+(N−1)ρ).
+
+| Passes | N_eff | Estimated Confidence | Marginal Gain | Cumulative % of Max Improvement |
+| ------ | ----- | -------------------- | ------------- | ------------------------------- |
+| 1      | 1.00  | 88.0%                | —             | 0%                              |
+| 2      | 1.48  | 92.1%                | +4.1%         | 48%                             |
+| 3      | 1.87  | 94.0%                | +1.9%         | 70%                             |
+| 4      | 2.09  | 94.9%                | +0.9%         | 80%                             |
+| 5      | 2.27  | 95.4%                | +0.5%         | 86%                             |
+| 7      | 2.50  | 95.9%                | +0.25% avg    | 92%                             |
+| 10     | 2.63  | 96.2%                | +0.10% avg    | 95%                             |
+| 20     | 2.80  | 96.5%                | +0.03% avg    | 99%                             |
+| ∞      | 2.86  | ~96.6%               | 0             | 100% (ceiling)                  |
+
+*Assumptions: p = 0.88 per evaluator, ρ = 0.35 inter-model correlation, based on correlated Condorcet analysis.*
+
+**Key insight: passes 1→3 capture 70% of total achievable improvement. Passes 1→5 capture 86%. Beyond 5 passes, marginal gains drop below 0.5% per pass.**
+
+### The irreducible error floor
+
+The ~96.6% ceiling has three components:
+
+1. **Shared LLM biases** (~2%) — Systematic errors common to all large language models trained on similar data distributions. Kim et al. showed these persist even across architecturally different models.
+
+2. **Specification ambiguity** (~1%) — Cases where the code's correctness is genuinely underdetermined by the available specification. More evaluation passes cannot resolve what the spec doesn't define.
+
+3. **Adversarial edge cases** (~0.4%) — Subtle bugs that exploit blind spots shared by all current-generation LLMs (e.g., certain concurrency patterns, specific numeric precision issues, particular security vulnerabilities).
+
+### Breaching the ceiling
+
+The ceiling is specific to *homogeneous LLM evaluation*. Three strategies push beyond it:
+
+**1. Maximize evaluator diversity.** The Knowledge Divergence theory (Kaplan et al., 2025) proves that debate advantage depends on the principal angles between models' representation subspaces — with a phase transition from negligible to essential benefit as knowledge diversity increases. Using architecturally distinct models (transformer vs. SSM), models trained on different data distributions, or domain-specific fine-tuned evaluators reduces effective ρ.
+
+**2. Incorporate orthogonal verification signals.** Unit test execution, static analysis, type checking, and formal verification are essentially uncorrelated with LLM judgment errors. Each orthogonal signal resets the correlation structure, potentially dropping effective ρ toward zero for the combined system. This is why PICE's Tier 3 combines AI evaluation with formal verification — not redundancy, but information-theoretic necessity.
+
+**3. Decompose evaluation into independent sub-problems.** Evaluating correctness, security, performance, and style separately — each with its own evaluator committee — exploits the fact that error correlation varies by evaluation dimension. The Krogh-Vedelsby decomposition makes this precise: E_ensemble = E_avg − Ambiguity. Ensemble error improves only when evaluators disagree.
+
+-----
+
+## 2. Empirical Scaling Laws
+
+### Stanford: Large Language Monkeys
+
+Brown et al. (Stanford, 2024) studied how solve rates scale with repeated sampling on SWE-Bench. Results follow an exponentiated power law:
+
+- 1 sample: 15.9% solve rate
+- 10 samples: ~30% solve rate
+- 50 samples: ~42% solve rate
+- 250 samples: 56% solve rate
+
+The curve is logarithmic — each doubling of samples yields diminishing returns. More critically, **the bottleneck is selection, not generation**. Majority voting and reward-model selection plateau at ~100–300 samples, unable to exploit the full coverage. The generation-verification gap grows with model capability.
+
+### Self-consistency research
+
+Wang et al. (2022) established self-consistency for chain-of-thought reasoning. Key findings on PaLM-540B with GSM8K:
+
+- 1 path: 56.5% accuracy
+- 5 paths: ~67% accuracy
+- 10 paths: ~71% accuracy
+- 40 paths: 74.4% accuracy
+
+The curve is sharply logarithmic — most gain in the first 5–10 samples. A 2025 Gemini study confirmed that accuracy plateaus and **slightly declines past 15 agents** for weaker models, likely due to error correlation overwhelming the diversity benefit.
+
+### AlphaCode: the extreme case
+
+DeepMind's AlphaCode generated up to 1 million code samples per problem. Solve rate scaled log-linearly with sample count. But AlphaCode 2 achieved equivalent performance with **10,000× fewer samples** by using better models and selection — reinforcing that algorithm quality dominates brute-force scaling. This directly validates PICE's emphasis on adaptive algorithms over raw pass count.
+
+### Weaver: ensemble verification
+
+Stanford/UW-Madison/Together AI's Weaver system (2025) closed the generation-verification gap by 14.5% using weighted ensembles of 33 diverse weak verifiers. Individual verifier accuracy: 43–62%. Collective accuracy when 20+ agree: 91%. Key insight: **verifier diversity matters far more than verifier count**.
+
+This directly validates PICE's architecture: diverse Arch Experts (each with different domain knowledge) are mathematically superior to multiple passes from the same model.
+
+-----
+
+## 3. Mathematical Foundations for the Novel Algorithms
+
+### Sequential analysis: Wald's SPRT
+
+Abraham Wald's Sequential Probability Ratio Test (1947) examines observations sequentially and makes a decision as soon as sufficient evidence accumulates. At each step, compute the log-likelihood ratio:
+
+```
+Λₙ = Σᵢ log(P(xᵢ | H₁) / P(xᵢ | H₀))
+```
+
+Compare against thresholds:
+- Accept H₁ (code is correct) if Λₙ ≥ A = log((1−β)/α)
+- Accept H₀ (code is defective) if Λₙ ≤ B = log(β/(1−α))
+- Continue sampling if B &lt; Λₙ &lt; A
+
+**The Wald-Wolfowitz theorem** proves SPRT minimizes expected sample size among all tests with equivalent error rates α (Type I) and β (Type II). This is the mathematically optimal stopping rule — no other test can achieve the same error control with fewer expected observations.
+
+The expected number of samples under H₁:
+
+```
+E[N | H₁] ≈ [(1−α)log((1−β)/α) + α·log(β/(1−α))] / D_KL(p₁ ∥ p₀)
+```
+
+For an evaluator with 85% accuracy distinguishing correct from defective code, at α = 0.05, β = 0.10: **E[N] ≈ 3.2 passes**.
+
+### Information-theoretic lower bound
+
+The binary symmetric channel capacity gives a lower bound on required observations:
+
+```
+n ≥ log(1/δ) / (1 − H(ε))
+```
+
+where H(ε) = −ε·log(ε) − (1−ε)·log(1−ε) is binary entropy, ε is evaluator error rate, and δ is target error probability. For ε = 0.15 (85% accuracy) and δ = 0.05 (95% confidence): **n ≥ 5.1 passes**. This is consistent with the SPRT estimate — the theoretical minimum is 3–5 passes for practically achievable evaluator accuracy.
+
+### O'Brien-Fleming group sequential boundaries
+
+In clinical trials, O'Brien-Fleming (1979) group sequential designs distribute the overall Type I error rate across multiple interim analyses with very stringent early thresholds:
+
+| Analysis (k of K=5) | O'Brien-Fleming z-threshold |
+| -------------------- | --------------------------- |
+| 1                    | 4.56                        |
+| 2                    | 3.23                        |
+| 3                    | 2.63                        |
+| 4                    | 2.28                        |
+| 5                    | 2.04                        |
+
+Early analyses use extreme thresholds (z ≥ 4.56 at first look), preserving most discriminative power for later analyses. For PICE: this means pass 1 can only accept/reject code with very high confidence. Passes 2–3 use progressively relaxed thresholds. Final passes use near-nominal thresholds. This prevents premature acceptance of subtly flawed code while allowing rapid rejection of obviously broken submissions.
+
+### Bayesian sequential analysis
+
+The Bayesian approach maintains a posterior distribution over the parameter of interest (P(code_correct)) and applies a decision rule based on posterior probabilities:
+
+```
+Prior:     Beta(α₀, β₀)
+After n:   Beta(α₀ + Σwᵢ·approve_i, β₀ + Σwᵢ·flag_i)
+```
+
+where wᵢ is the reliability weight for evaluator i. The posterior mean is:
+
+```
+E[θ | data] = (α₀ + Σwᵢ·approve_i) / (α₀ + β₀ + Σwᵢ)
+```
+
+and the posterior 95% credible interval provides a direct confidence measure at every step. The posterior-based stopping rule (Eckman & Henderson, 2020) halts when the posterior probability of correct classification exceeds a threshold — e.g., P(correct | data) > 0.95.
+
+### Semantic entropy for uncertainty quantification
+
+Kuhn et al. (ICLR 2023) introduced semantic entropy for LLM uncertainty:
+
+1. Generate multiple outputs
+2. Cluster outputs by semantic meaning (not token identity)
+3. Compute entropy over semantic clusters:
+
+```
+SE = −Σ_c p_c · log(p_c)
+```
+
+Low SE = high certainty (all outputs mean the same thing). High SE = high uncertainty (outputs disagree semantically).
+
+The deeper innovation for PICE: decompose SE into **epistemic** and **aleatoric** components. High epistemic uncertainty (models don't understand) → more diverse passes help. High aleatoric uncertainty (spec is ambiguous) → more passes cannot help → escalate to human review.
+
+### Psychometric adaptive testing (IRT)
+
+In Item Response Theory, each test item has parameters:
+- **a** (discrimination): how sharply the item distinguishes high from low ability
+- **b** (difficulty): the ability level where P(correct) = 0.5
+- **c** (guessing): lower asymptote
+
+Fisher Information for item i at ability θ:
+
+```
+I_i(θ) = a² · [P_i − c]² · [1−P_i] / [(1−c)² · P_i]
+```
+
+After each observation, select the next item maximizing information at current θ̂. Stop when Standard Error falls below threshold:
+
+```
+SE(θ̂) = 1/√(Σ I_i(θ̂))
+```
+
+PROMIS CATs use SE &lt; 0.3 with 4–12 items. Translated to PICE: 4–12 targeted evaluation dimensions, with adaptive selection of which quality dimensions to probe next based on current uncertainty.
+
+-----
+
+## 4. Novel Algorithm 1: Bayesian-SPRT Adaptive Halting
+
+### What it is
+
+A fusion of Bayesian belief updating with Wald's Sequential Probability Ratio Test, adapted for multi-model code evaluation. No published work combines these for heterogeneous multi-model code verification.
+
+### Prior art
+
+ConSol (Lee et al., March 2025) applied SPRT to single-model self-consistency for reasoning tasks. This is the closest precedent but differs critically: ConSol uses a single model's self-consistency (homogeneous samples), while PICE uses heterogeneous evaluators (Claude + GPT) with different error characteristics and model-specific reliability weights.
+
+### How it works
+
+**Step 1: Initialize priors.** Set Beta(α₀, β₀) based on:
+- Code complexity metrics (cyclomatic complexity, file count, change scope)
+- Historical defect rates for similar changes (from SQLite metrics engine)
+- Layer-specific base rates (infrastructure changes fail more often than CSS changes)
+
+**Step 2: Evaluate and update.** Each pass from Claude or GPT generates a verdict (approve/flag) with an associated confidence score. Update the posterior:
+
+```
+If pass approves:  Beta(α + w_model · confidence, β)
+If pass flags:     Beta(α, β + w_model · confidence)
+```
+
+where w_model is the model's learned reliability weight for this check type (from historical performance data in the self-evolving loop).
+
+**Step 3: Check SPRT boundaries.** Compute log-likelihood ratio Λₙ and compare against thresholds with O'Brien-Fleming alpha spending:
+
+```
+If Λₙ ≥ A_k  →  ACCEPT (code passes this layer)
+If Λₙ ≤ B_k  →  REJECT (code fails this layer)
+Otherwise    →  CONTINUE (run another pass)
+```
+
+where A_k and B_k are the O'Brien-Fleming-adjusted thresholds for the k-th analysis.
+
+**Step 4: Output.** At termination, report:
+- The verdict (PASS/FAIL)
+- The posterior mean P(correct)
+- The 95% credible interval
+- The number of passes used
+- The cost incurred
+
+### Expected performance
+
+For evaluator accuracy p = 0.85, α = 0.05, β = 0.10:
+- Expected passes for clear PASS: **2.4**
+- Expected passes for clear FAIL: **2.1**
+- Expected passes for borderline cases: **4.8**
+- Overall expected passes (weighted by case distribution): **~3.2**
+
+The Wald-Wolfowitz theorem guarantees no other stopping rule achieves lower expected pass count with the same error control.
+
+-----
+
+## 5. Novel Algorithm 2: Adversarial Divergence-Triggered Scaling (ADTS)
+
+### What it is
+
+An orchestration layer that uses inter-model disagreement as the control signal for evaluation depth. No published work uses disagreement between different LLM evaluators to dynamically allocate verification passes in code review.
+
+### Theoretical foundation
+
+The Knowledge Divergence theory (Kaplan et al., 2025) proves that debate advantage depends on the principal angles between models' representation subspaces — with a phase transition from quadratic (negligible benefit) to linear (essential benefit) as knowledge diversity increases. For PICE: disagreement between Claude and GPT is not noise to be averaged away but **signal about where additional evaluation is most valuable**.
+
+Du et al. (2024) confirmed empirically that mixed-model debates outperform same-model debates, and performance plateaus after ~4 rounds — directly informing PICE's tier boundaries.
+
+### How it works
+
+**Step 1: Run initial evaluation.** Pass 1 (Claude) and Pass 2 (GPT) evaluate the same code against the same contract.
+
+**Step 2: Compute divergence.** Calculate consensus entropy:
+
+```
+H_consensus = −Σ (v_k/n) · log(v_k/n)
+```
+
+where v_k counts votes for each distinct assessment category. Alternatively, compute Jensen-Shannon divergence between the two evaluators' probability distributions over verdict categories.
+
+**Step 3: Route by divergence.**
+
+```
+If D₂ < τ_low    →  TIER 1: Halt with consensus (~70% of evaluations)
+If τ_low ≤ D₂ ≤ τ_high  →  TIER 2: Targeted additional passes (~25%)
+If D₂ > τ_high   →  TIER 3: Full escalation (~5%)
+```
+
+**Tier 1 (Agreement).** Both models agree with reasonable confidence. Apply Bayesian-SPRT check — if the posterior confirms, halt at 2 passes with ~92% confidence. This handles the majority of evaluations at minimal cost.
+
+**Tier 2 (Moderate uncertainty).** Models partially disagree. Run 1–3 additional passes **targeted at the specific evaluation dimensions where disagreement is highest**. If Claude flags a security concern but GPT doesn't, the next pass focuses specifically on security evaluation. Apply Bayesian-SPRT to the expanded evidence.
+
+**Tier 3 (Strong disagreement).** Models fundamentally disagree. Escalate:
+- Add a third model (tiebreaker) with maximally different architecture/training
+- Apply VEC (Algorithm 3) to determine when entropy converges
+- If entropy remains high after 5+ passes, decompose into epistemic vs. aleatoric
+- High aleatoric → escalate to human review (spec is ambiguous)
+- High epistemic → add orthogonal verification (tests, static analysis, formal methods)
+
+### Threshold calibration
+
+τ_low and τ_high are calibrated from historical data in the self-evolving loop:
+- τ_low: set so that cases below this threshold have &lt;2% defect escape rate historically
+- τ_high: set so that cases above this threshold have >15% defect rate historically
+- Both thresholds adapt over time as the metrics engine accumulates data
+
+-----
+
+## 6. Novel Algorithm 3: Verification Entropy Convergence (VEC)
+
+### What it is
+
+A stopping rule based on the information content of accumulated evaluations, adapted from semantic entropy (Kuhn et al., ICLR 2023) and Predicted Standard Error Reduction from psychometric adaptive testing (Choi et al., 2010). No published work applies entropy-based convergence criteria to multi-pass code evaluation.
+
+### How it works
+
+**Step 1: Cluster evaluator outputs semantically.** After each pass, cluster all accumulated evaluation outputs by meaning using code-aware semantic similarity. Two reviews that flag different specific issues but agree on the overall assessment belong to the same semantic cluster.
+
+**Step 2: Compute semantic entropy.**
+
+```
+SE_n = −Σ_c p_c · log(p_c)
+```
+
+over semantic clusters c, where p_c is the fraction of evaluations in cluster c.
+
+**Step 3: Apply dual stopping criterion.** Halt when BOTH conditions are met:
+
+```
+(a) SE_n < ε           (absolute threshold: high certainty)
+(b) |SE_n − SE_{n−1}| < δ   (convergence threshold: new passes aren't adding information)
+```
+
+Condition (a) ensures sufficient overall certainty. Condition (b) ensures the system has converged — additional passes would not change the verdict.
+
+**Step 4: Decompose remaining uncertainty.**
+
+If the system doesn't converge after the maximum allocated passes, decompose the entropy into components:
+
+- **Epistemic entropy** — Evaluators reach different conclusions because they understand the code differently. Signal: adding a diverse evaluator shifts the semantic clusters. Response: more passes with maximally diverse evaluators (different model architectures, different prompting strategies).
+
+- **Aleatoric entropy** — Evaluators reach different conclusions because the specification is genuinely ambiguous. Signal: adding evaluators doesn't shift the semantic clusters, but the clusters remain balanced. Response: escalate to human review. More AI passes cannot resolve what the spec doesn't define.
+
+This decomposition is the critical innovation. It prevents PICE from wasting passes on problems that LLMs fundamentally cannot resolve — a direct response to the irreducible error findings showing that shared biases create a hard ceiling.
+
+### Connection to adaptive testing
+
+The stopping criterion is analogous to PROMIS CAT (computerized adaptive testing in healthcare):
+
+```
+SE(θ̂) = 1/√(Σ I_i(θ̂))    →    stop when SE < 0.3
+```
+
+In PICE: each evaluation dimension (correctness, security, performance, style, integration) has Fisher Information I_i that depends on how well the evaluators can discriminate quality at the current estimate. The system adaptively selects which dimension to evaluate next based on which would provide the most information — then stops when the overall Standard Error drops below threshold.
+
+PROMIS CATs typically require 4–12 items for convergence. Translated to PICE: **4–12 targeted evaluation passes** for complex, multi-dimensional code review, with the adaptive selection dramatically reducing this for routine changes.
+
+-----
+
+## 7. Putting It All Together: The Combined Decision Engine
+
+The three algorithms integrate into a single adaptive evaluation engine:
+
+```
+Code change arrives
+       │
+       ▼
+┌─────────────────────────────┐
+│  Bayesian-SPRT initializes  │
+│  Beta prior from history    │
+│  + code complexity          │
+└──────────────┬──────────────┘
+               │
+       ┌───────▼───────┐
+       │  Pass 1: Claude │──→ Update Beta posterior + compute Λ₁
+       └───────┬────────┘
+               │
+       ┌───────▼───────┐
+       │  Pass 2: GPT   │──→ Update Beta posterior + compute Λ₂
+       └───────┬────────┘
+               │
+       ┌───────▼───────┐
+       │  ADTS: Compute │
+       │  divergence D₂ │
+       └───────┬────────┘
+               │
+      ┌────────┼────────┐
+      ▼        ▼        ▼
+   D < τ_low  middle  D > τ_high
+      │        │        │
+      ▼        ▼        ▼
+   SPRT     3-5 more   VEC +
+   check    targeted   tiebreaker
+      │     passes        │
+      ▼        │          ▼
+   HALT      SPRT      Entropy
+   (92%)    check      converge?
+              │          │
+              ▼         ┌┴┐
+           HALT        Y   N
+           (94-95%)    │   │
+                       ▼   ▼
+                    HALT  Decompose:
+                  (95-96%) epistemic
+                           vs. aleatoric
+                              │
+                         ┌────┴────┐
+                         ▼         ▼
+                      More      Human
+                      diverse   review
+                      passes
+```
+
+### The minimum pass formula
+
+For a target confidence level C, the minimum passes required:
+
+```
+N_min ≈ log((1−C_prior)/(1−C_target)) / D_KL(p_eval ∥ 1−p_eval)
+```
+
+adjusted by the correlation ceiling: N_min is capped at 1/ρ effective independent evaluations regardless of actual pass count.
+
+| Target confidence | Passes (ρ=0.35, p=0.88) | Achievable? | Strategy |
+| --- | --- | --- | --- |
+| 90% | 2 | ✅ | ADTS Tier 1 |
+| 93% | 3 | ✅ | ADTS Tier 1–2 |
+| 95% | 4–5 | ✅ | ADTS Tier 2 |
+| 96% | 7–10 | ✅ (near ceiling) | ADTS Tier 3 + VEC |
+| 97% | 10+ | ⚠️ At ceiling | Add orthogonal signals |
+| 99% | N/A from LLMs alone | ❌ | Requires formal verification |
+
+**The critical design insight: beyond ~97%, PICE should escalate to orthogonal verification (tests, static analysis, formal methods) rather than adding LLM passes. This is the mathematically correct strategy, not a fallback.**
+
+-----
+
+## 8. Practical Implementation Notes
+
+### Prior calibration
+
+The Beta prior Beta(α₀, β₀) should be calibrated per layer and per change type from historical data:
+- Simple CSS change: Beta(9, 1) — strong prior toward correctness (90%)
+- New feature backend: Beta(7, 3) — moderate prior (70%)
+- Infrastructure change: Beta(5, 5) — uninformative prior (50%)
+- Security-critical change: Beta(3, 7) — prior toward caution (30%)
+
+These priors are updated by the self-evolving loop as the metrics engine accumulates project-specific data.
+
+### Model reliability weights
+
+Different models have different strengths. The self-evolving loop maintains per-model, per-check-type accuracy and confidence calibration:
+- Claude may be more reliable on code style and architecture patterns
+- GPT may be more reliable on specific API usage and edge cases
+- Haiku may be as reliable as Sonnet on simple checks at 10× lower cost
+
+Reliability weights w_model feed directly into the Bayesian posterior update, making each pass's contribution proportional to the model's demonstrated accuracy on that check type.
+
+### Cost optimization
+
+The ADTS three-tier architecture naturally optimizes cost:
+- **Tier 1** (~70% of evaluations): 2 passes × cheapest viable model
+- **Tier 2** (~25% of evaluations): 3–5 passes × mid-tier model
+- **Tier 3** (~5% of evaluations): 5–10 passes × premium model + orthogonal signals
+
+Expected cost per evaluation = 0.70 × C_tier1 + 0.25 × C_tier2 + 0.05 × C_tier3
+
+With Haiku at ~$0.001/pass, Sonnet at ~$0.01/pass, Opus at ~$0.10/pass:
+- Tier 1: 2 × $0.001 = $0.002
+- Tier 2: 4 × $0.01 = $0.04
+- Tier 3: 7 × $0.10 = $0.70
+- **Expected: $0.046/evaluation** — 15× cheaper than running 7 Opus passes for everything
+
+-----
+
+## 9. What This Means for PICE's Roadmap
+
+1. **The confidence table belongs in every `pice status` output.** Users should see not just PASS/FAIL but the posterior confidence — "PASS at 94.2% confidence (3 passes, $0.03)."
+
+2. **The ADTS tiers map directly to PICE's existing Tier 1/2/3 system.** This isn't a new concept to add; it's a mathematical foundation for the tiers that already exist.
+
+3. **The self-evolving loop has a clear training signal.** The Bayesian-SPRT's prediction accuracy (did the posterior correctly predict the final verdict?) is a direct metric for tuning priors, model weights, and thresholds.
+
+4. **99% confidence is achievable but not from LLMs alone.** PICE should make this explicit: Tier 3 evaluations that need >97% confidence should integrate formal verification, property-based testing, or human review — and communicate why.
+
+5. **The convergence math validates small expert teams.** 2–3 diverse experts provide nearly as much information as 10 similar ones. The Krogh-Vedelsby decomposition proves that diversity, not count, drives ensemble improvement.
+
+-----
+
+---
+
+## Stack Loops and Arch Experts: Originality Analysis
+
+
+
+-----
+
+## Executive Summary
+
+Neither "Stack Loops" nor "Arch Experts" exists as a pre-existing named concept, pattern, or framework anywhere in the surveyed landscape of software engineering, multi-agent AI systems, or AI-assisted development. After systematic searches across academic papers, framework documentation, developer blogs, and community discussions for all major platforms — CrewAI, AutoGen, LangGraph, MetaGPT, Claude Code, Cursor, and Windsurf — zero instances of either term used as a formal named concept were found. Both terms are **novel coinages by the PICE framework author**, though the underlying ideas they describe have significant conceptual overlap with existing work published under different names.
+
+-----
+
+## 1. Methodology
+
+### Search strategy
+
+Each term was searched across multiple domains using exact-match and semantic queries:
+
+- **Academic databases:** arXiv, ACM Digital Library, IEEE Xplore, Google Scholar, Semantic Scholar
+- **Framework documentation:** CrewAI, AutoGen/AG2, LangGraph/LangChain, MetaGPT, Claude Code, Cursor, Windsurf
+- **Package registries:** npm, PyPI, crates.io
+- **Developer communities:** GitHub (repos, issues, discussions), Reddit (r/programming, r/MachineLearning, r/ClaudeAI), Hacker News, Stack Overflow, Dev.to
+- **Blog platforms:** Medium, Substack, personal engineering blogs
+- **Patent databases:** USPTO, Google Patents
+
+### Exclusion criteria
+
+Results were excluded when:
+- "Stack" and "loops" appeared as separate, unrelated concepts (e.g., "looping through a stack data structure")
+- "Architecture expert" referred to a human job title rather than an AI agent pattern
+- "Arch" referred to Arch Linux rather than software architecture
+
+-----
+
+## 2. "Stack Loops" — No Prior Art as a Named Pattern
+
+### Search results
+
+Searches across every relevant domain — DevOps, CI/CD, AI coding workflows, multi-agent orchestration, and software testing — returned **zero uses of "Stack Loops" as a proper named concept**. Every result containing both words was an incidental combination: "looping through a stack," "feedback loops in the DevOps stack," "stack overflow in infinite loops," or similar phrases where neither word connects to the other as a compound concept.
+
+### Nearest existing terms
+
+**"Loop Stack" (inverted word order)** — Coined by Duncan Krebs at KrebsNet as a recursive orchestration pattern for multi-agent AI. A product called Loopstack AI also exists as a TypeScript/YAML workflow framework. Neither describes what PICE's "Stack Loops" means — per-layer verification loops across a technology stack.
+
+**Claude Code "Loops" feature** — Introduced in March 2026 via the `/loop` command for autonomous recurring tasks. Unrelated to per-layer stack verification. The term "loops" in the Claude Code context refers to iterative task execution, not layered architecture verification.
+
+### Conceptual predecessors under different names
+
+The individual building blocks behind Stack Loops are well-established. What's novel is their specific formulation and combination:
+
+**Test Pyramid (Mike Cohn, 2009)** — The foundational concept of layered testing: unit tests at the base, integration in the middle, end-to-end at the top. Established that verification should be structured by layer, with different investment at each level. However, the Test Pyramid is a static model — it describes proportions, not iterative cycles. Stack Loops add the "loop" dimension: each layer runs its own Plan→Implement→Contract-Evaluate cycle independently.
+
+**Speed Hierarchy of Feedback (Dark Software Fabric, January 2025)** — Defines a 7-layer verification hierarchy for AI-native development: types, lint rules, contract tests, unit tests, coverage analysis, AI logic checking, and end-to-end tests. Each layer runs at a different speed. This is arguably the closest published parallel to Stack Loops — it structures verification as ordered layers with iterative feedback. However, it focuses on test type ordering rather than technology stack layers (backend, database, infrastructure, deployment), and doesn't include the "always-run layer" concept or seam verification between layers.
+
+**Verification Loops (Spotify Engineering, December 2025)** — Describes inner/outer feedback loops for AI coding agents: the inner loop is fast iteration within the IDE; the outer loop is CI/CD validation. Related to the "loop" concept but not structured by stack layers — these are developer workflow loops, not architecture verification loops.
+
+**Quality Filtration Stacks (Capital One)** — Uses a water-filter metaphor for layered defect catching, where each filter removes a different class of defect. Conceptually adjacent — defects pass through ordered layers of verification. But the "stack" is a filter metaphor, not a technology stack, and there's no iterative loop per layer.
+
+**StackPlanner (arXiv:2601.05890, January 2025)** — A centralized hierarchical multi-agent system with task-experience memory management. Uses "stack" in the name but refers to task decomposition hierarchies, not technology stack layers.
+
+### What makes Stack Loops novel
+
+The specific combination that no prior work captures:
+
+1. **Technology stack layers** (backend, database, API, infrastructure, deployment) rather than test type layers (unit, integration, E2E)
+2. **Independent PICE loops per layer** — each layer runs its own Plan→Implement→Contract-Evaluate cycle
+3. **Always-run layers** — infrastructure, deployment, and observability cannot be skipped regardless of change scope
+4. **Seam verification between layers** — checking integration contracts at layer boundaries, not just within layers
+5. **Dependency ordering** — layers run sequentially based on architectural dependencies
+6. **Adaptive pass count** — each layer's evaluation depth is determined by the ADTS/Bayesian-SPRT/VEC algorithms based on accumulated evidence
+
+No single prior work addresses more than two of these six properties simultaneously.
+
+-----
+
+## 3. "Arch Experts" — No Prior Art as a Named Pattern
+
+### Search results
+
+The term "Arch Experts" — meaning dynamically generated specialist agents based on project architecture discovery — does not appear in any surveyed source as a formal concept. The only exact-match result was **Codementor.io/arch-experts**, which lists Arch Linux freelance developers — entirely unrelated.
+
+### Nearest existing terms and systems
+
+**ArchE — Architecture Expert (CMU SEI, 2003–2008)** — A rule-based Eclipse plugin from Carnegie Mellon's Software Engineering Institute. Helped human architects make quality-attribute-driven design decisions using the JESS expert system engine. Fundamentally different: a traditional expert system tool for human use, not a pattern for dynamically generating AI agents from architecture discovery. Discontinued.
+
+**ArchAgent (arXiv:2602.22425, February 2026)** — Uses "Arch" in its name but describes hardware architecture discovery — specifically cache replacement policies via AlphaEvolve. Operates in the computer architecture domain (chip design), not software project architecture.
+
+**AutoAgents (Chen et al., arXiv:2309.17288, September 2023)** — A framework that dynamically synthesizes specialized expert agents based on task content rather than using predefined roles. The closest match to the "dynamic generation" aspect of Arch Experts. Key difference: AutoAgents generates agents from task descriptions ("build a web scraper"), while Arch Experts generates agents from project architecture files (package.json, Dockerfile, docker-compose.yml). The input signal is fundamentally different — task intent vs. existing infrastructure reality.
+
+**MetaGPT (2023)** — Includes a dedicated "Architect" agent role within its software-company simulation. This is a fixed, predefined role, not dynamically generated. Every MetaGPT project gets the same Architect regardless of the technology stack.
+
+**Codified Context domain-expert agents (Vasilopoulos, arXiv:2602.20478, February 2026)** — Describes **19 specialized domain-expert agents** with trigger tables for automatic task routing in a 108,000-line C# codebase. Functionally very similar to Arch Experts in practice, but with critical differences:
+- Agents are **manually authored** by the development team, not dynamically generated
+- Trigger tables are **hand-crafted** routing rules, not architecture-inferred
+- The system requires explicit configuration for each new agent
+- Limited to a single codebase; not generalizable across projects
+
+**vFunction** — Describes making AI agents "architecture-aware co-pilots" by feeding discovered architectural context into coding agents. Related concept — using architecture discovery to enhance AI behavior — but the agents themselves are not generated from the discovery. The architecture context is an input to a generic agent, not a generator of specialist agents.
+
+**Archyl** — Offers automated C4 model generation from code with MCP integration for agent queries. Generates architecture documentation, not specialist agents.
+
+### Framework documentation sweep
+
+A systematic check of all major multi-agent frameworks confirmed neither term appears:
+
+| Framework | Agent specialization approach | Uses "Stack Loops"? | Uses "Arch Experts"? |
+|---|---|---|---|
+| CrewAI | Role-based with defined roles, goals, backstories | No | No |
+| AutoGen/AG2 | Dynamic group chat, expert tools | No | No |
+| LangGraph | Four patterns: subagents, skills, handoffs, routers | No | No |
+| MetaGPT | Fixed roles: PM, Architect, Engineer, QA | No | No |
+| Claude Code | Custom agents via markdown files | No | No |
+| Cursor | Rules files for context | No | No |
+| Windsurf | Cascade workflows | No | No |
+
+### What makes Arch Experts novel
+
+The specific combination that no prior work captures:
+
+1. **Architecture-inferred, not configured** — experts emerge from scanning project files, not from manual agent definition
+2. **Technology-specific system prompts** — each expert's instructions are constructed from the actual configuration files it will evaluate, not from a generic template
+3. **Seam ownership** — each expert owns the boundaries around its component, declaring what it provides and what it assumes
+4. **No template library** — the system doesn't select from a pre-built catalog; it constructs experts de novo for each project's specific technology combination
+5. **Adversarial assumption mining** — the dual-model evaluation is repurposed for seam discovery, with each model independently inferring one side of the integration contract
+6. **Runtime AgentDefinition construction** — experts are ephemeral objects passed via CLI flags, not persisted configuration files
+
+No existing system combines architecture discovery with dynamic agent generation with seam ownership with adversarial assumption mining.
+
+-----
+
+## 4. Additional Novel Concepts in PICE
+
+Beyond Stack Loops and Arch Experts, PICE introduces several other concepts that appear to be original:
+
+### Seam Verification
+
+The specific practice of running verification checks at the boundaries between architectural layers, using the twelve empirically validated failure categories as a checklist. While integration testing and contract testing exist, the concept of structured seam-specific verification mapped to a failure taxonomy — and integrated into a per-layer loop system — is novel in this formulation.
+
+### Adversarial Assumption Mining
+
+Using dual-model adversarial evaluation specifically to discover implicit contract asymmetries — one model infers consumer assumptions, the other infers provider guarantees, and the framework flags mismatches. The concept of adversarial LLM debate exists (Du et al., 2024), but its application to seam-level assumption discovery is new.
+
+### Implicit Contract Inference (v0.4)
+
+The synthesis of Daikon-style invariant detection + spec mining + distributed tracing + session types + hardware VIP + chaos engineering, applied to infer behavioral contracts at service boundaries. Each individual research lineage is mature; the combination is unpublished.
+
+### Bayesian-SPRT Adaptive Halting, ADTS, and VEC (v0.2 algorithms)
+
+Three algorithms for adaptive evaluation depth. ConSol (March 2025) applied SPRT to single-model self-consistency. PICE's Bayesian-SPRT extends this to heterogeneous multi-model evaluation with Bayesian priors. ADTS and VEC have no direct precedent in AI code verification.
+
+### Self-Evolving Verification (v0.5)
+
+The combination of MAPE-K + predictive test selection + DSPy-style prompt optimization + ensemble reliability weighting + evolutionary check generation in a single closed-loop verification framework. Each pattern exists independently; the integration is novel.
+
+-----
+
+## 5. Conceptual Predecessor Map
+
+The table below maps each PICE concept to its closest known parallels, highlighting what's borrowed and what's new:
+
+| PICE Concept | Closest Existing Work | What's Borrowed | What's New |
+|---|---|---|---|
+| Stack Loops | Speed Hierarchy of Feedback (2025) | Layered verification ordering | Technology stack layers, independent PICE loops per layer, always-run layers, seam checks |
+| Stack Loops | Test Pyramid (2009) | Layered testing concept | Iterative loop mechanics, adaptive pass count, dependency ordering |
+| Stack Loops | Verification Loops (Spotify, 2025) | Feedback loops for AI agents | Per-layer structure, seam verification, tier-scaled depth |
+| Arch Experts | AutoAgents (2023) | Dynamic expert agent generation | Architecture-file inference (vs. task-content inference), seam ownership |
+| Arch Experts | Codified Context (2026) | Domain-expert agents with routing | Dynamic generation (vs. manual authoring), no template library |
+| Arch Experts | MetaGPT Architect (2023) | Dedicated architecture role | Dynamic per-project generation (vs. fixed role) |
+| Seam Verification | Pact contract testing (2013) | Boundary verification concept | Automated from failure taxonomy, behavioral not just structural |
+| Seam Verification | Hardware VIP (industry) | Protocol assertions at interfaces | Applied to software (first time), integrated with AI evaluation |
+| Assumption Mining | Adversarial LLM debate (2024) | Dual-model disagreement as signal | Applied to implicit contract discovery at seams (first time) |
+| Implicit Contracts | Daikon invariant detection (2001) | Behavioral property inference | Cross-service (vs. single-component), distributed traces |
+| Adaptive Algorithms | ConSol SPRT (2025) | Sequential stopping for LLMs | Multi-model with Bayesian priors, ADTS divergence routing, VEC entropy |
+| Self-Evolving | Meta PTS (2019) + DSPy (2024) | ML-driven optimization, prompt tuning | Combined into single verification framework with evolutionary generation |
+
+-----
+
+## 6. Conclusion
+
+Both **Stack Loops** and **Arch Experts** are original coined terms with no pre-existing usage as named concepts in software engineering, multi-agent AI, or AI-assisted development. The underlying ideas — layered verification across technology stacks and architecture-aware specialist agents — have substantial conceptual precedent under different names, particularly in the 2023–2026 explosion of multi-agent AI research.
+
+However, the specific formulations, the compound terminology, and especially the **combination of both concepts within a unified framework** — enhanced with seam verification, adversarial assumption mining, adaptive convergence algorithms, and self-evolving verification — represent genuinely novel contributions.
+
+The novelty is not in the individual building blocks (which are well-established across multiple fields) but in:
+1. The specific formulation of each concept
+2. The combination into a unified architecture
+3. The mathematical grounding (convergence analysis, correlated evaluator theory)
+4. The cross-domain synthesis (hardware VIP, clinical trial stopping rules, psychometric testing, control theory)
+5. The closed-loop self-evolution from collected execution data
+
+This is the pattern of real innovation: synthesizing mature ideas from multiple fields into a combination that no one has attempted, creating something that is more than the sum of its parts.
+
+-----
+
+---
+
+## Self-Evolving Verification Frameworks: State of the Art and Blueprint for PICE
+
+
+
+-----
+
+## Executive Summary
+
+No production system today fully implements a closed-loop, self-evolving verification framework — one that genuinely learns from its own execution history to rewrite verification criteria, reallocate resources, and compound in value over time. But the building blocks exist across five distinct fields: predictive test selection (Meta, Google, Develocity), observability-driven development (Honeycomb, Tracetest), self-improving AI agents (Reflexion, DSPy, SICA), autonomic computing (MAPE-K), and evolutionary test optimization (EvoSuite). PICE's opportunity is to be the first system that integrates these patterns into a unified architecture where every evaluation makes the next one smarter, more targeted, and cheaper.
+
+-----
+
+## 1. Predictive Test Selection: Proof the Core Thesis Works at Scale
+
+The strongest evidence that self-optimizing verification is viable comes from predictive test selection (PTS) systems deployed at Meta, Google, and Netflix. These systems track historical test outcomes, build ML models correlating code changes with test failures, and dynamically select which tests to run.
+
+### Meta's PTS system
+
+Published at ICSE-SEIP 2019. Uses a gradient-boosted decision tree trained on historical test results from their monolithic repository. The framing is the key innovation: rather than asking "which tests could be impacted?" (dependency analysis), it asks **"what is the probability this test finds a regression?"** — a fundamentally different question.
+
+Results:
+- Catches **>99.9% of faulty code changes** while running only one-third of transitively dependent tests
+- Effectively doubles infrastructure efficiency
+- The model retrains regularly on fresh results, adapting automatically as the codebase evolves
+
+The feature set that drives predictions: which files changed, which tests historically fail on those files, recency of failures, developer identity, time of day, and commit metadata. This is directly analogous to the data PICE's SQLite metrics engine already collects — check outcomes, file associations, layer information, model used, evaluation confidence.
+
+### Meta's Sapienz
+
+Companion system using search-based software engineering to generate automated test cases. Key metric: **75% actionable report rate** — three-quarters of automated findings result in developer fixes. Attributed an **80% reduction in Android app crashes**. Demonstrates that automated verification can achieve production-quality signal, not just noise.
+
+### Google's TAP platform
+
+Processes **over 150 million test executions daily** across 4 billion individual test cases. Their ML-driven test selection reduced computational waste by over 30% while maintaining 99.9% regression safety confidence.
+
+A surprising finding: algorithms based on the **number of distinct developers** committing code that triggers particular tests outperformed algorithms based on recent execution history. Social and organizational signals are unexpectedly powerful predictors of failure. This suggests PICE's metrics engine should consider who's making changes, not just what's changing.
+
+### Develocity (formerly Gradle Enterprise)
+
+Commercialized predictive test selection. Used by Netflix, LinkedIn, Airbnb. Netflix reported:
+- **280,000 developer hours saved per year**
+- Test execution times reduced from **10+ minutes to 1–2 minutes** (full order of magnitude)
+- Maintained regression safety confidence
+
+### Launchable (now CloudBees Smart Tests)
+
+Demonstrated that running **20% of tests achieves 90% confidence** in catching failures, with models trained several times per week on fresh data. The 80/20 rule of verification — the minority of checks that catch the majority of issues can be identified from historical data.
+
+### Direct lesson for PICE
+
+The data PICE already collects in its SQLite metrics engine — check outcomes, file associations, layer information, model used, evaluation confidence — is precisely the feature set these systems use. The feedback loop is straightforward:
+
+1. Train a model on historical check outcomes
+2. For each new code change, predict which checks are most likely to catch issues
+3. Run those checks first, skip checks with zero historical hit rate
+4. Continuously retrain as new data arrives
+
+The expected outcome: PICE runs fewer checks, catches the same or more issues, at lower cost and latency. The self-evolving loop makes this automatic.
+
+-----
+
+## 2. Observability-Driven Development
+
+### Charity Majors and Honeycomb
+
+Observability-Driven Development (ODD), championed by Charity Majors (CTO of Honeycomb), proposes a feedback loop extending verification beyond pre-deployment into production reality.
+
+**Core thesis:** "Your job isn't done until it's in production." Deploying code is the beginning of gaining confidence, not the end. Majors advocates "two-window development" — code in one window, production telemetry in another, instrumenting as you go.
+
+**Observability 1.0 vs. 2.0:**
+- O11y 1.0: Separate pillars of metrics, logs, and traces in isolated tools. Pre-defined queries. Dashboard-centric.
+- O11y 2.0: Unified storage of wide structured log events in columnar databases. Arbitrary high-cardinality slicing. You can slice by build ID, feature flag, user ID, or any dimension without pre-defining queries.
+
+**Latest position (2026):** AI agents writing code need observability even more than humans, since their ability to validate changes determines the ROI of AI investment. This directly validates PICE's v0.5 architecture — the self-evolving loop needs production signals to close the feedback cycle.
+
+### Tools closing the production-to-development loop
+
+**Tracetest** (Kubeshop) — Creates assertions against distributed traces. Engineers turn production issues identified in Honeycomb into automated test assertions in CI/CD. Claims 80% reduction in troubleshooting time. The key innovation: tests are derived from observed production behavior, not hypothetical scenarios.
+
+**Digma** — "Preemptive observability" as an IDE plugin. Uses OpenTelemetry instrumentation to surface runtime code insights (anti-patterns, bottlenecks, query issues) without requiring code changes. Detects problems at development time using runtime data from staging or production environments.
+
+**Speedscale** — Captures production API traffic and auto-generates regression test suites from it. Replays sanitized traffic against new code versions. 2025 MCP integration lets AI coding agents pull exact failed production requests and replay them in sandboxes. This is essentially replay-based seam verification.
+
+**Harness Continuous Verification** — The most mature product explicitly implementing production-data-driven verification. Queries health sources (Prometheus, Datadog, Splunk) automatically during deployment. Uses ML to learn normal behavior. Triggers **automatic rollback** when anomalies are detected.
+
+### The key metric for PICE: evaluation-to-production correlation
+
+The single most important signal for PICE's self-evolution: **do verification verdicts predict production incidents?**
+
+Track two things:
+1. Code that PICE passed → did it cause production incidents? (false negative rate)
+2. Code that PICE flagged → would it have caused incidents if shipped? (true positive validation)
+
+Over time, this correlation score becomes the ultimate ground truth for tuning the entire system. Checks that predict production issues get amplified. Checks that don't get deprioritized. The framework learns what actually matters — not what looked important in theory.
+
+-----
+
+## 3. Self-Improving AI Agent Architectures
+
+### Reflexion (NeurIPS 2023)
+
+Shinn et al. introduced verbal self-reflection: an agent attempts a task, observes failure, writes a natural-language critique stored in episodic memory, and retries conditioned on that feedback.
+
+Results: **91% pass@1 on HumanEval** vs. GPT-4's 80%.
+
+The key architectural insight is the **"semantic gradient"**: natural-language reflections stored in memory serve as a persistent, interpretable improvement signal. Unlike weight updates, these reflections are:
+- Human-readable and auditable
+- Persistent across sessions
+- Composable (new reflections build on old ones)
+- Reversible (bad reflections can be identified and removed)
+
+For PICE: after each verification session, the framework can append discovered patterns ("this project's Docker builds fail when new dependencies aren't added to the multi-stage builder's first stage") to a persistent knowledge base. Future evaluations condition on this growing library.
+
+### DSPy (Stanford NLP)
+
+The state of the art in systematic prompt optimization from execution data. Rather than manually crafting prompts, you define:
+- Input/output signatures (what goes in, what comes out)
+- Metric functions (how to measure quality)
+- A training set (examples of good and bad outcomes)
+
+DSPy's optimizers automatically construct and refine prompts based on execution traces:
+
+**MIPROv2** — Bootstraps traces from program runs, filters by metric score, drafts instructions grounded in program code and data, uses Bayesian optimization to search the instruction space.
+
+**BootstrapFewShot** — Automatically selects the best few-shot examples from execution traces.
+
+**SIMBA/GEPA** — More advanced optimizers for complex multi-step pipelines.
+
+Reported gains: GPT-4o-mini scores from **66% to 87%** on classification tasks through automated prompt optimization alone.
+
+For PICE: the Arch Expert system prompts and dual-model evaluation prompts are exactly the kind of structured LLM pipelines DSPy optimizes. Rather than manually tuning "You are a RunPod expert...", PICE can define metrics (did this expert catch real issues? what was its false positive rate?) and let DSPy-style optimization search the prompt space using accumulated evaluation traces.
+
+### SICA — Self-Improving Coding Agent (ICLR 2025)
+
+Goes further than Reflexion: SICA evaluates its own performance on benchmarks, then enters a self-edit phase where an LLM proposes modifications to the agent's **own source code** — prompts, heuristics, and architecture.
+
+Key design:
+- Maintains an **archive of previous agent versions** and their benchmark results
+- Selects the best-performing variant as the "meta-agent" for the next improvement round
+- Iterates through improvement cycles with version control
+
+Results: **17–53% performance improvement** on SWE-Bench Verified.
+
+For PICE: the concept of maintaining a versioned archive of verification configurations — including prompt versions, threshold settings, and check definitions — with tracked performance metrics per version. The system can test new configurations against historical data before deploying them.
+
+### Darwin Gödel Machine (Sakana AI, 2025)
+
+Extends SICA with open-ended evolutionary search. Automatically improved SWE-bench performance from **20.0% to 50.0%** through a growing archive of diverse agent variants. The most aggressive self-improvement approach: the system literally rewrites its own architecture.
+
+For PICE: too aggressive for production verification (you don't want your safety system rewriting itself without guardrails), but validates the principle that automated self-improvement works. PICE can apply the concept with human-in-the-loop oversight — propose improvements, simulate against historical data, deploy with monitoring.
+
+### The AGENTS.md / CLAUDE.md pattern
+
+The most practical, widely-adopted approach for coding agents to learn without weight updates. A persistent markdown file accumulates:
+- Patterns discovered during execution
+- Gotchas specific to this project
+- Conventions the agent should follow
+- Mistakes to avoid
+
+After each task, learnings are appended. Future iterations ingest this file. This four-channel memory approach (git history, progress log, task state, knowledge base) is simple but effective.
+
+For PICE: the equivalent is `.pice/learnings.md` or `.pice/knowledge.md` — a growing file the framework reads and appends to across executions. Over time, it accumulates project-specific verification intelligence: "this project's Docker builds always need the builder stage to include openssl-dev," "the RunPod handler timeout needs to be 2x the p99 latency of the ML model."
+
+-----
+
+## 4. The MAPE-K Control Loop
+
+### Architecture
+
+IBM's MAPE-K loop (Monitor → Analyze → Plan → Execute, over a shared Knowledge base) is the canonical reference architecture for self-adaptive systems, introduced by Kephart & Chess in 2003. Over 6,000 research papers cite it.
+
+**Monitor** — Collects raw telemetry from the managed system. For PICE: per-check pass/fail, confidence scores, token counts, latency, model used, environmental context (file changed, layer, component, developer).
+
+**Analyze** — Processes raw data into actionable insights. For PICE: rolling averages, trend detection, statistical process control, Bayesian updating of check effectiveness, anomaly detection (sudden changes in failure patterns).
+
+**Plan** — Generates adaptation decisions. For PICE: which checks to enable/disable, which model to assign per check, prompt refinement candidates, budget allocation across tiers.
+
+**Execute** — Applies changes to the managed system. For PICE: update `.pice/config.toml`, adjust model routing, deploy new prompt versions, modify thresholds.
+
+**Knowledge** — Shared data store accessible to all phases. For PICE: the SQLite metrics engine plus `.pice/learnings.md`.
+
+### Recent critiques and extensions
+
+**"Breaking the Loop: AWARE is the New MAPE-K"** (FSE 2025) argues the sequential, reactive, centralized MAPE-K loop struggles with modern complex systems — lacking proactivity, scalability, and continuous learning integration. The AWARE framework proposes replacing the loop with an event-driven, distributed architecture.
+
+For PICE: the critique is valid for runtime systems but less applicable to verification frameworks where sequential processing is acceptable. However, the proactivity critique applies — PICE should not just react to failures but proactively predict which checks will be most valuable for each change.
+
+**LLM-enhanced MAPE-K** (ECSA 2025) proposes integrating LLM-based agentic AI for the Analyze and Plan phases. The LLM handles natural-language reasoning about why patterns are emerging and what adaptation strategies might work.
+
+For PICE: this is already the architecture. PICE's AI evaluators serve as both the managed system AND the Analyze/Plan intelligence. The self-evolving loop uses the same AI capabilities that perform verification to also reason about how to improve verification.
+
+### Control theory foundations
+
+Cangussu et al. developed a closed-loop feedback control model of the software test process grounded in automatic control theory. Key concepts that apply to PICE:
+
+**Setpoints** — Target values the system maintains. For PICE: target FPR &lt; 5%, cost per evaluation &lt; $X, confidence > 95% for Tier 2.
+
+**Error signals** — Difference between current and target metrics. For PICE: current FPR is 12% vs. target 5% → error signal of 7%.
+
+**Controller gain** — How aggressively the system responds to error signals. Too high → oscillation (checks flip between enabled and disabled). Too low → slow adaptation. PICE should use conservative gain with damping.
+
+**Stability margins** — Preventing harmful oscillations. PICE should require metrics to be consistently outside target for N consecutive evaluation cycles before adapting, preventing noise-driven changes.
+
+**Dead bands** — Minimum error thresholds to prevent constant small adjustments. If FPR is 5.1% vs. target 5.0%, don't adapt — that's within noise.
+
+-----
+
+## 5. Double-Loop Learning
+
+### Single-loop vs. double-loop
+
+Chris Argyris and Donald Schön (1978) distinguished two modes of organizational learning:
+
+**Single-loop learning** adjusts actions within existing rules. The thermostat maintains 68°F — if it's too cold, turn on the heat; if too warm, turn it off. The goal is never questioned.
+
+**Double-loop learning** questions the rules themselves. Why 68°F? Should it be 72°F in winter and 66°F in summer? Should we use a thermostat at all, or a more sophisticated climate control system?
+
+### Application to PICE
+
+**Inner loop (single-loop):** Adjusts parameters within existing verification criteria.
+- Tune thresholds: change the Bayesian-SPRT acceptance boundary from 0.95 to 0.93
+- Reassign models: route this check type to Haiku instead of Sonnet (same accuracy, lower cost)
+- Adjust budget: allocate more passes to infrastructure layer (higher failure rate)
+- Refine prompts: modify Arch Expert system prompt based on DSPy optimization
+
+**Outer loop (double-loop):** Questions the verification criteria themselves.
+- Generate new checks: "this project has had 3 incidents from Docker networking issues → add a Docker network connectivity seam check"
+- Retire obsolete checks: "this check hasn't fired in 180 days and costs $0.02/run → disable"
+- Restructure the seam model: "this project's architecture has evolved — the API layer now communicates directly with the queue, bypassing the backend → add an API↔Queue seam"
+- Evolve the tier structure: "Tier 1 is catching only 85% of issues for this project → expand Tier 1 scope"
+
+The outer loop is triggered by:
+- Sustained metric degradation (defect escape rate rising over 3 consecutive sprints)
+- Pattern analysis (3+ incidents from the same failure category in 30 days)
+- Architecture change detection (new files matching technology patterns not in the current seam model)
+- Manual trigger (`pice evolve`)
+
+-----
+
+## 6. Evolutionary Test Optimization
+
+### EvoSuite and EvoSuiteFIT
+
+EvoSuite uses genetic algorithms to generate whole test suites optimizing for code coverage. The evolutionary process:
+1. Initialize a population of random test suites
+2. Evaluate fitness (coverage, mutation score)
+3. Select, crossover, mutate
+4. Iterate until convergence
+
+EvoSuiteFIT extends this with **reinforcement-learning-based adaptive fitness function selection** — dynamically adjusting which optimization criteria drive the evolutionary search based on the current population's characteristics. The algorithm learns which fitness functions are most productive at each stage of evolution.
+
+### EvoGPT (2025)
+
+Hybridizes LLM test generation with evolutionary search:
+1. LLMs generate diverse initial test suites (exploiting semantic understanding)
+2. Genetic algorithm refines through selection, crossover, and mutation (exploiting systematic optimization)
+3. Outperforms either approach alone
+
+For PICE: the concept of evolutionary check generation. Generate candidate checks using AI, then evaluate their fitness (hit rate, FPR, cost, value score) over a probation period, and evolve the check population using selection pressure from real-world outcomes.
+
+### DeepVerifier (2025)
+
+Self-evolving verification agents that iteratively verify outputs using rubrics derived from an automatically constructed failure taxonomy. Outperformed agent-as-judge baselines by **12–48% in meta-evaluation F1 score**.
+
+Key principle: **exploit the asymmetry of verification** — checking correctness is easier than generation. PICE's entire architecture is built on this asymmetry: the evaluation agents are simpler and cheaper than the implementation agents, but the verification framework that orchestrates them adds the compound value.
+
+### ReVeal (2025)
+
+Multi-turn RL framework for self-evolving code agents where generation and verification capabilities co-evolve through iterative execution feedback. Demonstrates self-improvement across **up to 19 inference turns** despite being trained with only 3. Proves that the iterative loop structure itself drives improvement beyond what training provides.
+
+### Weaver (Stanford/UW-Madison/Together AI, 2025)
+
+Closes the generation-verification gap using ensemble verification with learned verifier reliabilities: 30+ verifiers with probabilistic aggregation achieve **91% collective accuracy** when 20+ agree, despite individual accuracy of 43–62%.
+
+Direct validation of PICE's dual-model approach — and suggests expanding to more evaluators with learned reliability weights. The ensemble's power comes not from count but from diversity and calibrated weighting.
+
+### The Generator-Verifier-Updater framework
+
+Chojecki (2025) unified self-play approaches under a Generator-Verifier-Updater (GVU) operator, showing that STaR, SPIN, Reflexion, GANs, and AlphaZero are specific topological realizations of the same fundamental pattern. This suggests PICE's dual-model adversarial setup is an instance of a **deeply general self-improvement mechanism** — not a specific technique but a manifestation of a universal pattern.
+
+-----
+
+## 7. Minimum Viable Telemetry for PICE's Closed Loop
+
+### Phase 1: Seven core metrics (minimum viable)
+
+These metrics enable basic predictive selection and parameter tuning:
+
+| # | Metric | Collection method | Update frequency |
+|---|--------|-------------------|------------------|
+| 1 | **Per-check hit rate** | Count FAIL verdicts / total runs, rolling 30-day window | Per evaluation |
+| 2 | **Per-check false positive rate** | Manual review sample or production correlation | Weekly batch |
+| 3 | **Per-layer failure distribution** | Aggregate check outcomes by layer | Per evaluation |
+| 4 | **Cost per evaluation** | Token count × model pricing, per model | Per evaluation |
+| 5 | **Evaluation latency** | Wall-clock time p50, p95, p99 | Per evaluation |
+| 6 | **Model agreement rate** | Cohen's kappa for dual-model checks | Per evaluation |
+| 7 | **Defect escape rate** | Production incidents ÷ PASS verdicts | Weekly/sprint |
+
+### Phase 2: Self-optimization signals (five additional metrics)
+
+These enable automated adaptation:
+
+| # | Metric | Formula | Purpose |
+|---|--------|---------|---------|
+| 8 | **Check value score** | (hit_rate × severity × (1−FPR)) / cost | Prioritize high-value checks |
+| 9 | **Information weight** | Contribution to constraining the evaluation space | Identify redundant checks |
+| 10 | **Trend detection** | Slope of rolling metric windows | Early warning of degradation |
+| 11 | **Cost per true positive** | Total cost ÷ true positives | Primary ROI metric |
+| 12 | **Predictive validity** | Correlation(verdict, production_outcome) | Ground truth calibration |
+
+### Phase 3: Automated decision rules
+
+Concrete rules the MAPE-K loop applies:
+
+- **Auto-disable:** Checks with zero hit rate and cost > $0.01/run for >90 consecutive days
+- **Auto-tier:** Route checks to cheaper models when accuracy is equivalent (Haiku vs. Sonnet)
+- **Auto-alert:** When FPR exceeds 20% for any check, flag for human review
+- **Auto-adjust:** Bayesian-SPRT thresholds based on precision-recall tradeoff curves
+- **Budget guardrails:** Alert at 50%, 90%, 100% of evaluation budget allocation
+- **Confidence floor:** Never auto-accept below configured minimum confidence (default 85%)
+
+### SQLite schema recommendation
+
+The metrics engine centers on an event-sourced `evaluations` table:
+
+```sql
+CREATE TABLE evaluations (
+    id          TEXT PRIMARY KEY,    -- UUIDv7 for time-ordered IDs
+    timestamp   TEXT NOT NULL,       -- ISO 8601
+    feature_id  TEXT NOT NULL,       -- Links to feature/plan
+    layer       TEXT NOT NULL,       -- 'backend', 'infrastructure', etc.
+    check_id    TEXT NOT NULL,       -- Specific check identifier
+    check_type  TEXT NOT NULL,       -- 'layer', 'seam', 'expert'
+    model       TEXT NOT NULL,       -- 'haiku', 'sonnet', 'opus', 'gpt-4o'
+    verdict     TEXT NOT NULL,       -- 'pass', 'fail', 'inconclusive'
+    confidence  REAL NOT NULL,       -- 0.0–1.0 posterior probability
+    tokens_in   INTEGER NOT NULL,
+    tokens_out  INTEGER NOT NULL,
+    cost_usd    REAL NOT NULL,
+    latency_ms  INTEGER NOT NULL,
+    pass_number INTEGER NOT NULL,    -- Which pass in the sequence (1, 2, 3...)
+    tier        INTEGER NOT NULL,    -- ADTS tier (1, 2, 3)
+    divergence  REAL,                -- ADTS divergence score D_n
+    entropy     REAL,                -- VEC semantic entropy SE_n
+    files_json  TEXT,                -- JSON array of affected files
+    metadata    TEXT                  -- JSON blob for extensibility
+);
+
+CREATE INDEX idx_eval_layer ON evaluations(layer, timestamp);
+CREATE INDEX idx_eval_check ON evaluations(check_id, timestamp);
+CREATE INDEX idx_eval_feature ON evaluations(feature_id);
+CREATE INDEX idx_eval_model ON evaluations(model, check_id);
+```
+
+Materialized rollup views at hourly/daily/weekly granularity:
+
+```sql
+CREATE TABLE check_rollups (
+    check_id    TEXT NOT NULL,
+    period      TEXT NOT NULL,       -- '2026-04-05', '2026-W14', '2026-04'
+    period_type TEXT NOT NULL,       -- 'day', 'week', 'month'
+    total_runs  INTEGER NOT NULL,
+    pass_count  INTEGER NOT NULL,
+    fail_count  INTEGER NOT NULL,
+    hit_rate    REAL NOT NULL,
+    avg_cost    REAL NOT NULL,
+    avg_latency REAL NOT NULL,
+    avg_confidence REAL NOT NULL,
+    value_score REAL,
+    PRIMARY KEY (check_id, period, period_type)
+);
+```
+
+A configuration history table for traceability:
+
+```sql
+CREATE TABLE config_changes (
+    id          TEXT PRIMARY KEY,
+    timestamp   TEXT NOT NULL,
+    change_type TEXT NOT NULL,       -- 'threshold', 'model_route', 'check_enable',
+                                    -- 'check_disable', 'prompt_update'
+    check_id    TEXT,
+    old_value   TEXT,
+    new_value   TEXT,
+    reason      TEXT NOT NULL,       -- 'auto:low_hit_rate', 'auto:cost_optimization',
+                                    -- 'manual:user_request'
+    metrics_snapshot TEXT            -- JSON of metrics at time of decision
+);
+```
+
+SQLite with WAL mode and proper indexing handles millions of rows with zero operational overhead — sufficient until data volume exceeds tens of gigabytes.
+
+-----
+
+## 8. The Complete Self-Evolving Architecture
+
+Synthesizing all prior art, PICE's evolution from v0.1 metrics engine to a genuinely self-evolving verification framework combines five proven patterns:
+
+### Pattern 1: MAPE-K skeleton
+
+The control loop providing Monitor → Analyze → Plan → Execute over the SQLite Knowledge base. The inner loop adjusts parameters continuously. The outer loop, triggered by sustained metric degradation or pattern analysis, evolves the verification criteria themselves.
+
+### Pattern 2: DSPy-style prompt optimization
+
+Systematically improves Arch Expert and evaluation prompts. Define metric functions (accuracy, precision, cost). Let optimizers search the instruction space using accumulated evaluation traces. Each optimization cycle produces candidate prompts; simulation mode evaluates against historical data before deployment.
+
+### Pattern 3: AGENTS.md / knowledge base pattern
+
+Lightweight, interpretable learning. After each verification session, append discovered patterns (new anti-patterns, false positive triggers, effective prompt formulations, project-specific gotchas) to `.pice/learnings.md`. Future evaluations condition on this growing library. Transparent, auditable, reversible.
+
+### Pattern 4: Ensemble verification with learned reliability weights
+
+Extend the dual-model approach following Weaver. Track per-model, per-check-type accuracy and confidence calibration. When models disagree, weight their verdicts by learned reliability rather than treating them equally. Over time, route each check type to the model combination that maximizes the check value score.
+
+### Pattern 5: Evolutionary check generation
+
+Close the ultimate loop. Analyze patterns in historical failures — which architectural boundaries fail most, what code patterns trigger violations, what new violation types emerge. Generate candidate verification checks using AI. Enter probation period with tracked metrics. Promote checks that prove value; prune those that don't. This is EvoSuite's genetic algorithm concept applied to verification criteria instead of test cases.
+
+### The compound value proposition
+
+Each execution generates:
+- Training data for check prioritization (predictive selection)
+- Feedback for prompt optimization (DSPy-style)
+- Signal for model routing (learned reliability weights)
+- Evidence for threshold tuning (Bayesian prior updating)
+- Candidates for check evolution (pattern analysis)
+- Ground truth for system calibration (production correlation)
+
+This is what it means for a framework to compound in value. Execution 1 is generic. Execution 100 is calibrated to your project. Execution 1,000 is a deeply specialized verification engine that knows your architecture's specific failure modes, your team's common mistakes, and which checks provide the most value per dollar.
+
+-----
+
+## 9. What No One Has Built Yet
+
+Despite rich prior art in each individual domain, no system combines:
+
+| Capability | Nearest existing system | What it lacks |
+|---|---|---|
+| Predictive check selection | Meta PTS, Develocity | Applied to traditional tests, not AI evaluation |
+| Prompt optimization from execution data | DSPy | Applied to general LLM pipelines, not verification |
+| Versioned configuration archive | SICA | Applied to coding agents, not verification frameworks |
+| Production correlation feedback | Harness CV | Detects anomalies, doesn't feed back into verification criteria |
+| Evolutionary criterion generation | EvoSuite | Generates test cases, not verification criteria |
+| **All of the above in one system** | **Nothing** | **PICE v0.5** |
+
+The gap is clear. The building blocks are mature. The integration is the novel contribution.
+
+-----
+
+---
+
+## Claude Code Agent Teams: A Technical Deep-Dive for PICE
+
+
+
+-----
+
+## Executive Summary
+
+Claude Code offers two distinct multi-agent systems that PICE can leverage — but with critical caveats. The stable **subagent system** (via the `Agent` tool) provides isolated, per-role context windows with configurable system prompts and model selection, making it directly applicable to Stack Loops and Arch Experts. The experimental **Agent Teams** feature (since v2.1.32, February 2026) adds peer-to-peer messaging and shared task lists but remains too unstable for production orchestration. For PICE, the recommended integration path is **CLI subprocess invocation** (`claude --bare -p`), which avoids SDK licensing concerns while providing full access to subagent orchestration via JSON-lines over stdio.
+
+-----
+
+## 1. Two Multi-Agent Systems, Not One
+
+Claude Code contains two architecturally distinct delegation mechanisms that are often conflated in community discussions. Understanding the difference is essential for PICE's design.
+
+### Subagents (stable, always available)
+
+The workhorse system. When Claude invokes the `Agent` tool (renamed from `Task` in v2.1.63), it spawns an inline sub-process with its own isolated context window. Key characteristics:
+
+- The subagent runs to completion; only the final result message returns to the parent
+- Intermediate tool calls and reasoning stay encapsulated — the parent never sees them
+- Subagents **cannot spawn their own subagents** (no recursive nesting)
+- Three built-in types ship by default: `Explore` (read-only codebase search on Haiku), `Plan` (research-focused, inherits parent model), and a general-purpose agent with full tool access
+
+The `Agent` tool's input schema:
+
+```json
+{
+  "description": "string (3-5 word task description)",
+  "prompt": "string (the task instructions)",
+  "subagent_type": "string (agent definition name)",
+  "model": "sonnet | opus | haiku (optional)",
+  "run_in_background": "boolean (optional)",
+  "resume": "string (agent ID, optional)"
+}
+```
+
+### Agent Teams (experimental, unstable)
+
+A fundamentally different architecture requiring `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` and Opus 4.6+. Each "teammate" is a **separate Claude Code instance** with its own full context window. A team lead spawns teammates, assigns tasks via a shared task list stored at `~/.claude/tasks/{team-name}/`, and teammates communicate through a **file-based mailbox system** (`~/.claude/teams/{teamName}/inboxes/{agentName}.json`) using JSON message queues with file-locking for concurrent safety.
+
+Internal tools powering teams: `TeamCreateTool`, `TeammateTool`, `SendMessageTool`, `TaskCreateTool`, `TaskUpdateTool`.
+
+### Comparison
+
+| Feature | Subagents | Agent Teams |
+|---|---|---|
+| Status | **Stable**, always available | Experimental research preview |
+| Communication | Parent→child→parent only | Peer-to-peer via mailbox |
+| Context | Isolated; only final result returns | Fully independent per teammate |
+| Custom system prompts | Yes, via `.claude/agents/` markdown files | Yes, via subagent type references |
+| Per-agent model selection | Yes (`sonnet`/`opus`/`haiku`/full ID) | Yes, specified at spawn |
+| Nesting | Subagents cannot spawn subagents | Teammates cannot spawn sub-teams |
+| Token cost | Lower (1 additional context window per subagent) | **3–7× single session** (linear with team size) |
+| Session resume | Supported | Not supported |
+| Concurrent limit | Not formally documented; practical limit ~5–10 | **2–16 teammates** per team |
+
+### Coordinator Mode
+
+A third system, feature-flagged as `COORDINATOR_MODE`, also exists in the codebase. It creates an asymmetric architecture where the coordinator relinquishes all filesystem/shell tools and exclusively manages workers via `Agent` tool calls with `subagent_type: "worker"`. This pattern — a pure orchestrator with no direct execution capability — maps closely to PICE's proposed coordinator role.
+
+### Why PICE uses subagents, not Agent Teams
+
+Agent Teams' peer-to-peer messaging is unnecessary for PICE's hierarchical verification model. PICE's architecture is inherently parent→child: the Rust coordinator spawns each layer's evaluator, collects results, and makes decisions. Lateral communication between evaluators would compromise the context isolation that Stack Loops require.
+
+More critically, Agent Teams have known stability issues:
+- No session resume capability
+- Task status lag between team lead and teammates
+- Known race conditions (e.g., `getTeammateModeFromSnapshot called before capture`)
+- Token cost 3–7× higher than subagent approach
+
+These issues make Agent Teams unsuitable as a reliability layer in a production verification framework where correctness is the product.
+
+-----
+
+## 2. Custom Subagent Definition System
+
+### Markdown files with YAML frontmatter
+
+Custom subagent types are defined as Markdown files placed in `.claude/agents/` (project scope) or `~/.claude/agents/` (user scope). The frontmatter supports rich configuration:
+
+```markdown
+---
+name: security-reviewer
+description: Reviews code for security vulnerabilities
+tools: Read, Grep, Glob, Bash
+model: sonnet
+permissionMode: default
+maxTurns: 25
+skills: [security-checklist]
+mcpServers: [sentry]
+isolation: worktree
+---
+You are a security expert. Focus on OWASP top 10...
+```
+
+### Key fields for PICE
+
+**`model`** — Supports per-agent model assignment, including full model IDs like `claude-opus-4-6`. Critical for cost optimization: Haiku for simple layer checks ($0.001/pass), Sonnet for implementation review ($0.01/pass), Opus for complex coordination ($0.10/pass).
+
+**`tools`** — Restricts what each agent can do. Critical for Stack Loop evaluation agents that should be read-only: `tools: [Read, Grep, Glob]` with no `Write`, `Edit`, or `Bash`. Prevents evaluators from modifying the code they're evaluating.
+
+**`isolation: worktree`** — Gives agents their own git worktree, preventing file conflicts between concurrent agents. Useful if PICE ever adopts parallel layer execution.
+
+**`maxTurns`** — Caps agent loop iterations. Essential for cost control — prevents a confused evaluator from running indefinitely. Recommended: 25 for standard evaluation, 10 for simple checks, 50 for complex Tier 3 analysis.
+
+**`skills`** and **`mcpServers`** — Let each Arch Expert access domain-specific tools and knowledge bases. A RunPod expert could connect to a RunPod MCP server for real-time deployment status.
+
+The body of the markdown file becomes the agent's **system prompt** — enabling the dynamic specialist contexts that Arch Experts require.
+
+### Resolution priority
+
+Subagent definitions follow a priority order: managed settings (org-wide) → `--agents` CLI flag → `.claude/agents/` → `~/.claude/agents/` → plugin directories. Custom agents can override built-in agents by sharing the same name — PICE could replace the default `Explore` agent with a domain-specialized version.
+
+-----
+
+## 3. The Claude Agent SDK
+
+### Two SDKs, different licenses
+
+The Claude Agent SDK exists in two language implementations with critically different licensing:
+
+**Python SDK** (`claude-agent-sdk` on PyPI, repo `anthropics/claude-agent-sdk-python`) — Standard **MIT License**. The full permissive text granting rights to use, copy, modify, merge, publish, distribute, sublicense, and sell. Copyright 2025 Anthropic, PBC. PyPI classifies it as `OSI Approved :: MIT License`.
+
+**TypeScript SDK** (`@anthropic-ai/claude-agent-sdk` on npm, repo `anthropics/claude-agent-sdk-typescript`) — **Proprietary**. npm license field reads "SEE LICENSE IN README.md." LICENSE.md contains a single line: `© Anthropic PBC. All rights reserved. Use is subject to Anthropic's Commercial Terms of Service.`
+
+Both SDKs' README files contain identical language: use is governed by Anthropic's Commercial Terms of Service, except where a specific component's LICENSE file indicates otherwise. The Python wrapper code is MIT; the bundled CLI binary in both packages is proprietary.
+
+> **Full licensing analysis:** [SDK Licensing](sdk-licensing.md)
+
+### How the SDK works
+
+Both SDKs **spawn the Claude Code CLI as a subprocess** and communicate via **JSON-lines over stdio** — newline-delimited JSON objects streaming bidirectionally. This is structurally similar to PICE's JSON-RPC over stdio provider architecture, though the wire format differs (JSON-lines vs. JSON-RPC 2.0 framing).
+
+The TypeScript SDK's core `query()` function accepts inline agent definitions:
+
+```typescript
+import { query, AgentDefinition } from "@anthropic-ai/claude-agent-sdk";
+
+const q = query({
+  prompt: "Review the authentication module comprehensively",
+  options: {
+    allowedTools: ["Read", "Glob", "Grep", "Agent"],
+    agents: {
+      "security-reviewer": {
+        description: "Security vulnerability specialist",
+        prompt: "You are a security expert. Identify OWASP top 10 issues...",
+        tools: ["Read", "Grep", "Glob"],
+        model: "sonnet"
+      },
+      "arch-reviewer": {
+        description: "Architecture pattern specialist",
+        prompt: "You are an architecture expert. Evaluate SOLID principles...",
+        tools: ["Read", "Grep", "Glob"],
+        model: "opus"
+      }
+    }
+  }
+});
+```
+
+The Python SDK exposes an abstract `Transport` base class (`connect()`, `write()`, `read_messages()`, `close()`) that could bridge custom protocols.
+
+-----
+
+## 4. Integration Options for PICE
+
+Four options exist, ranked by feasibility for an open-source project:
+
+### Option A: TypeScript SDK directly
+
+Import `@anthropic-ai/claude-agent-sdk` in PICE's TypeScript layer. Define `AgentDefinition` objects for each PICE role. Stream `SDKMessage` objects for real-time progress. Use hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop`) for control flow.
+
+**Pros:** Richest API, typed interfaces, lifecycle hooks.
+**Cons:** Proprietary license. Bundling or depending on this package creates licensing concerns for an open-source project.
+**Verdict:** Not recommended for PICE.
+
+### Option B: CLI subprocess (recommended)
+
+Spawn `claude --bare -p` as a subprocess from Rust. Use:
+- `--output-format stream-json` for streaming JSON-lines output
+- `--agents <json>` for dynamically generated agent definitions
+- `--resume <session_id>` for session continuity
+
+**Pros:** No compile-time dependency on proprietary packages. Same integration as any program invoking any CLI tool. The TypeScript SDK itself does this internally.
+**Cons:** PICE must parse JSON-lines output directly. No typed interfaces.
+**Verdict:** Recommended. Cleanest licensing posture for open-source distribution.
+
+### Option C: Python SDK bridge
+
+Use the MIT-licensed `claude-agent-sdk` Python package. Declare as an optional dependency (`pip install pice[claude]`). The Python SDK's `Transport` base class could bridge Rust↔Claude Code over a custom protocol.
+
+**Pros:** MIT license is compatible with any open-source license. Full SDK capabilities.
+**Cons:** Requires a Python bridge layer in a Rust project. The bundled CLI binary is still proprietary.
+**Verdict:** Good alternative if PICE adds a Python layer. Declare as optional dependency.
+
+### Option D: MCP Server Mode
+
+Run `claude mcp serve` to expose Claude Code's tools via JSON-RPC 2.0 over stdio — directly compatible with PICE's architecture. However, this mode does not support agent team orchestration and doesn't pass through Claude Code's own MCP server connections.
+
+**Pros:** Native JSON-RPC 2.0 compatibility.
+**Cons:** No subagent orchestration. No agent definitions.
+**Verdict:** Too limited for PICE's needs.
+
+-----
+
+## 5. Concrete Integration Architecture
+
+### How PICE orchestrates a Stack Loop evaluation
+
+```
+PICE Rust Core (sole orchestrator)
+│
+├─ Spawn: claude --bare -p --output-format stream-json --agents <json>
+│  │
+│  ├─ Subagent: Backend evaluator
+│  │  ├─ tools: [Read, Grep, Glob]  (read-only)
+│  │  ├─ model: haiku               (cost-appropriate)
+│  │  ├─ maxTurns: 25               (cost-capped)
+│  │  └─ prompt: "Evaluate backend layer against these criteria..."
+│  │  └─ Returns: PASS/FAIL + findings (JSON)
+│  │
+│  ├─ Seam check: Backend↔Database
+│  │  └─ prompt: "Verify integration contracts..."
+│  │
+│  ├─ Subagent: Database evaluator
+│  │  └─ (same pattern, database-specific contract)
+│  │
+│  └─ Subagent: Infrastructure evaluator
+│     ├─ model: sonnet              (more complex analysis)
+│     └─ prompt: includes Arch Expert + seam criteria
+│
+├─ [Claude-side evaluation complete]
+│
+├─ Spawn: OpenAI API call (GPT adversarial evaluator)
+│  └─ Same contract criteria, independent context
+│
+├─ ADTS: Compute divergence between Claude and GPT results
+│  ├─ D < τ_low  → HALT (Tier 1)
+│  ├─ D moderate → Additional targeted passes (Tier 2)
+│  └─ D > τ_high → Escalate + VEC (Tier 3)
+│
+└─ PICE merges results → layer verdict + seam verdict + confidence
+```
+
+### How PICE spawns Arch Experts
+
+PICE constructs `AgentDefinition` objects at runtime from architecture discovery results:
+
+```
+pice plan "add user auth"
+│
+├─ Architecture Discovery
+│  └─ Scan project files → detect technologies
+│
+├─ Expert Generation
+│  └─ Construct JSON agent definitions dynamically:
+│     {
+│       "runpod-expert": {
+│         "description": "RunPod Serverless specialist",
+│         "prompt": "<dynamically generated from runpod.toml + handler.py>",
+│         "tools": ["Read", "Grep", "Glob"],
+│         "model": "sonnet"
+│       }
+│     }
+│
+├─ Pass to Claude Code via --agents <json>
+│  └─ No .claude/agents/*.md files written (ephemeral, clean)
+│
+└─ Evaluation proceeds via Stack Loop
+```
+
+The `--agents` CLI flag and SDK `agents` parameter offer agent definition without filesystem mutation — cleaner for ephemeral evaluation contexts where agents should not persist between runs.
+
+### Streaming output parsing
+
+PICE parses the JSON-lines stream from Claude Code to:
+- Track subagent progress in real-time
+- Extract intermediate results for the ADTS divergence calculation
+- Detect completion and collect final verdicts
+- Monitor token usage for cost tracking
+- Capture timing data for the metrics engine
+
+Each line is a self-contained JSON object. PICE filters for result messages, tool use events, and error conditions.
+
+### Hooks for control flow
+
+The Claude Code hook system provides programmatic control points:
+
+- **`PreToolUse`** — Before each tool invocation. PICE can use this to enforce read-only constraints.
+- **`PostToolUse`** — After each tool invocation. PICE can capture tool results for seam analysis.
+- **`SubagentStart`** — When a subagent is spawned. PICE logs start time and configuration.
+- **`SubagentStop`** — When a subagent completes. PICE captures the result and updates the Bayesian posterior.
+- **`TaskCompleted`** — When the overall task finishes. PICE triggers the ADTS decision logic.
+
+When using CLI subprocess integration (Option B), hooks are configured via `.claude/settings.json` or command-line flags rather than programmatic callbacks.
+
+-----
+
+## 6. What PICE Can and Cannot Do with Claude Code
+
+### Can do: Stack Loops
+
+Subagents deliver the isolation Stack Loops require:
+- Each spawned agent gets a fresh, isolated context window
+- Only the final result returns — intermediate reasoning stays encapsulated
+- Layer N evaluator cannot be contaminated by layer N-1 reasoning
+- `tools` restriction enables read-only evaluation
+- `maxTurns` caps runaway evaluation loops
+- `model` enables cost-appropriate model selection per layer
+
+### Can do: Arch Experts
+
+The custom agent definition system serves Arch Experts well:
+- Dynamic `AgentDefinition` objects constructed at runtime from architecture discovery
+- Per-expert system prompts with project-specific context
+- Per-expert model assignment (Haiku for simple, Sonnet for complex)
+- Per-expert tool restrictions (read-only for evaluation, full for implementation)
+- `skills` and `mcpServers` for domain-specific tools and knowledge
+
+### Cannot do: Cross-provider adversarial evaluation
+
+The Agent SDK only supports Anthropic models. There is no cross-provider support through the subagent system. PICE must orchestrate dual-model adversarial evaluation at its own layer:
+- Claude-side evaluation via Claude Code subagents
+- GPT-side evaluation via separate OpenAI API connection
+- PICE's Rust core merges results and runs ADTS/VEC algorithms
+
+This is architecturally clean — it keeps cross-provider logic independent of any single vendor's agent system. PICE is the decision engine; Claude Code is one of its execution substrates.
+
+### Cannot do: Recursive nesting
+
+Subagents cannot spawn their own subagents. All agent orchestration must happen at a single level — PICE's coordinator must be the sole parent. This is not a limitation for Stack Loops (which require flat orchestration) but would prevent, e.g., an Arch Expert from delegating sub-tasks to its own specialist agents.
+
+### Cannot do: Agent Teams for reliability
+
+Agent Teams' instability (no session resume, race conditions, task status lag) makes them unsuitable for a production verification framework. If PICE needs lateral agent communication in the future, it should implement this at its own orchestration layer.
+
+-----
+
+## 7. Community Patterns Validating PICE's Architecture
+
+### The "plan → parallelize" two-step
+
+The dominant workflow in the Claude Code community. Use plan mode first (read-only analysis), then hand the plan to agents for execution. This maps directly to Stack Loops: verify the plan at one layer before committing tokens to implementation at the next.
+
+John Kim's "30 Tips for Claude Code Agent Teams" (March 2026): "If you try to do security, performance, and test coverage all in the same context, the agent gets biased by whatever it finds first." This **bias isolation** property is exactly what Stack Loops deliver through subagent context isolation.
+
+### Domain-based agent specialization
+
+Already standard practice. PubNub's production pipeline uses three sequential agents:
+- `pm-spec` (read-heavy, produces specifications)
+- `architect-review` (produces ADRs)
+- `implementer` (gets write tools)
+
+Each with scoped tool access. The community's `awesome-claude-code-subagents` repository contains 100+ specialized agents installable as plugins. Architecture-specific agents already exist: the `feature-dev` plugin ships `code-explorer`, `code-architect`, and `code-reviewer` agents with distinct prompts and tool restrictions.
+
+### Token cost as primary constraint
+
+Community measurements show 3–7× token usage for agent teams vs. single sessions, with some workflows hitting 15× standard usage. The March 2026 "quota exhaustion crisis" (Reddit threads with 330+ comments about "20× max usage gone in 19 minutes") demonstrates that cost control is essential, not optional.
+
+### The 3–5 teammate sweet spot
+
+Community consensus on diminishing returns. John Kim: "Anything more than three feels like overkill." Official docs recommend 5–6 tasks per teammate. For PICE, this aligns with the convergence analysis: the Krogh-Vedelsby decomposition shows ensemble improvement requires diversity, not count, and the correlated evaluator ceiling caps effective independent evaluators at ~3.
+
+-----
+
+## 8. Cost Control Strategy
+
+PICE enforces cost discipline through multiple mechanisms:
+
+**Model tiering.** Match model capability to task complexity:
+- Haiku (~$0.001/pass): Simple layer checks, syntax validation, basic seam checks
+- Sonnet (~$0.01/pass): Implementation review, Arch Expert evaluation, complex seam analysis
+- Opus (~$0.10/pass): Coordination, complex Tier 3 analysis, adversarial assumption mining
+
+**ADTS-driven pass allocation.** The three-tier architecture naturally optimizes:
+- ~70% of evaluations: 2 passes (Tier 1) — $0.002 with Haiku
+- ~25% of evaluations: 3–5 passes (Tier 2) — $0.04 with Sonnet
+- ~5% of evaluations: 5+ passes (Tier 3) — $0.70 with Opus
+- Expected: ~$0.046/evaluation
+
+**`maxTurns` per subagent.** Hard cap on agent iterations. Default 25; configurable per layer.
+
+**Check value scoring.** The self-evolving loop (v0.5) automatically deprioritizes low-value, high-cost checks and promotes high-value, low-cost ones.
+
+**Budget guardrails.** Alert at 50%, 90%, 100% of per-feature evaluation budget. Configurable in `.pice/config.toml`.
+
+-----
+
+## 9. Future: Conditional Agent Teams Adoption
+
+If Claude Code's Agent Teams feature stabilizes — specifically:
+- ✅ Session resume capability
+- ✅ Race condition fixes
+- ✅ Consistent task status propagation
+- ✅ Production-grade reliability
+
+Then PICE could adopt Agent Teams for **parallel Tier 3 layer evaluation** — running multiple layer evaluators concurrently rather than sequentially. This would reduce wall-clock time for full-stack evaluation without changing the architecture (each teammate is still an isolated evaluator, results still merge at the PICE coordinator).
+
+This is a watch-and-wait item, not a planned integration. Monitor the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` feature flag and Claude Code release notes for stabilization signals.
+
+-----
+
+---
+
+## Claude Agent SDK Licensing: Analysis for Open Source Integration
+
+
+
+-----
+
+## Executive Summary
+
+The Claude Agent SDK has a complex, layered licensing structure that creates real constraints for PICE's open source distribution. The Python SDK wrapper code carries a standard MIT license, but the TypeScript SDK is proprietary, and both packages bundle the proprietary Claude Code CLI binary. PICE's recommended approach — CLI subprocess invocation — sidesteps SDK licensing concerns entirely by treating Claude Code as an external tool invoked over stdio, the same way any program invokes any CLI utility.
+
+-----
+
+## 1. The Licensing Landscape
+
+### Python SDK: MIT Licensed
+
+**Package:** `claude-agent-sdk` on PyPI
+**Repository:** `anthropics/claude-agent-sdk-python` on GitHub
+**License file:** Standard MIT License — the full permissive text granting rights to "use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies." Copyright 2025 Anthropic, PBC.
+**PyPI classifier:** `OSI Approved :: MIT License`
+
+The Python SDK's wrapper code — the Python interface layer that communicates with the Claude Code CLI — is genuinely open source under MIT. PICE can freely depend on, modify, and redistribute this code.
+
+**Historical note:** The predecessor package `claude-code-sdk` (now deprecated, last version 0.0.25) was also MIT-licensed. When Anthropic rebranded to `claude-agent-sdk`, the Python wrapper retained MIT.
+
+### TypeScript SDK: Proprietary
+
+**Package:** `@anthropic-ai/claude-agent-sdk` on npm
+**Repository:** `anthropics/claude-agent-sdk-typescript` on GitHub
+**License field (npm):** `SEE LICENSE IN README.md` — a non-standard, non-SPDX identifier
+**LICENSE.md contents:** Single line, ~150 bytes: `© Anthropic PBC. All rights reserved. Use is subject to Anthropic's Commercial Terms of Service.`
+**GitHub license badge:** None displayed (GitHub does not recognize the license as open source)
+
+Third-party documentation from Promptfoo explicitly describes it as a "proprietary license." The TypeScript SDK is not open source.
+
+### Claude Code CLI Binary: Proprietary
+
+**Package:** `@anthropic-ai/claude-code` on npm
+**LICENSE.md:** `© Anthropic PBC. All rights reserved. Use is subject to Anthropic's Commercial Terms of Service.`
+**Package size:** ~45.3 MB (largely the bundled binary)
+
+Despite its public GitHub repository (94,700+ stars as of April 2026), Claude Code has never been open source. The repository is source-available for inspection but all rights are reserved.
+
+### The bundled binary problem
+
+Both SDK packages automatically include the Claude Code CLI binary within their distributions:
+- The Python SDK ships platform-specific wheels containing the binary (Linux x86_64, Linux aarch64, macOS x86_64, macOS ARM64)
+- The TypeScript package's 45.3 MB size is largely the bundled binary
+
+This creates a layered licensing situation:
+- **Python wrapper code:** MIT — freely redistributable
+- **Bundled CLI binary inside the Python package:** Proprietary — cannot be extracted and redistributed independently
+- **TypeScript SDK as a whole:** Proprietary
+
+### The README disclaimer
+
+Both SDKs' README files contain identical language in their "License and terms" sections:
+
+> *Use of this SDK is governed by Anthropic's Commercial Terms of Service, including when you use it to power products and services that you make available to your own customers and end users, except to the extent a specific component or dependency is covered by a different license as indicated in that component's LICENSE file.*
+
+This creates a dual layer: the Python wrapper code is MIT (as indicated by its LICENSE file), but using the SDK as a whole — including the bundled CLI binary — triggers the Commercial Terms of Service.
+
+-----
+
+## 2. Anthropic's Enforcement Posture
+
+### DMCA enforcement
+
+Anthropic has actively defended Claude Code's proprietary status. In April 2025, the company filed **DMCA takedown notices** against developers who reverse-engineered and deobfuscated the CLI's source code. TechCrunch reported on the incident, noting the tension between Claude Code's public GitHub presence and its proprietary license.
+
+### The March 2026 source leak
+
+Claude Code's entire source code (~512,000 lines across 1,900 files) was accidentally leaked through an npm packaging error that included unstripped source maps. The code was forked over **41,500 times** before Anthropic issued takedowns. Anthropic's official statement: "a release packaging issue caused by human error, not a security breach."
+
+Critically, this leak did not change the proprietary status. Using, copying, or redistributing that code remains a license violation regardless of its accidental public availability. Community projects built from the leaked code (such as `claw-code` by Sigrid Jin, which reached 30,000 stars) operate in legally uncertain territory.
+
+### Open source licensing requests
+
+GitHub issue #22002 on the Claude Code repository is a feature request to open-source the CLI under a permissive license (Apache 2.0 or MIT). It references widespread user confusion (issues #333, #1645, #1789, #19073) about the repository being "open source" when it is not. In March 2025, the Claude Code team stated they **"weren't ready to be good public stewards yet."**
+
+GitHub issue #8517 flagged that Claude Code binaries contain Apache-2.0-licensed open source dependencies without proper attribution — a potential compliance issue for Anthropic itself.
+
+-----
+
+## 3. Anthropic's Commercial Terms of Service
+
+### Key provisions affecting PICE
+
+**API key requirement.** Anthropic explicitly prohibits third-party developers from offering `claude.ai` login or routing requests through Free, Pro, or Max plan credentials. PICE users must authenticate with their own API keys through Claude Console or a supported cloud provider (AWS Bedrock, Google Cloud Vertex AI).
+
+**Branding restrictions.** Partners may use:
+- ✅ "Claude Agent" or "&#123;YourAgentName&#125; Powered by Claude"
+- ❌ "Claude Code" or "Claude Code Agent" branding
+- ❌ Claude Code-branded ASCII art
+
+PICE must not present itself as a Claude Code product or use Anthropic's trademarks.
+
+**Usage Policy compliance.** All users must comply with Anthropic's Usage Policy, which prohibits:
+- Model scraping or distillation
+- Jailbreaking or bypassing safety guardrails
+- Using API outputs to train competing AI models without authorization
+
+PICE's integration must not facilitate any of these uses.
+
+**Copyright indemnity.** Anthropic defends commercial customers against copyright infringement claims for authorized API use. This protection applies to PICE users who access Claude through the API with their own keys.
+
+**Data collection.** The SDK collects usage telemetry including code acceptance/rejection rates, conversation data, and user feedback. PICE's documentation should disclose this to users.
+
+### Claude for Open Source program
+
+Anthropic runs a "Claude for Open Source" program offering eligible OSS maintainers free Claude Max access for six months. This concerns *using* Claude as a tool, not open-sourcing Claude's own code. PICE maintainers could apply for this program to support development.
+
+-----
+
+## 4. PICE's Recommended Approach
+
+### Option B: CLI subprocess (chosen)
+
+PICE spawns `claude --bare -p` as a subprocess from Rust, communicating via JSON-lines over stdio. This is the same mechanism the TypeScript SDK uses internally, but without taking a dependency on the SDK package.
+
+**Why this works for open source:**
+
+1. **No compile-time dependency on proprietary code.** PICE's codebase contains zero lines of Anthropic-proprietary code. The integration is purely a runtime invocation of an external CLI tool — identical in legal character to a script that invokes `git`, `docker`, or `curl`.
+
+2. **No redistribution of proprietary binaries.** PICE does not ship the Claude Code CLI. Users install it independently via `npm install -g @anthropic-ai/claude-code`, accepting Anthropic's terms in the process.
+
+3. **PICE works without Claude Code.** The integration is an optional provider. The core PICE framework — Stack Loops, seam verification, adaptive algorithms, metrics engine — functions independently. Claude Code is one of potentially many execution substrates.
+
+4. **Clean license boundary.** PICE's license (MIT or Apache 2.0) applies to PICE's code. Anthropic's Commercial Terms apply to Claude Code's code. The boundary is clear: they interact over stdio, not through linked libraries.
+
+### If PICE later wants an SDK dependency
+
+The Python SDK (`claude-agent-sdk`) is the safer choice:
+- Its wrapper code is MIT-licensed — compatible with any open source license
+- Declare as an **optional dependency** (e.g., `pip install pice[claude]`)
+- The bundled CLI binary remains proprietary, but users accept those terms when they install the package
+- The core framework stays free of proprietary entanglements
+
+The TypeScript SDK should be avoided for any direct dependency due to its proprietary license.
+
+### Documentation requirements
+
+PICE's documentation must clearly state:
+
+1. Using PICE's Claude Code integration requires a separate Claude Code installation and Anthropic API key
+2. Claude Code is proprietary software governed by Anthropic's Commercial Terms of Service
+3. Users are responsible for compliance with Anthropic's Usage Policy
+4. The Claude Code CLI collects usage telemetry
+5. PICE is not affiliated with, endorsed by, or a product of Anthropic
+
+-----
+
+## 5. License Compatibility Matrix
+
+| PICE License | Python SDK (MIT) | TypeScript SDK (Proprietary) | CLI Binary (Proprietary) | CLI Subprocess |
+|---|---|---|---|---|
+| MIT | ✅ Compatible as optional dep | ❌ Cannot bundle/require | ❌ Cannot redistribute | ✅ No license conflict |
+| Apache 2.0 | ✅ Compatible as optional dep | ❌ Cannot bundle/require | ❌ Cannot redistribute | ✅ No license conflict |
+| GPL v3 | ✅ Compatible (MIT is GPL-compat) | ❌ Cannot link | ❌ Cannot link | ✅ Subprocess = separate program |
+| AGPL v3 | ✅ Compatible | ❌ Cannot link | ❌ Cannot link | ✅ Subprocess = separate program |
+
+The CLI subprocess approach (Option B) is license-compatible with every open source license because subprocess invocation does not create a derivative work. This is the same legal principle that allows GPL software to invoke proprietary compilers, or MIT software to invoke proprietary databases.
+
+-----
+
+## 6. Risk Assessment
+
+### Low risk
+
+- **CLI subprocess invocation.** Well-established legal principle. No court has held that invoking a program via its public CLI creates a license obligation on the invoking program.
+- **Python SDK as optional dependency.** MIT license is maximally permissive. The proprietary binary is installed by the user, not redistributed by PICE.
+
+### Medium risk
+
+- **API changes.** Anthropic could change the CLI's `--bare`, `--output-format`, or `--agents` flags without notice, breaking PICE's integration. Mitigation: pin to known-good CLI versions, implement graceful degradation.
+- **Terms of Service changes.** Anthropic could modify its Commercial Terms to restrict CLI subprocess invocation by third-party tools. Unlikely (this would break the entire ecosystem) but theoretically possible.
+
+### Low but notable risk
+
+- **Branding confusion.** Users might perceive PICE as a Claude Code product. Mitigation: clear branding separation, explicit disclaimers, no Anthropic trademarks in PICE materials.
+- **Telemetry concerns.** Users may not realize the Claude Code CLI collects usage data when PICE invokes it. Mitigation: document in PICE's privacy/data section.
+
+### Mitigated risk
+
+- **Proprietary license contamination.** By using CLI subprocess (not SDK dependency), PICE's codebase remains entirely under its own license. No proprietary code is compiled into, linked with, or distributed alongside PICE.
+
+-----
+
+## 7. Comparison with Similar Open Source Projects
+
+Many successful open source projects integrate with proprietary tools via CLI subprocess without licensing issues:
+
+| Project | Proprietary tool | Integration method | License conflict? |
+|---|---|---|---|
+| Terraform | AWS CLI, Azure CLI, GCP CLI | CLI subprocess + API | No |
+| Docker Compose | Docker Engine | CLI subprocess | No |
+| Homebrew | macOS system tools | CLI subprocess | No |
+| VS Code extensions | VS Code (MIT, but MS-proprietary builds) | Extension API | Debated, generally no |
+| **PICE** | **Claude Code CLI** | **CLI subprocess** | **No** |
+
+PICE's approach follows the same well-trodden pattern: an open source orchestrator that invokes proprietary tools as external dependencies, with users responsible for installing and licensing those tools independently.
+
+-----
+
+## 8. Summary of Recommendations
+
+1. **Use CLI subprocess integration (Option B).** No compile-time dependency on proprietary code. Clean license boundary. Maximum open source compatibility.
+
+2. **Make Claude Code optional.** PICE's core framework must work without Claude Code installed. The integration activates when the CLI is available.
+
+3. **Users bring their own installation and API keys.** PICE never distributes the CLI binary. Users install independently and accept Anthropic's terms.
+
+4. **If an SDK dependency is needed later, use Python.** MIT-licensed wrapper is compatible with any PICE license. Declare as optional.
+
+5. **Avoid the TypeScript SDK.** Proprietary license creates redistribution and bundling concerns for open source.
+
+6. **Maintain clear branding separation.** No Anthropic trademarks. Explicit disclaimer that PICE is independent.
+
+7. **Document the data implications.** Users should know the CLI collects telemetry when PICE invokes it.
+
+8. **Consider applying for Claude for Open Source.** Free Claude Max access for PICE maintainers could support development without licensing concerns.
+
+-----
+
+---
+
+## Stack Loops v0.2: Critical Gap Analysis
+
+
+
+-----
+
+## Executive Summary
+
+A systematic stress-test of the Stack Loops v0.2 design surfaced 37 distinct gaps across eight dimensions, with twelve classified as production-blocking. All twelve have been addressed as solved design decisions in the roadmap. This document provides the full analysis behind those decisions — the research, competitive intelligence, and reasoning that drove each resolution — serving as the technical record for why v0.2's architecture takes the shape it does.
+
+The competitive landscape validates the thesis: no existing tool implements per-layer AI verification as of April 2026. But well-funded competitors — Qodo ($120M raised), SonarSource (AC/DC framework), Augment Code (Intent system) — could pivot within months. The market context creates urgency: 41% of all code is AI-generated, yet 96% of developers don't trust its accuracy.
+
+-----
+
+## 1. Layer Detection and Configuration
+
+### The problem
+
+No existing tool defines "layers" the way Stack Loops needs them:
+
+- **Monorepo tools** (Nx, Turborepo, Bazel) organize by *projects* and *workspaces*, not architectural tiers
+- **Package scanners** (Snyk, Dependabot, Renovate) detect *manifest files* and *dependency managers* — Renovate supports 100+ package managers across 30+ languages but produces dependency graphs, not layer maps
+- **Framework detectors** (Heroku buildpacks, Nixpacks, Vercel) identify *runtimes* — Vercel detects 40+ frameworks but maps them to deployment targets, not architectural layers
+- **Language detectors** (GitHub Linguist) identify *programming languages*, not how they're architecturally organized
+
+None of these produce the "backend layer, database layer, API layer" decomposition that Stack Loops requires as input.
+
+### Sub-gaps identified
+
+**Gap 1.1: Fullstack-in-one frameworks.** Next.js, Remix, SvelteKit, and Nuxt combine frontend, API routes, and database access in a single codebase. A Next.js `pages/api/users.ts` importing `@prisma/client` spans three layers simultaneously. Layer boundaries are code paths, not directories.
+
+**Gap 1.2: Monorepos with shared code.** In a 15-microservice monorepo, each service is its own stack. But shared libraries (auth utilities, TypeScript types, database models) are consumed by multiple stacks' layers and owned by none. Service-to-service dependencies create cross-stack seams distinct from within-stack layer seams.
+
+**Gap 1.3: Polyrepos.** When the frontend is in one repository and the API in another, scanning a single repo reveals only part of the stack. Cross-repo layer detection is fundamentally unsolved. Nx's "synthetic monorepo" (cross-repo graphs via Nx Cloud) is experimental and requires explicit configuration.
+
+**Gap 1.4: Dynamic dependencies.** Database connections via environment variables, service communication through service meshes (Istio, Linkerd), and message queues referenced only by connection strings — these seams exist at configuration time, not in code.
+
+**Gap 1.5: Non-standard project structures.** Not every project follows conventional directory layouts. A Go project with everything in the root directory, a Python project with non-standard package names, or a legacy project with decades of accumulated structure all defeat convention-based heuristics.
+
+### Resolution
+
+PICE uses a **six-level heuristic detection stack** with mandatory manual override:
+
+1. Manifest files → runtime, framework, dependencies
+2. Directory patterns → conventional locations (app/, api/, infra/, deploy/)
+3. Framework signals → framework-specific patterns (Next.js app/ routes, Prisma schema)
+4. Config files → Docker, Terraform, CI/CD workflows
+5. Import graph → static analysis of which files depend on which
+6. Override file → `.pice/layers.toml` (always wins)
+
+Fullstack frameworks use **file-level layer tagging**: files belong to multiple layers, each evaluated through a different contract lens. Monorepos are treated as multiple stacks with cross-stack seam checks on shared dependencies. Polyrepos are the acknowledged limitation — deferred to v0.4's distributed trace analysis for cross-repo seam inference, with `.pice/external-contracts.toml` for manual declaration in the interim.
+
+Auto-detection generates a proposed `layers.toml` on `pice init`. The developer reviews, adjusts, and commits. This balances automation with human oversight — the human makes the architectural judgment call, PICE automates the verification that follows.
+
+-----
+
+## 2. Incremental Re-Evaluation
+
+### The problem
+
+When a layer fails and the developer fixes it, what happens to other layers?
+
+- **Downstream invalidation** (standard): if the API layer's fix changes its response format, the frontend layer (which was verified against the old format) needs re-evaluation.
+- **Upstream invalidation** (non-standard): if an infrastructure fix changes the database endpoint, the backend layer (which was verified assuming the old endpoint) needs re-evaluation.
+
+Standard build systems — Nx, Turborepo, Bazel — all assume **unidirectional dependency flow**. Changes propagate downstream only. No production system handles reverse propagation.
+
+### Research: how build systems handle this
+
+**Bazel's change pruning** is the strongest existing primitive. When a dirty build target is rebuilt and its output is byte-identical to the previous version, Bazel stops propagating invalidation. This prevents unnecessary downstream rebuilds when internal changes don't affect the interface. Bazel's Skyframe evaluation framework models all build artifacts as nodes in a dependency graph with automatic invalidation tracking.
+
+**Adapton** (PLDI 2014) introduces demand-driven change propagation — only recompute results when demanded by an observer, not eagerly. This avoids unnecessary computation when downstream layers haven't been queried yet.
+
+**The pluto build system** (OOPSLA 2015) proved both soundness and optimality for incremental rebuilds with custom "stamps." Different build targets can use different staleness checks — schema hash for database layers, OpenAPI spec hash for API layers, content hash for code layers. This is directly applicable to Stack Loops, where each layer type has a natural "contract hash" that determines whether its interface has changed.
+
+### Resolution
+
+PICE implements a **bidirectional dependency graph with contract-based change pruning**:
+
+- Forward edges model standard dependency flow (database → API → frontend)
+- Each layer's verification is linked to the contract versions it consumes and produces
+- When a fix changes a layer's produced contract (different contract hash), forward edges trigger downstream re-verification
+- When a fix changes a layer's consumed contract (upstream layer's output changed), backward edges trigger upstream re-verification
+- When a fix doesn't change any contracts (same hash), no propagation occurs — the most common case
+
+The verification manifest tracks which contract version each layer was verified against. After a fix, PICE compares the new contract hash against the stored hash. In practice, most fixes don't change contracts — they fix implementation bugs that don't alter the interface. Contract-based pruning skips re-verification in the majority of cases.
+
+-----
+
+## 3. CI/CD Integration and Timing
+
+### The problem
+
+Sequential verification of all layers takes too long for CI/CD:
+
+- 10 layers × 2–4 minutes each = 20–40 minutes sequential
+- Developers context-switch away from CI after **6–7 minutes** (Honeycomb Engineering research)
+- Each additional 5 minutes of CI time increases average time-to-merge by **over an hour** (Graphite data)
+- Kent Beck's guidance: builds exceeding 10 minutes are "used much less often"
+
+### Research: what's the acceptable ceiling?
+
+Graphite's research across thousands of engineering teams found that CI time is the single strongest predictor of merge velocity. Their data shows:
+
+- Under 5 minutes: optimal — developers stay engaged
+- 5–10 minutes: acceptable — some context-switching but recoverable
+- 10–20 minutes: degraded — significant productivity loss
+- Over 20 minutes: broken — developers batch PRs, skip CI, or find workarounds
+
+For AI-assisted CI specifically, a USENIX case study (September 2025) from Wiser Solutions documented that AI review steps need automatic disabling when responses exceed 30 seconds or costs exceed thresholds. Token consumption is substantial: Claude Code's simple "edit this file" command consumes 50,000–150,000 tokens per API call.
+
+### Integration patterns
+
+**GitHub App** (CodeRabbit/Qodo model): Zero per-repo config, webhook-triggered, posts inline PR comments. Best for adoption friction but requires data to leave the developer's environment.
+
+**GitHub Action / CI step**: Full control, runs in developer's environment, but consumes CI minutes and requires secret management for AI API keys.
+
+**Reusable workflows**: Each layer's verification becomes a modular, conditionally invoked workflow — the most architecturally clean option for layer-by-layer checks. GitHub Actions' `paths` filter + `needs` dependencies enable layer-aware conditional execution.
+
+### Resolution
+
+Four strategies keep total time under 10 minutes:
+
+1. **Path-based filtering** (biggest impact): only verify layers whose files changed. `pice affected` computes the changed layer set from the git diff. A CSS-only change might verify only 2 of 7 layers.
+
+2. **Parallel layer execution**: independent layers run concurrently. The dependency graph determines parallelization opportunities. Backend and frontend layers (no dependency edge) run simultaneously.
+
+3. **Tiered model routing**: Haiku (~100ms response) for simple checks. Sonnet (~2s) for standard evaluation. Opus (~5s) only for Tier 3. Most Tier 1 evaluations complete in under 30 seconds per layer.
+
+4. **Prompt caching**: Anthropic's prompt caching reduces costs by 90% and latency by 85% on repeated context. Layer contracts and system prompts are cached across runs — only changed code is new context.
+
+Additionally, the Anthropic **Batch API** (50% cost reduction, 24-hour processing window) is available for non-interactive CI runs where immediate feedback isn't required — e.g., nightly full-stack evaluations.
+
+**Cost circuit breakers** are implemented at three levels: per-layer (abort if single layer exceeds $X), per-evaluation (abort if total exceeds $Y), and per-billing-period (alert and optionally halt if monthly spend exceeds $Z). These are configured in `.pice/config.toml` and enforced by the Rust coordinator.
+
+-----
+
+## 4. Feature Flags and Deployment Strategies
+
+### The problem: feature flags
+
+With N boolean feature flags, a single layer exhibits 2^N possible behaviors. LaunchDarkly's documentation calls exhaustive testing of all combinations "clearly untenable." Martin Fowler's taxonomy distinguishes four flag types with different lifecycles and testing requirements:
+
+- **Release toggles**: temporary, gate incomplete features
+- **Experiment toggles**: A/B tests, need both variants verified
+- **Ops toggles**: runtime circuit breakers, need failure-path verification
+- **Permission toggles**: user-level feature access, need authorization verification
+
+### The problem: deployment transitions
+
+**Canary deployments** create two concurrent versions of a layer with traffic splitting. Both versions must satisfy contracts with the same upstream and downstream layers, but may expose different API schemas, performance characteristics, or feature sets. The "seam" becomes two parallel seams active simultaneously.
+
+**Blue-green deployments** require database migrations compatible with both API versions during the transition window. The database layer's contract must simultaneously satisfy two different consumers — a constraint standard contract models don't express.
+
+**Rolling deployments** create a window where N-1 instances run the old version and 1 instance runs the new version, potentially with different contract behaviors.
+
+### Resolution: feature flags
+
+Contracts are indexed by flag state with **pairwise coverage** rather than exhaustive testing:
+
+```toml
+[feature_flags]
+new_auth_flow = { affects_layers = ["api", "frontend"], default = false }
+```
+
+Each flag combination is tested with at least one other flag variation, covering interaction effects without combinatorial explosion. The pairwise testing strategy reduces 2^N combinations to approximately N² — from 1,024 tests for 10 flags to ~100.
+
+Contracts declare which flags affect which layers. Only affected layers are re-evaluated when a flag state changes. Flag-agnostic contract criteria (structural checks, security requirements) run regardless of flag state.
+
+### Resolution: deployment transitions
+
+PICE models deployment transitions with **version-aware seams**:
+
+- Database migrations use the expand-and-contract pattern: schema changes are decomposed into additive (expand) and subtractive (contract) phases, each independently verifiable
+- `pice evaluate --transition` explicitly tests both the current production version and the incoming version against shared contracts
+- Seam compatibility checks verify that the old and new versions can coexist during the transition window
+- After full cutover, transition-specific checks are automatically retired
+
+-----
+
+## 5. Infrastructure-as-Code Modeling
+
+### The problem
+
+The roadmap initially treated infrastructure as a peer layer alongside backend, database, and API. IaC is categorically different:
+
+- It **creates** other layers (you can't have a database layer without IaC provisioning the database)
+- It **defines** the seams (network policies and IAM roles determine whether API can reach the database)
+- It **parameterizes** contracts (environment-specific configs change which contracts apply)
+- Its verification is **slow** (terraform plan takes minutes), **expensive** (real cloud resources cost money), **non-deterministic** (cloud API availability varies), and **stateful** (must verify state over time)
+
+### Resolution
+
+IaC is modeled as a **meta-layer** with `type = "meta"` in `.pice/layers.toml`. Meta-layers have distinct semantics:
+
+- **Provisioning seams** (IaC → application) are separated from **runtime seams** (API → database). Provisioning seams verify that infrastructure outputs match application inputs. Runtime seams verify operational behavior.
+
+- **Tiered IaC verification** respects the cost/time constraints:
+  - Tier 1: Static analysis only (terraform validate, tfsec, checkov) — seconds
+  - Tier 2: AI evaluation of config correctness — minutes
+  - Tier 3: Plan-based verification (terraform plan → evaluate diff) — minutes
+  - Actual deployment testing is out of scope — that's staging
+
+- **Multi-cloud** gets a two-dimensional model: layers × cloud providers. A single API layer on AWS and Azure has different IAM, networking, and failure modes. Contracts at each intersection are evaluated independently.
+
+The IaC testing pyramid is well-established (Terraform's native test framework since 1.7, Terratest, Checkov, tfsec). PICE integrates with these tools rather than replacing them — the meta-layer contract can reference external tool outputs as verification evidence.
+
+-----
+
+## 6. Cross-Layer Contract Format
+
+### The problem
+
+Every existing contract format covers exactly one layer:
+
+| Format | Layer coverage |
+|---|---|
+| OpenAPI | REST APIs |
+| AsyncAPI | Event-driven interfaces |
+| Protobuf / gRPC | RPC interfaces |
+| Prisma / Drizzle schemas | Database |
+| GraphQL SDL | Query interfaces |
+| Terraform HCL | Infrastructure |
+
+No format spans UI → API → Service → Data with consistent versioning and compatibility semantics.
+
+### Research: format selection
+
+**YAML** is the recommended primary format, validated by the precedent of OpenAPI, AsyncAPI, Kubernetes, and GitHub Actions:
+
+- JSON lacks comments — disqualifying for developer-authored contracts
+- TOML fails at deep nesting beyond 3 levels
+- Markdown with structured sections requires custom parsers
+- YAML with JSON Schema validation provides structure + readability + tooling
+
+A hybrid approach — YAML for declaration with an optional TypeScript SDK for programmatic creation (following Spring Cloud Contract's Groovy DSL + YAML dual support) — provides the best balance.
+
+### Contract versioning
+
+Contracts adopt **Confluent Schema Registry's compatibility modes** applied to layer contracts:
+
+- **BACKWARD**: new contract can read data produced by old contract
+- **FORWARD**: old contract can read data produced by new contract
+- **FULL**: both backward and forward compatible
+- **TRANSITIVE** variants: compatibility across all historical versions, not just adjacent
+
+Semantic versioning with explicit compatibility declarations enables automated checking. The expand-and-contract pattern for breaking changes provides verifiable intermediate states.
+
+### Resolution
+
+PICE defines a unified contract format in YAML with JSON Schema validation. The `failure_category` field links each check to the twelve empirically validated failure categories from the seam blindspot research. Contracts support environment-specific sections, feature flag indexing, and metadata tracking for auto-generation and manual refinement. See the roadmap's "Cross-layer contract format" section for the full schema.
+
+Specmatic (using OpenAPI + AsyncAPI + gRPC proto as executable contracts, with an MCP server for Claude Code integration) is the closest existing tool. But Specmatic covers no database layer, no UI component contracts, no concept of chained layer-to-layer contracts, and no seam verification between layers. PICE's contract format fills this gap.
+
+-----
+
+## 7. Verification System Failure Modes
+
+### Gap 7.1: Dual-provider outage
+
+StatusGator has tracked 1,098+ Anthropic outages since June 2024. OpenAI has parallel outage history. Both providers experienced significant disruptions in the same weeks of March 2026. If Claude Code is the primary verifier and OpenAI the adversarial evaluator, a correlated outage blocks all verification.
+
+**Resolution:** Four-tier graceful degradation:
+- Tier A: Full AI verification (normal)
+- Tier B: Single-model (one provider down)
+- Tier C: Cached results for unchanged layers + static checks (both down)
+- Tier D: Skip with prominent warning (emergency bypass)
+
+Best practice from LLM reliability engineering: implement circuit breakers, timeouts, and retry budgets per provider. Graceful degradation is a well-established pattern — every major LLM-powered system implements it.
+
+### Gap 7.2: Model version drift
+
+Apple's MUSCLE research found that when pretrained LLM base models are updated, fine-tuned adapters experience "negative flips" — previously correct instances become incorrect. Verification prompts tuned for Claude Sonnet 4.5 may produce different results on 4.6.
+
+**Resolution:** Three mechanisms:
+1. Pinned model versions in config (e.g., `claude-sonnet-4-20250514`)
+2. Golden evaluation regression suite (`.pice/golden-evaluations/`)
+3. Consensus voting across old and new model versions for critical checks
+
+### Gap 7.3: Token budget exhaustion
+
+Anthropic's rate limits use a token bucket algorithm with per-minute quotas. A 500-file monorepo can exceed 500K tokens per request. Tier 1 API limits are approximately 30K input tokens per minute for Sonnet.
+
+**Resolution:**
+- Prompt caching (cached tokens don't count toward input TPM limits)
+- Fresh conversations per layer (avoid context accumulation)
+- Batch API (50% cost reduction, 24-hour window for non-interactive CI)
+- Per-layer token budget limits in config
+- Automatic retry with exponential backoff on rate limit errors
+
+### Gap 7.4: Crash recovery
+
+If PICE verifies 10 layers and crashes on layer 7, it must not re-verify layers 1–6.
+
+**Resolution:** Verification manifest — a JSON checkpoint file recording completed layers, their contract hashes, model versions, and confidence scores. On resume, PICE reads the manifest, skips completed layers whose content hashes haven't changed, and continues from the last incomplete layer. Each layer verification is idempotent.
+
+-----
+
+## 8. Developer Experience and Onboarding
+
+### The problem
+
+Survey data from 202 open source developers shows:
+- **34.2%** abandon a tool if setup is painful — the #1 abandonment trigger
+- **17.3%** abandon due to bad documentation
+- **12.4%** abandon due to missing features
+
+The benchmark: one-command install or under 5 minutes of manual setup.
+
+### Research: successful adoption patterns
+
+The TypeScript adoption playbook is the template: start permissive (`allowJs` + `checkJs`), tighten gradually, support running alongside existing tools.
+
+ESLint's recommended configs start loose and allow incremental strictness. Prettier adopts an opinionated-defaults-with-overrides model. Both achieve wide adoption by avoiding the "wall of errors on first run" problem.
+
+Google's error message guidelines, validated by Stripe's API error UX and CLI best practices from 30+ production developer tools, converge on a rule: every error must answer "What went wrong?" AND "How do I fix it?"
+
+### Resolution
+
+**`pice init` (&lt;5 minutes):** Auto-detects layers, generates `.pice/layers.toml` and `.pice/contracts/`, outputs a summary for human review. No manual configuration required to start.
+
+**Baseline mode:** First evaluation runs with `--baseline` flag — reports findings without blocking. Establishes the current state of the codebase. Findings go to `.pice/baseline/` for gradual resolution. The team enables enforcement layer by layer as baseline findings are addressed.
+
+**Actionable diagnostics:** Every failed check includes:
+- The layer and check that failed
+- The specific contract criterion violated
+- The code location (file, line, function)
+- A suggested fix (AI-generated)
+- The confidence level
+- Whether this is a seam check (and which boundary pair)
+
+Low-confidence findings are explicitly marked — presenting uncertain findings as definitive erodes trust faster than not flagging them at all.
+
+**Progressive strictness:** Teams start with Tier 1 (affected layers only, 2 passes, single evaluator) and graduate to Tier 2 and Tier 3 as confidence in the system grows. The `.pice/config.toml` makes tier selection explicit and auditable.
+
+-----
+
+## 9. Competitive Landscape (April 2026)
+
+### No one ships per-layer AI verification today
+
+This is validated across every competitor analyzed:
+
+**Qodo** (formerly CodiumAI) — Raised $70M Series B in March 2026 for "code integrity." Generates tests and does "system-wide impact analysis" but does not decompose by architectural layer. Positions itself as "quality-first code gen" rather than post-generation verification. Could pivot toward layer awareness with their funding.
+
+**SonarSource** — Introduced the "Agent Centric Development Cycle" (AC/DC) framework: Guide → Generate → Verify → Solve. The most conceptually similar to PICE — verification as a first-class concern in the AI coding loop. But SonarQube verifies by *code quality dimensions* (bugs, vulnerabilities, code smells), not *architectural layers*. No seam concept.
+
+**IronBee** — "The Verification and Intelligence Layer for AI Coding Agents." Uses runtime tracing through 7 sequential verification phases. The closest structural analog to Stack Loops but focuses on runtime behavior verification rather than architectural seam verification. Pre-seed stage.
+
+**Opslane** — "The Verification Layer for AI Code." Deploys PR branches in isolated containers for runtime testing. No per-layer decomposition, no seam concept.
+
+**CodeRabbit** — AI code review that posts inline PR comments. Context-aware across the PR but no architectural layer model. Verifies code quality, not deployment readiness.
+
+**Augment Code** — "Intent" system that evaluates whether generated code matches developer intent. Novel concept but operates at the intent→implementation gap, not the implementation→deployment gap.
+
+### The market context
+
+- **41% of all code in 2026 is AI-generated** (Anthropic, GitHub data)
+- **96% of developers don't trust AI-generated code accuracy** (survey data)
+- AI PRs contain **1.7× more issues** than human-written PRs (CodeRabbit)
+- Technical debt increased **30–41%** after AI tool adoption (GitClear/multiple studies)
+- EU AI Act becomes fully applicable for high-risk systems **August 2026**
+- Werner Vogels coined **"verification debt"** as the defining challenge
+
+Every major player — Anthropic, Sonar, Qodo, Augment — now frames verification as the critical bottleneck. The phrase has entered mainstream DevOps vocabulary. But nobody has built per-layer, seam-aware verification. PICE occupies this position alone.
+
+### The window
+
+Claude Code's infrastructure — skills framework, hooks, dispatch, and the `/batch` skill that decomposes work into 5–30 independent units — makes it the ideal substrate for Stack Loops. But Anthropic could add native layer-aware verification features at any time.
+
+The recommendation: ship quickly, establish the conceptual vocabulary ("layers," "seams," "contracts," "Stack Loop"), and capture mindshare before well-funded players extend their verification capabilities.
+
+-----
+
+## 10. Summary: All Twelve Production-Breaking Gaps Resolved
+
+| # | Gap | Resolution | Roadmap section |
+|---|---|---|---|
+| 1 | Layer detection has no foundation | Six-level heuristic + `.pice/layers.toml` override + `pice init` | Layer detection |
+| 2 | Upstream invalidation unmodeled | Bidirectional graph + contract-hash change pruning | Incremental re-evaluation |
+| 3 | Sequential timing is fatal | Path filtering + parallel execution + tiered routing + prompt caching | CI/CD integration |
+| 4 | Feature flag combinatorial explosion | Flag-state-indexed contracts + pairwise coverage | Environment-specific contracts |
+| 5 | Canary/blue-green breaks model | Version-aware seams + `--transition` flag + expand-and-contract | Deployment transitions |
+| 6 | IaC is meta-layer, not peer | `type = "meta"` + provisioning seams + tiered IaC checks | Infrastructure-as-code |
+| 7 | No crash recovery | Verification manifest (JSON checkpoint) + content-hash resume | Crash recovery |
+| 8 | Dual-provider outage | Four-tier graceful degradation + circuit breakers | Resilience |
+| 9 | Model version drift | Pinned versions + golden regression suite + consensus voting | Resilience |
+| 10 | No cross-layer contract format | YAML + JSON Schema + failure_category taxonomy link | Contract format |
+| 11 | Environment-specific variance | Invariant vs. environment-specific contract sections | Environment-specific contracts |
+| 12 | Onboarding takes too long | `pice init` + baseline mode + actionable diagnostics + progressive strictness | Onboarding |
+
+The remaining 25 non-blocking gaps (from the original 37) are categorized as enhancements, optimizations, or edge cases addressable in minor releases. None would prevent a team from adopting and benefiting from Stack Loops on a standard project.
+
+-----
