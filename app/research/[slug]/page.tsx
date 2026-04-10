@@ -71,6 +71,14 @@ export default async function ResearchPage({
           {meta.description}
         </p>
 
+        {(meta.author || meta.date) && (
+          <div className="flex items-center gap-3 text-xs text-[var(--muted)] mt-3">
+            {meta.author && <span>{meta.author}</span>}
+            {meta.author && meta.date && <span>·</span>}
+            {meta.date && <time className="font-mono">{meta.date}</time>}
+          </div>
+        )}
+
       </header>
 
       <hr className="border-[var(--border)] border-t-[0.5px]" />

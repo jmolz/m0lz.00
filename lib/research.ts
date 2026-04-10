@@ -11,6 +11,8 @@ export interface ResearchFrontmatter {
   title: string
   description: string
   project: string
+  author?: string
+  date?: string
   sections: ResearchSection[]
 }
 
