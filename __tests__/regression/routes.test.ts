@@ -130,6 +130,65 @@ describe('Route Stubs', () => {
     })
   })
 
+  describe('Table of Contents', () => {
+    it('table-of-contents.tsx exists', () => {
+      expect(
+        fs.existsSync(path.join(ROOT, 'components/table-of-contents.tsx')),
+      ).toBe(true)
+    })
+
+    it('component is a client component', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/table-of-contents.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain("'use client'")
+    })
+
+    it('component uses IntersectionObserver', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/table-of-contents.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('IntersectionObserver')
+    })
+
+    it('MDX pipeline imports rehype-slug', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'lib/mdx.ts'),
+        'utf-8',
+      )
+      expect(content).toContain('rehype-slug')
+    })
+
+    it('globals.css has scroll-behavior smooth', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'app/globals.css'),
+        'utf-8',
+      )
+      expect(content).toContain('scroll-behavior: smooth')
+    })
+
+    it('component uses only monochrome color tokens', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/table-of-contents.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('var(--foreground)')
+      expect(content).toContain('var(--muted)')
+      expect(content).toContain('var(--border)')
+      expect(content).not.toMatch(/#[0-9a-fA-F]{3,6}/)
+    })
+
+    it('component is hidden on narrow viewports', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/table-of-contents.tsx'),
+        'utf-8',
+      )
+      expect(content).toMatch(/hidden\s+xl:block/)
+    })
+  })
+
   describe('Metadata', () => {
     it('layout exports metadata with title', () => {
       const content = fs.readFileSync(

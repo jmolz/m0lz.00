@@ -58,7 +58,7 @@ npm run test -- \
 | `design-constraints.test.ts` (13 tests) | Design System | Monochrome-only colors, no font-weight 600/700, no tailwind.config.*, no inline styles, CSS tokens defined |
 | `theme-system.test.ts` (10 tests) | Theme System | Blocking script logic, dark class baked into HTML, suppressHydrationWarning, CSS light/dark tokens, ThemeProvider/useTheme exports |
 | `branch-mark.test.ts` (19 tests) | Branch Mark | All 4 variants defined with distinct patterns, proportional scaling math, currentColor/var(--background) theme awareness, favicon exists and valid |
-| `routes.test.ts` (25 tests) | Routes & Layout | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured |
+| `routes.test.ts` (32 tests) | Routes & Layout | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured, floating TOC (component exists, client directive, IntersectionObserver, rehype-slug, scroll-behavior, monochrome tokens, responsive hiding) |
 
 **Phase 2 — Content Infrastructure (2026-04-10)**
 
@@ -95,6 +95,9 @@ npm run test -- \
 - `app/opengraph-image.tsx` — Site default OG image (1200x630)
 - `app/writing/[slug]/opengraph-image.tsx` — Per-post OG images with generateStaticParams
 - `app/feed.xml/route.ts` — RSS 2.0 feed generation (static-compatible GET)
+- `components/table-of-contents.tsx` — Floating TOC with IntersectionObserver scroll tracking
+- `app/research/[slug]/page.tsx` — Per-project research page with TOC integration
+- `app/writing/[slug]/page.tsx` — Individual post page with TOC integration
 
 ### Expected results
 
@@ -134,7 +137,7 @@ npm run test
 npm run build
 ```
 
-Expected baseline: 0 lint errors, 116 tests passing (5 files), build succeeds with 6 static routes + _not-found + 1 SSG route (/writing/[slug])
+Expected baseline: 0 lint errors, 123 tests passing (5 files), build succeeds with 21 static routes
 
 ## Phase 3: Code Review of Current Changes
 

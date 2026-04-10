@@ -7,6 +7,7 @@ import { projects } from '@/data/projects'
 import { compileMDX } from '@/lib/mdx'
 import { mdxComponents } from '@/components/mdx-components'
 import { BranchMark } from '@/components/branch-mark'
+import { TableOfContents } from '@/components/table-of-contents'
 
 export async function generateStaticParams() {
   const research = getAllResearch()
@@ -70,28 +71,11 @@ export default async function ResearchPage({
           {meta.description}
         </p>
 
-        {meta.sections && meta.sections.length > 0 && (
-          <nav className="mt-6 p-4 border border-[var(--border)] rounded-sm">
-            <p className="text-xs tracking-widest text-[var(--muted)] mb-3">
-              CONTENTS
-            </p>
-            <ul className="space-y-1">
-              {meta.sections.map((section) => (
-                <li key={section.id}>
-                  <a
-                    href={`#${section.id}`}
-                    className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-                  >
-                    {section.title}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        )}
       </header>
 
       <hr className="border-[var(--border)] border-t-[0.5px]" />
+
+      <TableOfContents />
 
       <article className="mt-8 prose-content leading-[1.8] text-sm">
         <Content components={mdxComponents} />

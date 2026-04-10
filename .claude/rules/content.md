@@ -47,18 +47,20 @@ Optional fields: `canonical`, `companion_repo`, `medium_url`, `devto_url`
 
 ## MDX Processing Pipeline
 
-The pipeline uses `@mdx-js/mdx` `evaluate()` with `rehype-pretty-code`:
+The pipeline uses `@mdx-js/mdx` `evaluate()` with `rehype-slug` and `rehype-pretty-code`:
 
 ```
-MDX file → gray-matter (strip frontmatter) → @mdx-js/mdx evaluate() → rehype-pretty-code (Shiki) → React components → Static HTML
+MDX file → gray-matter (strip frontmatter) → @mdx-js/mdx evaluate() → rehype-slug (heading IDs) → rehype-pretty-code (Shiki) → React components → Static HTML
 ```
 
 Key configuration:
+- `rehype-slug` generates `id` attributes on all headings (used by the floating Table of Contents)
 - Shiki dual themes: `min-dark` / `min-light` — swapped via `.dark` CSS class on `<html>`
 - `keepBackground: false` — code block backgrounds use `var(--background)` instead of Shiki theme backgrounds
 - File name tabs: supported via meta string (e.g., ` ```tsx title="app/page.tsx" `)
 - Copy button: always present on code blocks, with try/catch for clipboard permission denial
 - `remark-gfm` enabled for tables, strikethrough, autolinks
+- Plugin order matters: `rehype-slug` must run before `rehype-pretty-code` so code block headings aren't affected
 
 ## Post Utilities (`lib/posts.ts`)
 

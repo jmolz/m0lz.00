@@ -112,6 +112,25 @@ The `branch-mark.tsx` component renders the generative logo system:
 - Automatically adapts colors to current theme (foreground/background swap)
 - Renders as inline SVG for crisp scaling
 
+## Client Components
+
+Interactive features that require browser APIs use `'use client'` components. Follow these patterns:
+
+- Place `'use client'` as the very first line of the file
+- Keep client components minimal — extract as much logic as possible into server components or shared utilities
+- Use `useEffect` cleanup to prevent memory leaks (e.g., `IntersectionObserver.disconnect()`, event listener removal)
+- Client components render `null` or minimal content on mount, then hydrate with interactive state
+
+### Existing Client Components
+
+| Component | Purpose | Browser API |
+|-----------|---------|-------------|
+| `theme-toggle.tsx` | Dark/light mode switch | `localStorage` |
+| `theme-provider.tsx` | Theme context + blocking script | `localStorage`, `document.documentElement` |
+| `nav-links.tsx` | Active link state + mobile menu | `usePathname()` |
+| `table-of-contents.tsx` | Floating TOC with scroll tracking | `IntersectionObserver`, `document.querySelectorAll` |
+| `code-block.tsx` | Copy-to-clipboard on code blocks | `navigator.clipboard` |
+
 ## Styling Rules
 
 - Use Tailwind utility classes exclusively — no custom CSS except in `globals.css` for tokens and `rehype-pretty-code` styling

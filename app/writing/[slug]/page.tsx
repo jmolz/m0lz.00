@@ -7,6 +7,7 @@ import { projects } from '@/data/projects'
 import { compileMDX } from '@/lib/mdx'
 import { mdxComponents } from '@/components/mdx-components'
 import { BranchMark } from '@/components/branch-mark'
+import { TableOfContents } from '@/components/table-of-contents'
 
 export async function generateStaticParams() {
   const posts = getAllPosts()
@@ -111,6 +112,8 @@ export default async function PostPage({
       </header>
 
       <hr className="border-[var(--border)] border-t-[0.5px]" />
+
+      <TableOfContents />
 
       <article className="mt-8 prose-content leading-[1.8] text-sm">
         <Content components={mdxComponents} />

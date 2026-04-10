@@ -70,7 +70,8 @@ m0lz.00/
 │   ├── post-card.tsx       # Post listing item
 │   ├── project-card.tsx    # Project card
 │   ├── code-block.tsx      # Shiki code rendering + copy button
-│   └── mdx-components.tsx  # Custom MDX overrides
+│   ├── mdx-components.tsx  # Custom MDX overrides
+│   └── table-of-contents.tsx     # Floating TOC with IntersectionObserver
 ├── content/
 │   └── posts/              # MDX blog posts (committed by blog agent)
 │       └── {slug}/
@@ -145,9 +146,9 @@ The blog agent (m0lz.01, separate repo) publishes posts by committing MDX files 
 
 - **Framework**: Vitest (lightweight, Vite-compatible, good TypeScript support)
 - **Location**: `__tests__/regression/` for cumulative regression suite
-- **Run**: `npm run test` (116 tests, 5 files)
+- **Run**: `npm run test` (123 tests, 5 files)
 - **Regression suite**: Grows with every shipped feature, never shrinks. See `.claude/rules/testing.md` for conventions.
-- **Current coverage**: Design constraints (13), theme system (10), branch mark (19), routes & layout (25), content pipeline (49)
+- **Current coverage**: Design constraints (13), theme system (10), branch mark (19), routes & layout (32), content pipeline (49)
 
 ---
 
