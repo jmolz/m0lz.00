@@ -120,7 +120,7 @@ describe('MDX Compilation (lib/mdx.ts)', () => {
 
 describe('Frontmatter Schema', () => {
   it('test post has all required fields', () => {
-    const mdxPath = path.join(ROOT, 'content/posts/hello-world/index.mdx')
+    const mdxPath = path.join(ROOT, 'content/posts/hey-im-jacob/index.mdx')
     expect(fs.existsSync(mdxPath)).toBe(true)
     const raw = fs.readFileSync(mdxPath, 'utf-8')
     const { data } = matter(raw)
@@ -132,14 +132,14 @@ describe('Frontmatter Schema', () => {
   })
 
   it('date format is YYYY-MM-DD', () => {
-    const mdxPath = path.join(ROOT, 'content/posts/hello-world/index.mdx')
+    const mdxPath = path.join(ROOT, 'content/posts/hey-im-jacob/index.mdx')
     const raw = fs.readFileSync(mdxPath, 'utf-8')
     const { data } = matter(raw)
     expect(data.date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
   it('tags is an array of strings', () => {
-    const mdxPath = path.join(ROOT, 'content/posts/hello-world/index.mdx')
+    const mdxPath = path.join(ROOT, 'content/posts/hey-im-jacob/index.mdx')
     const raw = fs.readFileSync(mdxPath, 'utf-8')
     const { data } = matter(raw)
     expect(Array.isArray(data.tags)).toBe(true)
@@ -150,13 +150,13 @@ describe('Frontmatter Schema', () => {
 })
 
 describe('Project Data', () => {
-  it('all 9 projects present', () => {
-    expect(projects.length).toBe(9)
+  it('all 8 projects present', () => {
+    expect(projects.length).toBe(8)
   })
 
   it('m0lz catalog projects have variant field', () => {
     const catalogProjects = projects.filter((p) => p.variant)
-    expect(catalogProjects.length).toBe(4)
+    expect(catalogProjects.length).toBe(3)
   })
 
   it('all projects have name, description, url, tech', () => {
