@@ -50,6 +50,8 @@ npm run lint && npx tsc --noEmit && npm run test && npm run build
 
 ```text
 m0lz.00/
+├── README.md               # Project documentation with branch mark
+├── LICENSE                  # MIT license
 ├── app/                    # Next.js App Router pages
 │   ├── layout.tsx          # Root layout, fonts, theme provider
 │   ├── page.tsx            # Landing page
@@ -80,6 +82,9 @@ m0lz.00/
 │   ├── mdx.ts              # MDX processing pipeline
 │   ├── posts.ts            # Post listing, sorting, filtering
 │   └── og.tsx              # OG image generation logic
+├── public/
+│   ├── favicon.svg          # Branch mark favicon (16px, personal variant)
+│   └── branch-mark.svg     # Branch mark for README (48px, personal variant)
 ├── __tests__/              # Vitest regression and unit tests
 │   └── regression/         # Cumulative regression suite
 ├── .claude/                # AI layer (shared foundation + project overrides)
@@ -173,6 +178,16 @@ When working on specific areas, read the corresponding reference:
 | Brownfield integration | `.claude/docs/BROWNFIELD-GUIDE.md` | Working with existing codebases |
 
 For the full PRD: `PRD.md` (project root)
+
+---
+
+## GitHub & Deployment
+
+- **Repo**: `git@github.com:jmolz/m0lz.00.git` (public, MIT license)
+- **Branch protection**: `main` — no force pushes, no deletions, enforced for admins
+- **Deploy**: `git push origin main` → Vercel auto-deploys (static build ~1-2 min)
+- **Domain**: `https://m0lz.dev`
+- **Tagging**: Annotated tags (`v0.1.0`) for releases. Tag after completing a phase or shipping a significant feature.
 
 ---
 

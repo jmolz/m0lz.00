@@ -61,6 +61,28 @@ This toolkit supports both **Claude Code** and **Windsurf**. When modifying comm
 - The `_example-*` prefixed files are reference templates — do not customize them for a specific project
 - When modifying AI layer files, include a `Context:` section in the commit body
 
+## GitHub & Deployment
+
+- **Repo**: `git@github.com:jmolz/m0lz.00.git` — public, MIT license
+- **Branch protection on `main`**: no force pushes, no deletions, enforced for admins. No PR requirement (solo dev workflow).
+- **Deploy**: `git push origin main` → Vercel auto-deploys the static site
+- **Domain**: `https://m0lz.dev`
+
+### Tagging Convention
+
+Use annotated tags for releases after completing a phase or shipping a significant feature:
+
+```bash
+git tag -a v0.x.0 -m 'v0.x.0 — description of what shipped'
+git push origin main --tags
+```
+
+### README & License
+
+- `README.md` must include the branch mark SVG (`public/branch-mark.svg`), tech stack, dev commands, and catalog listing
+- `LICENSE` is MIT (2026 Jacob Molz) — must exist at repo root for open-source compliance
+- When adding new public assets (SVGs, images), consider visibility on both GitHub light and dark themes
+
 ## Quality Standards
 
 - Every file must be self-contained enough to be useful without reading other files
