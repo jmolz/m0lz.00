@@ -13,7 +13,7 @@ export const projects: ProjectData[] = [
   {
     name: 'm0lz.dev',
     description: 'Monochrome developer blog & portfolio. Static-only Next.js 16 site with MDX content pipeline, generative branch mark identity system, and dark/light theme.',
-    url: 'https://m0lz.dev',
+    url: 'https://github.com/jmolz/m0lz.00',
     tech: 'Next.js / TypeScript',
     catalogId: 'm0lz.00',
     variant: 'personal',
