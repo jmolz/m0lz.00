@@ -64,7 +64,7 @@ npm run test -- \
 
 | Test File | Feature | What It Validates |
 | --- | --- | --- |
-| `content-pipeline.test.ts` (41 tests) | Content Pipeline | Post utilities (getAllPosts sort/filter, getPost, getAdjacentPosts, readingTime, slug matching, unpublished throw), MDX compilation exports, frontmatter schema (required fields, date format, tags array), project data (9 projects, 4 catalog variants, required fields, no duplicates), component exports (PostCard, ProjectCard, CodeBlock, mdxComponents), dynamic post route (exists, generateStaticParams, async params, conditional nav), page wiring (writing index, projects sections, landing page PostCard/ProjectCard, post limit), code block CSS (dual theme, title tabs), about page content (bio, background, education, GitHub/LinkedIn links, metadata), research placeholder (descriptive, not bare), all pages metadata descriptions |
+| `content-pipeline.test.ts` (49 tests) | Content Pipeline | Post utilities (getAllPosts sort/filter, getPost, getAdjacentPosts, readingTime, slug matching, unpublished throw), MDX compilation exports, frontmatter schema (required fields, date format, tags array), project data (9 projects, 4 catalog variants, required fields, no duplicates), component exports (PostCard, ProjectCard, CodeBlock, mdxComponents), dynamic post route (exists, generateStaticParams, async params, conditional nav), page wiring (writing index, projects sections, landing page PostCard/ProjectCard, post limit), code block CSS (dual theme, title tabs), about page content (bio, background, education, GitHub/LinkedIn links, metadata), research placeholder (descriptive, not bare), all pages metadata descriptions, OG image infrastructure (lib/og, opengraph-image convention, generateStaticParams), RSS feed (route handler, static-compatible GET, no Request dependency), enhanced layout metadata (metadataBase, openGraph, twitter) |
 
 ### Source files these tests protect
 
@@ -91,6 +91,10 @@ npm run test -- \
 - `data/projects.ts` — 9 projects with name, description, url, tech, optional variant/catalogId
 - `app/writing/[slug]/page.tsx` — Individual post page with MDX rendering, generateStaticParams
 - `content/posts/hello-world/index.mdx` — Test post exercising full MDX pipeline
+- `lib/og.tsx` — OG image shared layout, font loading, branch mark SVG helper
+- `app/opengraph-image.tsx` — Site default OG image (1200x630)
+- `app/writing/[slug]/opengraph-image.tsx` — Per-post OG images with generateStaticParams
+- `app/feed.xml/route.ts` — RSS 2.0 feed generation (static-compatible GET)
 
 ### Expected results
 
@@ -130,7 +134,7 @@ npm run test
 npm run build
 ```
 
-Expected baseline: 0 lint errors, 108 tests passing (5 files), build succeeds with 6 static routes + _not-found + 1 SSG route (/writing/[slug])
+Expected baseline: 0 lint errors, 116 tests passing (5 files), build succeeds with 6 static routes + _not-found + 1 SSG route (/writing/[slug])
 
 ## Phase 3: Code Review of Current Changes
 

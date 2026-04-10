@@ -358,6 +358,70 @@ describe('About & Research Pages', () => {
   })
 })
 
+describe('OG Images & RSS', () => {
+  it('lib/og.tsx exists and exports createOGImage', () => {
+    const content = fs.readFileSync(path.join(ROOT, 'lib/og.tsx'), 'utf-8')
+    expect(content).toContain('export async function createOGImage')
+  })
+
+  it('site default opengraph-image exists', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/opengraph-image.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('size')
+    expect(content).toContain('contentType')
+  })
+
+  it('post opengraph-image exists with generateStaticParams', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/writing/[slug]/opengraph-image.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('generateStaticParams')
+  })
+
+  it('RSS route handler exists and exports GET', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/feed.xml/route.ts'),
+      'utf-8',
+    )
+    expect(content).toContain('export async function GET')
+  })
+
+  it('RSS route handler does not read from Request', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/feed.xml/route.ts'),
+      'utf-8',
+    )
+    expect(content).not.toMatch(/function GET\s*\(\s*(req|request)/)
+  })
+
+  it('layout has metadataBase', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/layout.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('metadataBase')
+  })
+
+  it('layout has openGraph config', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/layout.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('openGraph')
+  })
+
+  it('layout has twitter config', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/layout.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('twitter')
+  })
+})
+
 describe('Code Block Styling', () => {
   it('globals.css has rehype-pretty-code dual theme rules', () => {
     const content = fs.readFileSync(

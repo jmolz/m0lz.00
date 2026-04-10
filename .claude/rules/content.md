@@ -5,6 +5,9 @@ paths:
   - "lib/posts.ts"
   - "lib/og.tsx"
   - "data/**"
+  - "app/opengraph-image.tsx"
+  - "app/writing/[slug]/opengraph-image.tsx"
+  - "app/feed.xml/**"
 ---
 
 # Content & MDX Conventions
@@ -76,20 +79,27 @@ Project cards are defined as a typed array. Two categories:
 Each project entry must include: `name`, `description`, `url`, `tech`
 m0lz projects additionally include: `catalogId`, `variant`
 
-## OG Image Generation
+## OG Image Generation (`lib/og.tsx`)
 
-Open Graph images are generated via a route handler at `/og`:
-- Include the branch mark (personal variant) + post title
-- Monochrome design matching the site
-- Geist font rendered in the image
-- Accept `title` as a query parameter
+Open Graph images use the Next.js `opengraph-image.tsx` file convention:
 
-## RSS Feed
+- **`lib/og.tsx`** — Shared `createOGImage({ title, subtitle? })` function, Geist font loading via `fs.readFileSync`, branch mark SVG as base64 data URI
+- **`app/opengraph-image.tsx`** — Site default OG image (auto-wired into root metadata)
+- **`app/writing/[slug]/opengraph-image.tsx`** — Per-post OG images with `generateStaticParams`
 
-Generated at build time via a route handler at `/feed.xml`:
+Constraints:
+- Always dark background (`#000000`) with white text (`#ffffff`) and muted subtitle (`#a3a3a3`)
+- Branch mark uses hardcoded SVG (not the React component) because Satori doesn't support `currentColor` or CSS custom properties
+- Dimensions: 1200x630
+- Geist fonts loaded from `node_modules/geist/dist/fonts/geist-sans/` as `.ttf` ArrayBuffers
+
+## RSS Feed (`app/feed.xml/route.ts`)
+
+Generated at build time as a static route handler:
 - Standard RSS 2.0 format
-- Include all published posts with title, description, date, and link
-- Site description and metadata in the channel element
+- Calls `getAllPosts()` for all published posts
+- XML-escapes special characters in titles and descriptions
+- `export const dynamic = 'force-static'` — must NOT read from `Request` (static export constraint)
 - Validate with an RSS validator before shipping
 
 ## Content Rules

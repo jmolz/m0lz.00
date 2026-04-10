@@ -48,10 +48,10 @@ This project uses two test patterns:
 When a new feature ships:
 
 1. Create tests in `__tests__/regression/` named `{feature-domain}.test.ts`
-2. Add the test file to the regression suite runner command in `.windsurf/workflows/review.md`
-3. Update the "What each test covers" table in the review workflow
-4. Add protected source files to the "Source files these tests protect" list
+2. Add the test file to the regression suite runner command in both `.windsurf/workflows/review.md` and `.claude/commands/review.md`
+3. Update the "What each test covers" table in both review files
+4. Add protected source files to the "Source files these tests protect" list in both review files
 
 ### Current Baseline
 
-108 tests across 5 files. All must pass before any commit.
+116 tests across 5 files. All must pass before any commit.

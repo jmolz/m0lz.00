@@ -8,11 +8,20 @@ import { Footer } from '@/components/footer'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://m0lz.dev'),
   title: 'm0lz',
   description:
     'Technical research & engineering by Jacob Molz. AI coding workflows, MCP security, and agentic systems.',
   icons: {
     icon: '/favicon.svg',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'm0lz',
+    locale: 'en_US',
+  },
+  twitter: {
+    card: 'summary_large_image',
   },
 }
 
