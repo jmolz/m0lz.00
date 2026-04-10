@@ -7,6 +7,8 @@ import { projects } from '@/data/projects'
 
 export const metadata: Metadata = {
   title: 'm0lz — Technical Research & Engineering',
+  description:
+    'Technical research & engineering by Jacob Molz. AI coding workflows, MCP security, and agentic systems.',
 }
 
 export default function HomePage() {

@@ -5,6 +5,8 @@ import { PostCard } from '@/components/post-card'
 
 export const metadata: Metadata = {
   title: 'Writing — m0lz',
+  description:
+    'Technical writing on AI engineering, MCP security, and agentic coding workflows by Jacob Molz.',
 }
 
 export default function WritingPage() {

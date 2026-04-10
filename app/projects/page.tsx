@@ -5,6 +5,8 @@ import { ProjectCard } from '@/components/project-card'
 
 export const metadata: Metadata = {
   title: 'Projects — m0lz',
+  description:
+    'Open-source projects and tools by Jacob Molz — the m0lz catalog and other shipped products.',
 }
 
 export default function ProjectsPage() {

@@ -280,6 +280,84 @@ describe('Page Wiring', () => {
   })
 })
 
+describe('About & Research Pages', () => {
+  it('about page has bio content', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/about/page.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('AI Product Engineer')
+  })
+
+  it('about page has background section', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/about/page.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('BACKGROUND')
+  })
+
+  it('about page has education section', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/about/page.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('EDUCATION')
+  })
+
+  it('about page links to GitHub and LinkedIn', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/about/page.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('github.com/jmolz')
+    expect(content).toContain('linkedin.com/in/jacobmolz')
+  })
+
+  it('about page has metadata description', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/about/page.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('description')
+    expect(content).not.toMatch(/description:\s*['"]?\s*['"]?\s*,/)
+  })
+
+  it('research page has descriptive placeholder (not bare Coming soon)', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/research/page.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('data-driven')
+    expect(content).not.toMatch(
+      />\s*Coming soon\.\s*<\/p>\s*<\/div>\s*\)\s*\}/,
+    )
+  })
+
+  it('research page has metadata description', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/research/page.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('description')
+    expect(content).not.toMatch(/description:\s*['"]?\s*['"]?\s*,/)
+  })
+
+  it('all page routes have metadata descriptions', () => {
+    const pages = [
+      'app/page.tsx',
+      'app/writing/page.tsx',
+      'app/projects/page.tsx',
+      'app/research/page.tsx',
+      'app/about/page.tsx',
+    ]
+    for (const page of pages) {
+      const content = fs.readFileSync(path.join(ROOT, page), 'utf-8')
+      expect(content).toContain('description')
+    }
+  })
+})
+
 describe('Code Block Styling', () => {
   it('globals.css has rehype-pretty-code dual theme rules', () => {
     const content = fs.readFileSync(

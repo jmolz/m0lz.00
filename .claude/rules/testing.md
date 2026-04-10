@@ -54,4 +54,4 @@ When a new feature ships:
 
 ### Current Baseline
 
-100 tests across 5 files. All must pass before any commit.
+108 tests across 5 files. All must pass before any commit.
