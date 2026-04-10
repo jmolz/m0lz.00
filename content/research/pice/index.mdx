@@ -19,6 +19,8 @@ sections:
     title: "Claude Agent SDK Licensing: Analysis for Open Source Integration"
   - id: "v02-gap-analysis"
     title: "Stack Loops v0.2: Critical Gap Analysis"
+  - id: "sources"
+    title: "Sources"
 ---
 
 ## The Seam Blindspot: Where Software Really Breaks and What No One Is Building to Fix It
@@ -2458,3 +2460,68 @@ The recommendation: ship quickly, establish the conceptual vocabulary ("layers,"
 The remaining 25 non-blocking gaps (from the original 37) are categorized as enhancements, optimizations, or edge cases addressable in minor releases. None would prevent a team from adopting and benefiting from Stack Loops on a standard project.
 
 -----
+
+## Sources
+
+The research above draws on work across software engineering, machine learning, distributed systems, and autonomic computing. Citations below are grouped by the theme they support.
+
+**Integration failure taxonomies and postmortem data.** Empirical grounding for the twelve failure categories and the seam blindspot thesis.
+
+- **Gregor et al.** — *A Taxonomy of Microservice Integration Faults.* ICST 2025 (TU Munich / Siemens). Practitioner survey validating the twelve failure categories and service-lifecycle organization.
+- **Adyen** — *Characterizing API Failures in Production: An Empirical Study of 2.43M Error Responses.* ICSE-SEIP 2018. Eleven general causes of API failure at a large payment provider.
+- **Google SRE** — *Site Reliability Engineering* postmortem data (2010–2017). 31% of outages triggered by configuration pushes, 37% by binary/version changes, 68% total at integration points.
+- **Garlan, D., Allen, R., & Ockerbloom, J.** — *Architectural Mismatch: Why Reuse Is So Hard.* IEEE Software, 1995. Originated the "architectural mismatch" framing; proposed documentation as the mitigation.
+- **Nygard, M.** — *Release It! Design and Deploy Production-Ready Software.* Pragmatic Bookshelf. Source of the "integration point amplifier" pattern.
+- **AWS** — US-EAST-1 DynamoDB cascading failure postmortem (October 2025) and US-EAST-1 monitoring failover incident (December 2021).
+
+**Contract verification, invariant inference, and protocol formalisms.** Research lineages PICE's seam verification combines.
+
+- **Ernst, M. D. et al.** — *Dynamically Discovering Likely Program Invariants.* Daikon, 2001. Behavioral property inference for single components; never extended to cross-service distributed traces.
+- **Pact** — Consumer-driven contract testing framework. Open source, 2013. Concrete request/response pairs generated from consumer tests.
+- **Honda, K., Yoshida, N., & Carbone, M.** — *Multiparty Asynchronous Session Types.* POPL 2008. Mathematical framework for communication safety and deadlock freedom; Scribble protocol language from Imperial College.
+
+**LLM evaluation, correlation, and convergence theory.** Foundations for the correlated-evaluator ceiling and the three adaptive halting algorithms.
+
+- **Condorcet, M.** — *Essai sur l'application de l'analyse à la probabilité des décisions.* 1785. The jury theorem whose independence assumption fails for correlated LLMs.
+- **Kim et al.** — *Correlated Errors in Large Language Models.* ICML 2025. Demonstrated ~60% error agreement across 350+ LLMs regardless of provider or architecture.
+- **Denisov-Blanch et al.** — *Correlation of LLM Errors on Random ASCII Strings.* ICML 2025. ρ ≈ 0.35 even on forced-choice random tokens, proving shared inductive biases drive correlation.
+- **"Consensus is Not Verification"** — Companion study, 2025. Majority voting across LLMs systematically fails on questions with shared systematic biases.
+- **Kaplan et al.** — *Knowledge Divergence Theory of Multi-Agent Debate.* 2025. Principal-angle formalization of when debate produces negligible vs. essential benefit.
+- **Brown, B. et al.** — *Large Language Monkeys: Scaling Inference Compute with Repeated Sampling.* Stanford, 2024. Exponentiated power law for solve rates on SWE-Bench under repeated sampling.
+- **Wang, X. et al.** — *Self-Consistency Improves Chain of Thought Reasoning in Language Models.* 2022. Established self-consistency gains on PaLM-540B / GSM8K.
+- **Weaver** — Stanford / UW-Madison / Together AI, 2025. Weighted ensembles of 33 diverse weak verifiers closed the generation–verification gap by 14.5%; verifier diversity dominates verifier count.
+- **DeepMind** — AlphaCode and AlphaCode 2. Solve rate scales log-linearly with sample count, but AlphaCode 2 achieved equivalent performance with ~10,000× fewer samples through better models and selection.
+- **Kuhn, L., Gal, Y., & Farquhar, S.** — *Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation.* ICLR 2023. Basis for PICE's Verification Entropy Convergence algorithm.
+- **Lee et al.** — *ConSol: Sequential Probability Ratio Testing for Self-Consistency in LLMs.* March 2025. SPRT applied to single-model self-consistency on reasoning tasks; closest precedent to PICE's Bayesian-SPRT.
+- **Du, Y. et al.** — *Improving Factuality and Reasoning in Language Models through Multiagent Debate.* 2024. Mixed-model debates outperform same-model; performance plateaus after ~4 rounds.
+- **Choi, S. W. et al.** — Psychometric adaptive testing with Predicted Standard Error Reduction. 2010. Source of the PSER stopping criterion adapted for VEC.
+- **Krogh, A. & Vedelsby, J.** — *Neural Network Ensembles, Cross Validation, and Active Learning.* NIPS 1994. The ambiguity decomposition: E_ensemble = E_avg − Ambiguity.
+
+**Multi-agent architectures and self-improving coding agents.** Prior art for the Arch Experts pattern and the self-evolving verification roadmap.
+
+- **Chen et al.** — *AutoAgents: A Framework for Automatic Agent Generation.* arXiv:2309.17288, September 2023. Dynamic expert agent synthesis from task content. [arxiv.org/abs/2309.17288](https://arxiv.org/abs/2309.17288)
+- **Vasilopoulos** — *Codified Context Domain-Expert Agents.* arXiv:2602.20478, February 2026. 19 manually authored domain-expert agents with trigger tables in a 108K-line C# codebase. [arxiv.org/abs/2602.20478](https://arxiv.org/abs/2602.20478)
+- **ArchAgent** — arXiv:2602.22425, February 2026. Hardware-domain architecture discovery via AlphaEvolve (cache replacement policies). [arxiv.org/abs/2602.22425](https://arxiv.org/abs/2602.22425)
+- **Hong et al.** — *MetaGPT: Meta Programming for a Multi-Agent Collaborative Framework.* 2023. Fixed-role software company simulation (PM, Architect, Engineer, QA).
+- **Bachmann, F. et al.** — *ArchE: Architecture Expert.* CMU Software Engineering Institute, 2003–2008. Rule-based Eclipse plugin using JESS for quality-attribute-driven design decisions.
+- **Shinn, N. et al.** — *Reflexion: Language Agents with Verbal Reinforcement Learning.* NeurIPS 2023. Verbal self-reflection stored in episodic memory.
+- **SICA** — *Self-Improving Coding Agent.* ICLR 2025. LLM proposes modifications to its own source code (prompts, heuristics, architecture) based on benchmark performance.
+- **Khattab, O. et al.** — *DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines.* Stanford NLP, 2024. Prompt optimization from execution traces.
+
+**Self-evolving verification, control theory, and predictive test selection.** The building blocks for PICE's closed loop.
+
+- **Memon, A. et al.** — *Taming Google-Scale Continuous Testing.* Google TAP platform, ICSE-SEIP 2017. Production predictive test selection at scale.
+- **Machalica, M. et al.** — *Predictive Test Selection.* Meta, ICSE-SEIP 2019. Gradient-boosted decision trees catching >99.9% of faulty changes with one-third the tests.
+- **Meta Sapienz** — Commercialized PTS adopted by Netflix, LinkedIn, Airbnb.
+- **Kephart, J. O. & Chess, D. M.** — *The Vision of Autonomic Computing.* IBM, IEEE Computer 2003. The original MAPE-K control loop; 6,000+ citations.
+- **"Breaking the Loop: AWARE is the New MAPE-K"** — FSE 2025. Event-driven distributed replacement for the sequential MAPE-K loop.
+- **LLM-Enhanced MAPE-K** — ECSA 2025. LLM agents handling the Analyze and Plan phases of self-adaptive systems.
+- **Cangussu, J. W. et al.** — *A Formal Model of the Software Test Process.* Closed-loop feedback control from automatic control theory.
+- **Chojecki, P.** — *The Generator-Verifier-Updater Operator: A Unifying Framework for Self-Play.* 2025. Shows STaR, SPIN, Reflexion, GANs, and AlphaZero as topological realizations of one pattern.
+- **EvoGPT**, **DeepVerifier**, **ReVeal** — 2025. Evolutionary test generation and LLM-driven verification systems.
+
+**Industry case studies and community sources.**
+
+- **Wiser Solutions** — AI-Assisted CI cost and timeout management case study. USENIX September 2025. Automatic disabling of review steps at >30s latency or threshold cost.
+- **Kim, J.** — *30 Tips for Claude Code Agent Teams.* March 2026. Community guidance on subagent isolation and bias separation.
+
