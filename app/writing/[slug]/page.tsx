@@ -62,36 +62,49 @@ export default async function PostPage({
         </div>
         <p className="text-xs text-[var(--muted)] mt-2">Jacob Molz</p>
 
-        {(project || meta.companion_repo || research) && (
-          <div className="flex flex-wrap items-center gap-4 mt-4">
-            {project?.variant && (
-              <Link
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-              >
-                <BranchMark variant={project.variant} size={16} />
-                {project.name}
-              </Link>
+        {(project || research) && (
+          <div className="mt-4 p-4 border border-[var(--border)] rounded-sm">
+            {project && (
+              <div className="flex items-center gap-2 mb-2">
+                {project.variant && (
+                  <BranchMark variant={project.variant} size={16} />
+                )}
+                <span className="text-xs font-medium">
+                  {project.name}
+                  <span className="font-mono text-[var(--muted)] ml-2">
+                    {project.catalogId}
+                  </span>
+                </span>
+              </div>
             )}
-            {meta.companion_repo && (
-              <a
-                href={meta.companion_repo}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-              >
-                View repo
-              </a>
-            )}
-            {research && (
-              <Link
-                href={`/research/${research.slug}`}
-                className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
-              >
-                Read the research
-              </Link>
+
+            <a
+              href={project?.url || meta.companion_repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors block mb-2"
+            >
+              {(project?.url || meta.companion_repo || '').replace('https://', '')}
+            </a>
+
+            {research && research.sections && research.sections.length > 0 && (
+              <>
+                <p className="text-xs tracking-widest text-[var(--muted)] mt-3 mb-1">
+                  RESEARCH
+                </p>
+                <ul className="space-y-0.5">
+                  {research.sections.map((section) => (
+                    <li key={section.id}>
+                      <Link
+                        href={`/research/${research.slug}#${section.id}`}
+                        className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                      >
+                        {section.title}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </>
             )}
           </div>
         )}
