@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Geist Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, monospace;
+}
+
+:root {
+  --foreground: #000000;
+  --background: #ffffff;
+  --muted: #737373;
+  --border: #e5e5e5;
+}
+
+.dark {
+  --foreground: #ffffff;
+  --background: #000000;
+  --muted: #a3a3a3;
+  --border: #262626;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
