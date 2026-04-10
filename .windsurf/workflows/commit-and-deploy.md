@@ -1,5 +1,5 @@
 ---
-description: Standard workflow for building, testing, committing and deploying Alpaka changes
+description: Standard workflow for building, testing, committing and deploying m0lz.00 changes
 ---
 
 # Commit and Deploy Workflow
@@ -8,85 +8,44 @@ description: Standard workflow for building, testing, committing and deploying A
 
 Run these checks in order. Fix failures before proceeding.
 
-### 1. Build
+### 1. Lint
 
 ```bash
-pnpm build
+npm run lint
 ```
 
-### 2. Check maxDuration limits
+### 2. Regression tests
 
 ```bash
-grep -Ern 'maxDuration[[:space:]]*=[[:space:]]*(80[1-9]|8[1-9][0-9]|9[0-9][0-9]|[0-9]{4,})' --include='*.ts' app/api/ && echo "ERROR: maxDuration exceeds 800s Vercel Pro limit" || echo "OK: all maxDuration values within limit"
+npm run test
 ```
 
-### 3. Pipeline pattern validation (required when touching pipeline/job code)
+Expected: 116 tests passing across 5 files. All must pass before committing.
+
+### 3. Build
 
 ```bash
-./scripts/validate-pipeline-patterns.sh
+npm run build
 ```
 
-### 4. Regression tests (REQUIRED for any potentially breaking change)
+Expected: Clean static export with all routes pre-rendered. No warnings.
 
-```bash
-pnpm test -- __tests__/regression/
-```
+## Documentation Updates
 
-### 5. RON tests (required when touching ron/**)
+Before committing, check if any of these need updating:
 
-```bash
-cd ron && python3 -m pytest __tests__/test_financial_extraction.py __tests__/test_title_generation.py -v
-```
+1. **README.md** — Update if commands, structure, or tech stack changed
+2. **CLAUDE.md** — Update if project conventions, test counts, or structure changed
+3. **`.claude/rules/`** — Update if patterns or conventions changed
+4. **`.windsurf/workflows/review.md`** and **`.claude/commands/review.md`** — Update if test files, counts, or source files changed (must stay in sync)
 
-### 6. RON Docker build (required when touching ron/**)
+## Commit
 
-```bash
-docker build -f ron/Dockerfile .
-```
+Use the `/commit` workflow for message format. Key rules:
 
-### 7. Full unit tests
-
-```bash
-pnpm test
-```
-
-## Documentation Updates (REQUIRED)
-
-Before committing:
-
-1. **TASK.md**: Mark completed tasks `[x]`, add discovered issues, update dates
-2. **Help/Knowledge/Security docs**: If product behavior changed, review for accuracy, clarity, structure, terminology, parity, and metadata
-3. **README.md**: Update if commands, env vars, architecture, or setup changed
-4. **ron/README.md**: Update if RON endpoints, models, config, or architecture changed
-
-## Commit by Feature (CRITICAL)
-
-**Do NOT create one giant commit.** Group changes by feature/purpose.
-
-```bash
-# Review everything
-git status
-
-# Stage and commit by logical group
-git add components/projects/*.tsx
-git commit -m "feat(ui): enhance project engagements tab"
-
-git add app/api/projects/[id]/engagements/route.ts
-git commit -m "feat(api): include AI summary in engagements response"
-
-git add lib/db/schema*.ts lib/db/migrations/*.sql
-git commit -m "feat(db): add communication schema"
-
-# Docs last, separately
-git add TASK.md README.md ron/README.md
-git commit -m "docs: update task tracking and documentation"
-```
-
-**Commit tags:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`
-
-**Include scope:** `feat(ui)`, `fix(api)`, `refactor(db)`, `feat(ron)`
-
-If any AI layer files changed (CLAUDE.md, .claude/rules/, .claude/commands/, .windsurf/workflows/), add a `Context:` section to the commit body.
+- **Tags:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`
+- **Scope:** `feat(ui)`, `fix(content)`, `docs(readme)`, `chore(deploy)`
+- **Context section** required if AI layer files changed (CLAUDE.md, .claude/, .windsurf/)
 
 ## Deploy
 
@@ -94,8 +53,7 @@ If any AI layer files changed (CLAUDE.md, .claude/rules/, .claude/commands/, .wi
 git push origin main
 ```
 
-**Frontend (Vercel):** Auto-deploys in ~2-5 minutes.
-**RON Backend (RunPod):** Auto-deploys in ~15-20 minutes if `ron/**` or `shared/**` changed.
+**Vercel** auto-deploys on push to `main`. Static site builds in ~1-2 minutes.
 
 ## Verify
 
@@ -104,4 +62,8 @@ git status
 # Expected: "nothing to commit, working tree clean"
 ```
 
-If RON deploy fails: check GitHub Actions logs, verify `docker build -f ron/Dockerfile .` locally, check RunPod console.
+After deploy, verify at [m0lz.dev](https://m0lz.dev):
+- All routes load (/, /writing, /projects, /research, /about)
+- Dark/light toggle works
+- OG images render (test via [opengraph.xyz](https://www.opengraph.xyz/))
+- RSS feed validates at /feed.xml
