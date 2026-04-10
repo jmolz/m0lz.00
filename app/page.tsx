@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 
-import { BranchMark } from '@/components/branch-mark'
+import { getAllPosts } from '@/lib/posts'
+import { PostCard } from '@/components/post-card'
+import { ProjectCard } from '@/components/project-card'
 import { projects } from '@/data/projects'
 
 export const metadata: Metadata = {
@@ -8,6 +10,9 @@ export const metadata: Metadata = {
 }
 
 export default function HomePage() {
+  const posts = getAllPosts().slice(0, 5)
+  const catalogProjects = projects.filter((p) => p.variant)
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
       <section className="mb-12">
@@ -29,7 +34,15 @@ export default function HomePage() {
         <p className="text-xs tracking-widest text-[var(--muted)] mb-6">
           LATEST
         </p>
-        <p className="text-sm text-[var(--muted)]">No posts yet.</p>
+        {posts.length > 0 ? (
+          <div>
+            {posts.map((post) => (
+              <PostCard key={post.slug} post={post} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-[var(--muted)]">No posts yet.</p>
+        )}
       </section>
 
       <hr className="border-[var(--border)] border-t-[0.5px]" />
@@ -39,19 +52,8 @@ export default function HomePage() {
           PROJECTS
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {projects.map((project) => (
-            <div
-              key={project.variant}
-              className="flex items-start gap-3 p-4 border border-[var(--border)] rounded-sm"
-            >
-              <BranchMark variant={project.variant} size={36} />
-              <div>
-                <p className="text-sm font-medium">{project.name}</p>
-                <p className="text-xs text-[var(--muted)] mt-1">
-                  {project.description}
-                </p>
-              </div>
-            </div>
+          {catalogProjects.map((project) => (
+            <ProjectCard key={project.name} project={project} />
           ))}
         </div>
       </section>

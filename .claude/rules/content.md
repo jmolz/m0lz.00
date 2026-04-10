@@ -44,17 +44,18 @@ Optional fields: `canonical`, `companion_repo`, `medium_url`, `devto_url`
 
 ## MDX Processing Pipeline
 
-The pipeline uses `next-mdx-remote` with `rehype-pretty-code`:
+The pipeline uses `@mdx-js/mdx` `evaluate()` with `rehype-pretty-code`:
 
 ```
-MDX file → next-mdx-remote → rehype-pretty-code (Shiki) → React components → Static HTML
+MDX file → gray-matter (strip frontmatter) → @mdx-js/mdx evaluate() → rehype-pretty-code (Shiki) → React components → Static HTML
 ```
 
 Key configuration:
-- Shiki theme: monochrome-leaning (e.g., `vitesse-dark`/`vitesse-light` or custom minimal)
-- Line numbers: optional, enabled per code block
+- Shiki dual themes: `min-dark` / `min-light` — swapped via `.dark` CSS class on `<html>`
+- `keepBackground: false` — code block backgrounds use `var(--background)` instead of Shiki theme backgrounds
 - File name tabs: supported via meta string (e.g., ` ```tsx title="app/page.tsx" `)
-- Copy button: always present on code blocks
+- Copy button: always present on code blocks, with try/catch for clipboard permission denial
+- `remark-gfm` enabled for tables, strikethrough, autolinks
 
 ## Post Utilities (`lib/posts.ts`)
 
@@ -69,11 +70,11 @@ This module handles:
 
 Project cards are defined as a typed array. Two categories:
 
-1. **m0lz catalog** — projects with `catalogId` (e.g., `m0lz.02`) and a `branchMarkVariant`
+1. **m0lz catalog** — projects with `catalogId` (e.g., `m0lz.02`) and a `variant` (BranchMark variant)
 2. **Other projects** — projects with just a name, description, URL, and tech stack
 
 Each project entry must include: `name`, `description`, `url`, `tech`
-m0lz projects additionally include: `catalogId`, `branchMarkVariant`
+m0lz projects additionally include: `catalogId`, `variant`
 
 ## OG Image Generation
 

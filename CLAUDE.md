@@ -16,7 +16,7 @@ m0lz.00 is **m0lz.dev** — a monochrome, developer-focused technical blog and p
 | Next.js 16 (v16.2.3) | App Router, static generation, Turbopack |
 | React 19.2 | UI library (View Transitions, React Compiler support) |
 | Tailwind CSS 4 | Utility-first styling, monochrome design system |
-| next-mdx-remote | MDX processing for blog posts |
+| @mdx-js/mdx | MDX compilation for blog posts |
 | rehype-pretty-code | Shiki-powered syntax highlighting in code blocks |
 | Geist + Geist Mono | Typography via `next/font` |
 | Vercel | Hosting, edge network, auto-deploys |
@@ -99,7 +99,7 @@ m0lz.00/
 Data flow:
 
 ```text
-MDX files in /content/posts/ → next-mdx-remote at build → Static HTML pages
+MDX files in /content/posts/ → @mdx-js/mdx evaluate() at build → Static HTML pages
 Project data in /data/projects.ts → project-card components → Static HTML pages
 ```
 
@@ -140,9 +140,9 @@ The blog agent (m0lz.01, separate repo) publishes posts by committing MDX files 
 
 - **Framework**: Vitest (lightweight, Vite-compatible, good TypeScript support)
 - **Location**: `__tests__/regression/` for cumulative regression suite
-- **Run**: `npm run test` (67 tests, 4 files)
+- **Run**: `npm run test` (100 tests, 5 files)
 - **Regression suite**: Grows with every shipped feature, never shrinks. See `.claude/rules/testing.md` for conventions.
-- **Current coverage**: Design constraints (13), theme system (10), branch mark (19), routes & layout (25)
+- **Current coverage**: Design constraints (13), theme system (10), branch mark (19), routes & layout (25), content pipeline (33)
 
 ---
 

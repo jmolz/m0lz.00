@@ -45,7 +45,8 @@ npm run test -- \
   __tests__/regression/design-constraints.test.ts \
   __tests__/regression/theme-system.test.ts \
   __tests__/regression/branch-mark.test.ts \
-  __tests__/regression/routes.test.ts
+  __tests__/regression/routes.test.ts \
+  __tests__/regression/content-pipeline.test.ts
 ```
 
 ### What each test covers
@@ -58,6 +59,12 @@ npm run test -- \
 | `theme-system.test.ts` (10 tests) | Theme System | Blocking script logic, dark class baked into HTML, suppressHydrationWarning, CSS light/dark tokens, ThemeProvider/useTheme exports |
 | `branch-mark.test.ts` (19 tests) | Branch Mark | All 4 variants defined with distinct patterns, proportional scaling math, currentColor/var(--background) theme awareness, favicon exists and valid |
 | `routes.test.ts` (25 tests) | Routes & Layout | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured |
+
+**Phase 2 — Content Infrastructure (2026-04-10)**
+
+| Test File | Feature | What It Validates |
+| --- | --- | --- |
+| `content-pipeline.test.ts` (33 tests) | Content Pipeline | Post utilities (getAllPosts sort/filter, getPost, getAdjacentPosts, readingTime, slug matching, unpublished throw), MDX compilation exports, frontmatter schema (required fields, date format, tags array), project data (9 projects, 4 catalog variants, required fields, no duplicates), component exports (PostCard, ProjectCard, CodeBlock, mdxComponents), dynamic post route (exists, generateStaticParams, async params, conditional nav), page wiring (writing index, projects sections, landing page PostCard/ProjectCard, post limit), code block CSS (dual theme, title tabs) |
 
 ### Source files these tests protect
 
@@ -75,6 +82,15 @@ npm run test -- \
 - `components/nav-links.tsx` — Client nav links with active state and mobile menu
 - `components/footer.tsx` — Footer with GitHub, LinkedIn, RSS links
 - `public/favicon.svg` — Personal branch mark favicon
+- `lib/posts.ts` — Post types (PostFrontmatter, PostMeta), getAllPosts, getPost, getAdjacentPosts, reading time
+- `lib/mdx.ts` — MDX compilation pipeline with rehype-pretty-code dual theme
+- `components/code-block.tsx` — Code block wrapper with copy button
+- `components/mdx-components.tsx` — Custom MDX component overrides (pre, a, h1-h3, code, hr, blockquote, table)
+- `components/post-card.tsx` — Post listing card with date, title, description, tags
+- `components/project-card.tsx` — Project card with optional BranchMark for catalog projects
+- `data/projects.ts` — 9 projects with name, description, url, tech, optional variant/catalogId
+- `app/writing/[slug]/page.tsx` — Individual post page with MDX rendering, generateStaticParams
+- `content/posts/hello-world/index.mdx` — Test post exercising full MDX pipeline
 
 ### Expected results
 
@@ -114,7 +130,7 @@ npm run test
 npm run build
 ```
 
-Expected baseline: 0 lint errors, 67 tests passing (4 files), build succeeds with 5 static routes + _not-found
+Expected baseline: 0 lint errors, 91 tests passing (5 files), build succeeds with 6 static routes + _not-found + 1 SSG route (/writing/[slug])
 
 ## Phase 3: Code Review of Current Changes
 

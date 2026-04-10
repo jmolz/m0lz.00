@@ -20,7 +20,8 @@ __tests__/
     ├── design-constraints.test.ts
     ├── theme-system.test.ts
     ├── branch-mark.test.ts
-    └── routes.test.ts
+    ├── routes.test.ts
+    └── content-pipeline.test.ts
 ```
 
 ## Regression Suite
@@ -53,4 +54,4 @@ When a new feature ships:
 
 ### Current Baseline
 
-67 tests across 4 files. All must pass before any commit.
+100 tests across 5 files. All must pass before any commit.

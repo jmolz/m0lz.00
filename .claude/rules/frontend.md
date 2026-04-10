@@ -43,7 +43,7 @@ All pages must be statically renderable. Use `generateStaticParams()` for dynami
 
 ```tsx
 export async function generateStaticParams() {
-  const posts = await getAllPosts()
+  const posts = getAllPosts()
   return posts.map((post) => ({ slug: post.slug }))
 }
 ```
@@ -61,7 +61,7 @@ Only 4 CSS custom properties exist. No other colors are allowed in the UI:
 --border: #e5e5e5 (light) / #262626 (dark)
 ```
 
-Syntax highlighting in code blocks is the sole exception — use a monochrome-leaning Shiki theme.
+Syntax highlighting in code blocks is the sole exception — uses `min-dark` / `min-light` dual Shiki themes.
 
 ### Typography
 
@@ -114,7 +114,7 @@ The `branch-mark.tsx` component renders the generative logo system:
 
 ## Styling Rules
 
-- Use Tailwind utility classes exclusively — no custom CSS except in `globals.css` for tokens
+- Use Tailwind utility classes exclusively — no custom CSS except in `globals.css` for tokens and `rehype-pretty-code` styling
 - Do NOT use Tailwind `dark:` variants — theme colors come from CSS custom properties that swap via the `.dark` class on `<html>`. Use `text-[var(--foreground)]`, `bg-[var(--background)]`, etc.
 - No `!important` overrides
 - No inline styles — use Tailwind arbitrary values (e.g., `tracking-[-1.5px]`) instead

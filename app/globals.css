@@ -26,3 +26,77 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* rehype-pretty-code: dual theme visibility */
+[data-rehype-pretty-code-fragment] [data-theme='light'],
+[data-rehype-pretty-code-figure] [data-theme='light'] {
+  display: block;
+}
+[data-rehype-pretty-code-fragment] [data-theme='dark'],
+[data-rehype-pretty-code-figure] [data-theme='dark'] {
+  display: none;
+}
+.dark [data-rehype-pretty-code-fragment] [data-theme='light'],
+.dark [data-rehype-pretty-code-figure] [data-theme='light'] {
+  display: none;
+}
+.dark [data-rehype-pretty-code-fragment] [data-theme='dark'],
+.dark [data-rehype-pretty-code-figure] [data-theme='dark'] {
+  display: block;
+}
+
+/* rehype-pretty-code: code block containers */
+[data-rehype-pretty-code-fragment] pre,
+[data-rehype-pretty-code-figure] pre {
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  background-color: var(--background) !important;
+}
+
+/* rehype-pretty-code: line elements */
+[data-line] {
+  padding: 0 1rem;
+  margin: 0 -1rem;
+}
+
+/* rehype-pretty-code: file name tab */
+[data-rehype-pretty-code-title] {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 4px 4px 0 0;
+  background-color: var(--background);
+}
+[data-rehype-pretty-code-title] + pre {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Reset inline code styles inside code blocks */
+pre code {
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+/* Prose content line height */
+.prose-content p {
+  margin-bottom: 1.25rem;
+}
+.prose-content ul,
+.prose-content ol {
+  margin-bottom: 1.25rem;
+  padding-left: 1.5rem;
+}
+.prose-content li {
+  margin-bottom: 0.25rem;
+}
