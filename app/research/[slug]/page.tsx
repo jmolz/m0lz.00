@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { getAllResearch, getResearch } from '@/lib/research'
+import { getAllPosts } from '@/lib/posts'
 import { projects } from '@/data/projects'
 import { compileMDX } from '@/lib/mdx'
 import { mdxComponents } from '@/components/mdx-components'
@@ -34,6 +35,7 @@ export default async function ResearchPage({
   const { meta, content } = getResearch(slug)
   const Content = await compileMDX(content)
   const project = projects.find((p) => p.catalogId === meta.project)
+  const relatedPosts = getAllPosts().filter((p) => p.project === meta.project)
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
@@ -94,6 +96,35 @@ export default async function ResearchPage({
       <article className="mt-8 prose-content leading-[1.8] text-sm">
         <Content components={mdxComponents} />
       </article>
+
+      {relatedPosts.length > 0 && (
+        <>
+          <hr className="border-[var(--border)] border-t-[0.5px] mt-12" />
+
+          <section className="mt-6">
+            <p className="text-xs tracking-widest text-[var(--muted)] mb-4">
+              RELATED WRITING
+            </p>
+            <ul className="space-y-3">
+              {relatedPosts.map((post) => (
+                <li key={post.slug}>
+                  <Link
+                    href={`/writing/${post.slug}`}
+                    className="group"
+                  >
+                    <p className="text-sm text-[var(--muted)] group-hover:text-[var(--foreground)] transition-colors">
+                      {post.title}
+                    </p>
+                    <p className="text-xs text-[var(--muted)] mt-0.5">
+                      {post.description}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        </>
+      )}
     </div>
   )
 }

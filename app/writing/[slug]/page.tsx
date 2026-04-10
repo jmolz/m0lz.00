@@ -2,8 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { getAllPosts, getPost, getAdjacentPosts } from '@/lib/posts'
+import { getAllResearch } from '@/lib/research'
+import { projects } from '@/data/projects'
 import { compileMDX } from '@/lib/mdx'
 import { mdxComponents } from '@/components/mdx-components'
+import { BranchMark } from '@/components/branch-mark'
 
 export async function generateStaticParams() {
   const posts = getAllPosts()
@@ -33,6 +36,13 @@ export default async function PostPage({
   const Content = await compileMDX(content)
   const { prev, next } = getAdjacentPosts(slug)
 
+  const project = meta.project
+    ? projects.find((p) => p.catalogId === meta.project)
+    : null
+  const research = meta.project
+    ? getAllResearch().find((r) => r.project === meta.project)
+    : null
+
   return (
     <div className="max-w-3xl mx-auto px-6 py-16">
       <header className="mb-8">
@@ -51,6 +61,40 @@ export default async function PostPage({
           )}
         </div>
         <p className="text-xs text-[var(--muted)] mt-2">Jacob Molz</p>
+
+        {(project || meta.companion_repo || research) && (
+          <div className="flex flex-wrap items-center gap-4 mt-4">
+            {project?.variant && (
+              <Link
+                href={project.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              >
+                <BranchMark variant={project.variant} size={16} />
+                {project.name}
+              </Link>
+            )}
+            {meta.companion_repo && (
+              <a
+                href={meta.companion_repo}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              >
+                View repo
+              </a>
+            )}
+            {research && (
+              <Link
+                href={`/research/${research.slug}`}
+                className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+              >
+                Read the research
+              </Link>
+            )}
+          </div>
+        )}
       </header>
 
       <hr className="border-[var(--border)] border-t-[0.5px]" />
