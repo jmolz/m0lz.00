@@ -20,15 +20,15 @@ export const projects: ProjectData[] = [
   },
   {
     name: 'PICE',
-    description: 'Structured methodology for AI-assisted engineering. Plan → Implement → Contract-Evaluate with dual-model adversarial evaluation and WISC context management.',
+    description: 'Structured AI coding workflow orchestrator. Plan → Implement → Contract-Evaluate with dual-model adversarial evaluation, WISC context management, and tiered verification.',
     url: 'https://github.com/jmolz/pice-framework',
-    tech: 'Methodology / TypeScript',
+    tech: 'Rust / TypeScript',
     catalogId: 'm0lz.02',
     variant: 'pice',
   },
   {
     name: 'MCP-Guard',
-    description: 'Security proxy daemon for MCP servers — authentication, rate limiting, PII detection, permission scoping, and audit logging.',
+    description: 'Security proxy daemon for MCP servers. Authentication, rate limiting, PII detection, permission scoping, audit logging. 97% detection rate across 7,095 attack scenarios.',
     url: 'https://github.com/jmolz/mcp-guard',
     tech: 'TypeScript',
     catalogId: 'm0lz.03',
@@ -48,9 +48,9 @@ export const projects: ProjectData[] = [
   },
   {
     name: 'Case Pilot',
-    description: 'AI-powered legal case management for pro se litigants',
+    description: 'AI-powered legal case management for pro se litigants. Court filing monitor, deadline tracker, citation verification, red team analysis, and DOCX export. Local-first, privacy-focused.',
     url: 'https://github.com/jmolz/case-pilot',
-    tech: 'JavaScript',
+    tech: 'JavaScript / Claude API',
   },
   {
     name: 'Bloom',
@@ -60,7 +60,7 @@ export const projects: ProjectData[] = [
   },
   {
     name: 'Investor Matchmaker',
-    description: 'Python-based investor-founder matchmaking for Startup Week',
+    description: 'Investor-founder meeting scheduler for Startup Week. Greedy bipartite matching across investment type, business type, and sector with Excel I/O.',
     url: 'https://github.com/Raleigh-Durham-Startup-Week/investor-matchmaker',
     tech: 'Python',
   },

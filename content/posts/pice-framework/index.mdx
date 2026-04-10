@@ -1,0 +1,92 @@
+---
+title: "PICE: Structured AI Coding Workflows"
+description: "Plan → Implement → Contract-Evaluate — a methodology for AI-assisted engineering with dual-model adversarial evaluation and WISC context management."
+date: "2026-04-10"
+tags: ["ai", "developer-tools", "methodology", "open-source"]
+canonical: "https://m0lz.dev/writing/pice-framework"
+companion_repo: "https://github.com/jmolz/pice-framework"
+project: "m0lz.02"
+published: true
+---
+
+PICE is a structured methodology for AI-assisted engineering. It breaks AI coding sessions into three phases — **Plan**, **Implement**, **Contract-Evaluate** — with formal contracts between human and AI defining "done" before any code is generated.
+
+The problem it solves: AI coding tools are powerful but chaotic. Without structure, sessions drift, context degrades, and quality is unmeasurable. PICE adds the missing discipline.
+
+---
+
+## How it works
+
+### Plan
+
+Research the codebase, map affected files, identify patterns, and produce a detailed implementation plan. The plan must contain all context needed for one-pass implementation — the execution agent gets only this document.
+
+### Implement
+
+Execute the plan in a fresh AI session. No conversation history, no prior research. Everything the agent needs is in the plan file. This forces plans to be complete and self-contained.
+
+### Contract-Evaluate
+
+Grade the implementation against a formal contract using dual-model adversarial evaluation:
+
+```
+╔══════════════════════════════════════╗
+║  Contract Evaluation — m0lz.00      ║
+╠══════════════════════════════════════╣
+║ ✅ Static HTML output only     9/9  ║
+║ ✅ 4 color tokens, no extras   9/9  ║
+║ ✅ All routes render           10/10 ║
+╠══════════════════════════════════════╣
+║  Adversarial Review                  ║
+║  [consider] Rate limiting on login   ║
+╠══════════════════════════════════════╣
+║  Overall: PASS                       ║
+╚══════════════════════════════════════╝
+```
+
+Claude grades each criterion with a numeric score against a threshold. A separate model (GPT-5.4) independently challenges the approach as an adversary — surfacing blind spots neither model would catch alone.
+
+---
+
+## WISC Context Management
+
+Context is the most precious resource in AI-assisted development. PICE uses WISC — **Write, Isolate, Select, Compress** — to manage it:
+
+- **Write** — Capture decisions, constraints, and patterns as persistent artifacts (CLAUDE.md, rules, plans)
+- **Isolate** — Each phase runs in a fresh session. No context bleed between planning and implementation.
+- **Select** — Path-scoped rules load only when editing relevant files. Don't waste tokens on frontend rules while editing database code.
+- **Compress** — Handoff files capture session state for the next agent. Compact, structured, no chat history.
+
+---
+
+## Tiered Evaluation
+
+Evaluation scales with the significance of the change:
+
+- **Tier 1** — Single evaluator pass. Bug fixes, simple endpoints, UI tweaks.
+- **Tier 2** — Parallel adversarial review. New features touching multiple domains, integrations, schema changes.
+- **Tier 3** — Agent team evaluation. Architectural changes, new pipeline phases, security-critical work.
+
+---
+
+## Architecture
+
+PICE CLI is built in Rust with a provider architecture that separates the core from AI provider implementations. The Rust core handles argument parsing, state management, configuration, metrics, and process orchestration. AI providers are separate TypeScript processes communicating over JSON-RPC on stdio.
+
+This means community-built providers can support any AI coding tool without modifying the core binary.
+
+---
+
+## Commands
+
+| Command | Description |
+|---------|-------------|
+| `pice plan` | Research, plan, and generate a contract |
+| `pice execute` | Implement from a plan file in a fresh session |
+| `pice evaluate` | Adversarial evaluation against a contract |
+| `pice review` | Code review and regression suite |
+| `pice commit` | Standardized git commit |
+| `pice handoff` | Capture session state for next session |
+| `pice metrics` | Aggregate quality metrics |
+
+Source: [github.com/jmolz/pice-framework](https://github.com/jmolz/pice-framework)

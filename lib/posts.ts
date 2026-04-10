@@ -10,6 +10,7 @@ export interface PostFrontmatter {
   published: boolean
   canonical?: string
   companion_repo?: string
+  project?: string
   medium_url?: string
   devto_url?: string
 }

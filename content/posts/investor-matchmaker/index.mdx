@@ -1,0 +1,59 @@
+---
+title: "Investor Matchmaker: Startup Week Scheduling"
+description: "Python-based investor-founder meeting scheduler using greedy bipartite matching across investment type, business type, and sector criteria."
+date: "2026-04-10"
+tags: ["python", "open-source", "startups"]
+canonical: "https://m0lz.dev/writing/investor-matchmaker"
+companion_repo: "https://github.com/Raleigh-Durham-Startup-Week/investor-matchmaker"
+published: true
+---
+
+Investor Matchmaker is a Python script that schedules investor-founder meetings for Startup Week events. It uses greedy bipartite matching to pair investors with founders based on three criteria: investment type, business type, and sector.
+
+---
+
+## The matching problem
+
+A match requires alignment on at least one "Yes" in **each** of three categories:
+
+1. **Investment Type** — Angel, Pre-Seed, Seed, Series A, Series B
+2. **Business Type** — B2B, B2C, CPG, Enterprise
+3. **Sector** — AI, FinTech, Cybersecurity, etc.
+
+### Constraints
+
+- **10 time slots**, each 20 minutes with 5-minute breaks
+- **20 concurrent pairings** per slot
+- No repeated investor-founder pairs across slots
+- Every founder must meet at least one investor (if a valid match exists)
+
+---
+
+## Algorithm
+
+The script implements greedy bipartite matching for each slot:
+
+1. Read investor and founder data from Excel
+2. Identify all valid matches based on the three criteria
+3. For each time slot, greedily assign matches while respecting constraints
+4. Ensure fairness — founders with fewer matches get priority
+5. Write the schedule to `Schedule.xlsx`
+
+### Known limitations
+
+- **Greedy matching** — Not guaranteed optimal in complex scenarios. A constraint solver (Google OR-Tools) would guarantee coverage but adds complexity.
+- **Coverage gaps** — Founders with limited category overlap might remain unmatched if high-demand pairs fill the slots first.
+
+---
+
+## Usage
+
+```bash
+pip install pandas networkx openpyxl
+python matchmaker_excel.py
+```
+
+Input: `Company Data.xlsx` and `Investor Data.xlsx` with Yes/No columns for each criterion.
+Output: `Schedule.xlsx` with up to 20 pairings per time slot.
+
+Source: [github.com/Raleigh-Durham-Startup-Week/investor-matchmaker](https://github.com/Raleigh-Durham-Startup-Week/investor-matchmaker)

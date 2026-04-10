@@ -1,0 +1,72 @@
+---
+title: "Case Pilot: AI Legal Case Management"
+description: "A local-first, privacy-focused tool for pro se litigants. Court filing monitor, AI drafting, deadline tracking, citation verification, and red team analysis."
+date: "2026-04-10"
+tags: ["ai", "legal-tech", "open-source"]
+canonical: "https://m0lz.dev/writing/case-pilot"
+companion_repo: "https://github.com/jmolz/case-pilot"
+published: true
+---
+
+Case Pilot is a local-first, privacy-focused tool that helps self-represented parties manage their litigation. It runs entirely on your machine — no cloud, no third-party access to your case files. Built for North Carolina District Court but adaptable to any jurisdiction.
+
+---
+
+## Core features
+
+- **AI Drafting** — Claude-powered motion and response drafting with full case context via RAG over your local documents
+- **Court Filing Monitor** — Scrapes Tyler Tech Register of Actions portal for new filings, downloads PDFs, organizes into case folders
+- **Deadline Tracker** — AI-analyzed deadlines from court events with urgency coloring
+- **Citation Verification** — Checks NC case citations against CourtListener, statutes against local library
+- **Filing Completeness Checker** — Real-time checks for caption, signature block, certificate of service, jurisdictional reservation
+- **Red Team Analysis** — Opposing counsel simulation to stress-test your filings before submission
+- **Hearing Prep Generator** — Dual-format oral arguments: full 90-second and nuclear 2-sentence cutoff
+- **DOCX Export** — Court-ready Word documents with proper legal formatting
+- **Research Library Sync** — Auto-downloads NC statutes, local rules, and recent case law
+- **Assignment Chain Visualizer** — Visual chain-of-title analysis with gap detection
+
+---
+
+## Privacy model
+
+- **100% local** — No data leaves your machine except Anthropic API calls
+- **No telemetry** — No analytics, no tracking
+- **Gitignored by default** — Case config, database, and all case document folders excluded from version control
+
+The only external communication is to the Claude API for AI-powered features. Your case context is sent for drafting but never stored on Anthropic's servers (when using API access).
+
+---
+
+## How it works
+
+The tool is organized around a folder structure that mirrors legal case management:
+
+```
+case-pilot/
+├── 00_Case_Overview/     # Case index, timeline, strategy
+├── 01_Pleadings/         # Complaints, answers
+├── 02_Motions/           # Motions, responses, replies
+├── 03_Discovery/         # Discovery requests and responses
+├── 04_Evidence_Exhibits/ # Evidence and exhibits
+├── 05_Court_Orders/      # Court orders
+├── 07_Research/          # Statutes, local rules, case law
+├── 08_Templates/         # Filing templates
+└── 09_Oral_Arguments/    # Hearing prep scripts
+```
+
+Daily automation via macOS LaunchAgents handles court filing checks and research library sync.
+
+---
+
+## Quick start
+
+```bash
+git clone https://github.com/jmolz/case-pilot.git
+cd case-pilot
+cp case-config.example.json case-config.json
+cp .env.example .env
+cd scripts && npm install && node setup.js
+node ui-server.js
+```
+
+Source: [github.com/jmolz/case-pilot](https://github.com/jmolz/case-pilot)
