@@ -55,10 +55,10 @@ npm run test -- \
 
 | Test File | Feature | What It Validates |
 | --- | --- | --- |
-| `design-constraints.test.ts` (13 tests) | Design System | Monochrome-only colors, no font-weight 600/700, no tailwind.config.*, no inline styles, CSS tokens defined |
+| `design-constraints.test.ts` (16 tests) | Design System + ESLint Config | Monochrome-only colors, no font-weight 600/700, no tailwind.config.*, no inline styles, CSS tokens defined, ESLint config registers react-hooks plugin and enforces rules-of-hooks + exhaustive-deps as errors |
 | `theme-system.test.ts` (10 tests) | Theme System | Blocking script logic, dark class baked into HTML, suppressHydrationWarning, CSS light/dark tokens, ThemeProvider/useTheme exports |
 | `branch-mark.test.ts` (19 tests) | Branch Mark | All 4 variants defined with distinct patterns, proportional scaling math, currentColor/var(--background) theme awareness, favicon exists and valid |
-| `routes.test.ts` (32 tests) | Routes & Layout | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured, floating TOC (component exists, client directive, IntersectionObserver, rehype-slug, scroll-behavior, monochrome tokens, responsive hiding) |
+| `routes.test.ts` (40 tests) | Routes & Layout + TOC + Research Panel | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured, floating TOC (component exists, client directive, IntersectionObserver, rehype-slug, scroll-behavior, monochrome tokens, responsive hiding), research panel (exists, client directive, panel-scoped IntersectionObserver with `root: scrollContainerRef`, `max-w-5xl` for two-column layout, `.toc-scroll` class reuse, hidden below `lg:` breakpoint, no embedded `<TableOfContents>`, monochrome tokens + no `dark:` variants) |
 
 **Phase 2 — Content Infrastructure (2026-04-10)**
 
@@ -69,6 +69,7 @@ npm run test -- \
 ### Source files these tests protect
 
 - `app/globals.css` — Tailwind import, monochrome color tokens, dark/light theme definitions
+- `eslint.config.mjs` — ESLint flat config with `react-hooks/rules-of-hooks` and `react-hooks/exhaustive-deps` enabled as errors
 - `app/layout.tsx` — Root layout with Geist fonts, ThemeProvider, Nav, Footer, blocking theme script
 - `app/page.tsx` — Landing page with hero, latest posts, project cards
 - `app/writing/page.tsx` — Writing route stub
@@ -96,8 +97,9 @@ npm run test -- \
 - `app/writing/[slug]/opengraph-image.tsx` — Per-post OG images with generateStaticParams
 - `app/feed.xml/route.ts` — RSS 2.0 feed generation (static-compatible GET)
 - `components/table-of-contents.tsx` — Floating TOC with IntersectionObserver scroll tracking
+- `components/research-panel.tsx` — Slide-out research panel with panel-scoped sticky TOC, custom scrollbar, and two-column desktop layout
 - `app/research/[slug]/page.tsx` — Per-project research page with TOC integration
-- `app/writing/[slug]/page.tsx` — Individual post page with TOC integration
+- `app/writing/[slug]/page.tsx` — Individual post page with TOC integration and ResearchPanel consumer
 
 ### Expected results
 
@@ -137,7 +139,7 @@ npm run test
 npm run build
 ```
 
-Expected baseline: 0 lint errors, 123 tests passing (5 files), build succeeds with 21 static routes
+Expected baseline: 0 lint errors, 134 tests passing (5 files), build succeeds with 21 static routes
 
 ## Phase 3: Code Review of Current Changes
 

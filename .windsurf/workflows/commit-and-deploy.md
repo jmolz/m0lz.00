@@ -20,7 +20,7 @@ npm run lint
 npm run test
 ```
 
-Expected: 116 tests passing across 5 files. All must pass before committing.
+Expected: 134 tests passing across 5 files. All must pass before committing.
 
 ### 3. Build
 

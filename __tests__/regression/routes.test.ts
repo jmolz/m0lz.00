@@ -189,6 +189,75 @@ describe('Route Stubs', () => {
     })
   })
 
+  describe('Research Panel', () => {
+    it('research-panel.tsx exists', () => {
+      expect(
+        fs.existsSync(path.join(ROOT, 'components/research-panel.tsx')),
+      ).toBe(true)
+    })
+
+    it('component is a client component', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain("'use client'")
+    })
+
+    it('panel-scoped TOC uses scrollContainerRef as IntersectionObserver root', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('IntersectionObserver')
+      expect(content).toMatch(/root:\s*scrollContainerRef/)
+    })
+
+    it('panel is wide enough for a two-column layout', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toMatch(/max-w-(3xl|4xl|5xl|6xl|7xl)/)
+    })
+
+    it('panel scroll container reuses the .toc-scroll class', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('toc-scroll')
+    })
+
+    it('panel TOC is hidden below lg breakpoint', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toMatch(/hidden\s+lg:block/)
+    })
+
+    it('does not render the viewport-scoped TableOfContents inside the panel', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).not.toContain('<TableOfContents')
+    })
+
+    it('component uses only monochrome color tokens', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('var(--foreground)')
+      expect(content).toContain('var(--muted)')
+      expect(content).toContain('var(--border)')
+      expect(content).not.toMatch(/#[0-9a-fA-F]{3,6}/)
+      expect(content).not.toMatch(/\bdark:/)
+    })
+  })
+
   describe('Metadata', () => {
     it('layout exports metadata with title', () => {
       const content = fs.readFileSync(

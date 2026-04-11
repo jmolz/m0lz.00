@@ -145,4 +145,35 @@ describe('Design Constraints', () => {
       expect(darkBlock).toContain('--border:')
     })
   })
+
+  describe('ESLint config', () => {
+    it('registers the react-hooks plugin', () => {
+      const config = fs.readFileSync(
+        path.join(ROOT, 'eslint.config.mjs'),
+        'utf-8',
+      )
+      expect(config).toContain('eslint-plugin-react-hooks')
+      expect(config).toMatch(/['"]react-hooks['"]\s*:\s*reactHooks/)
+    })
+
+    it('enforces react-hooks/rules-of-hooks as an error', () => {
+      const config = fs.readFileSync(
+        path.join(ROOT, 'eslint.config.mjs'),
+        'utf-8',
+      )
+      expect(config).toMatch(
+        /['"]react-hooks\/rules-of-hooks['"]\s*:\s*['"]error['"]/,
+      )
+    })
+
+    it('enforces react-hooks/exhaustive-deps as an error', () => {
+      const config = fs.readFileSync(
+        path.join(ROOT, 'eslint.config.mjs'),
+        'utf-8',
+      )
+      expect(config).toMatch(
+        /['"]react-hooks\/exhaustive-deps['"]\s*:\s*['"]error['"]/,
+      )
+    })
+  })
 })
