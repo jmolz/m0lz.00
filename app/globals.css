@@ -123,3 +123,13 @@ pre code {
 .prose-content li {
   margin-bottom: 0.25rem;
 }
+
+/* Prevent horizontal overflow on mobile */
+.prose-content {
+  overflow-wrap: break-word;
+}
+.prose-content pre,
+.prose-content table,
+.prose-content img {
+  max-width: 100%;
+}

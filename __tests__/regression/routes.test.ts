@@ -187,6 +187,23 @@ describe('Route Stubs', () => {
       )
       expect(content).toMatch(/hidden\s+xl:block/)
     })
+
+    it('TOC queries h2 headings only, not h3', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/table-of-contents.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain("h2[id]")
+      expect(content).not.toContain("h3[id]")
+    })
+
+    it('prose content prevents horizontal overflow', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'app/globals.css'),
+        'utf-8',
+      )
+      expect(content).toContain('overflow-wrap: break-word')
+    })
   })
 
   describe('Research Panel', () => {
@@ -255,6 +272,24 @@ describe('Route Stubs', () => {
       expect(content).toContain('var(--border)')
       expect(content).not.toMatch(/#[0-9a-fA-F]{3,6}/)
       expect(content).not.toMatch(/\bdark:/)
+    })
+
+    it('panel TOC queries h2 headings only, not h3', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain("h2[id]")
+      expect(content).not.toContain("h3[id]")
+    })
+
+    it('panel TOC uses viewport-relative max-height for independent scrolling', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/research-panel.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('calc(100vh')
+      expect(content).not.toContain('max-h-full')
     })
   })
 

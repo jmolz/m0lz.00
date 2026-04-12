@@ -5,7 +5,6 @@ import { useState, useEffect, useRef } from 'react'
 interface TocItem {
   id: string
   text: string
-  level: number
 }
 
 export function TableOfContents() {
@@ -17,13 +16,12 @@ export function TableOfContents() {
     const article = document.querySelector('article')
     if (!article) return
 
-    const headings = article.querySelectorAll('h2[id], h3[id]')
+    const headings = article.querySelectorAll('h2[id]')
     if (headings.length === 0) return
 
     const tocItems: TocItem[] = Array.from(headings).map((el) => ({
       id: el.id,
       text: el.textContent || '',
-      level: el.tagName === 'H2' ? 2 : 3,
     }))
     setItems(tocItems)
     setActiveId(tocItems[0].id)
@@ -61,9 +59,7 @@ export function TableOfContents() {
           <li key={item.id}>
             <a
               href={`#${item.id}`}
-              className={`block transition-colors leading-snug ${
-                item.level === 3 ? 'pl-6' : 'pl-3'
-              } ${
+              className={`block transition-colors leading-snug pl-3 ${
                 activeId === item.id
                   ? 'text-[var(--foreground)]'
                   : 'text-[var(--muted)] hover:text-[var(--foreground)]'

@@ -129,6 +129,7 @@ Interactive features that require browser APIs use `'use client'` components. Fo
 | `theme-provider.tsx` | Theme context + blocking script | `localStorage`, `document.documentElement` |
 | `nav-links.tsx` | Active link state + mobile menu | `usePathname()` |
 | `table-of-contents.tsx` | Floating TOC with scroll tracking | `IntersectionObserver`, `document.querySelectorAll` |
+| `research-panel.tsx` | Slide-out research panel with panel-scoped TOC | `IntersectionObserver`, `document.querySelectorAll`, `KeyboardEvent` |
 | `code-block.tsx` | Copy-to-clipboard on code blocks | `navigator.clipboard` |
 
 ## Styling Rules

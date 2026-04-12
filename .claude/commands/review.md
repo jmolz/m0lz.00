@@ -58,7 +58,7 @@ npm run test -- \
 | `design-constraints.test.ts` (16 tests) | Design System + ESLint Config | Monochrome-only colors, no font-weight 600/700, no tailwind.config.*, no inline styles, CSS tokens defined, ESLint config registers react-hooks plugin and enforces rules-of-hooks + exhaustive-deps as errors |
 | `theme-system.test.ts` (10 tests) | Theme System | Blocking script logic, dark class baked into HTML, suppressHydrationWarning, CSS light/dark tokens, ThemeProvider/useTheme exports |
 | `branch-mark.test.ts` (19 tests) | Branch Mark | All 4 variants defined with distinct patterns, proportional scaling math, currentColor/var(--background) theme awareness, favicon exists and valid |
-| `routes.test.ts` (40 tests) | Routes & Layout + TOC + Research Panel | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured, floating TOC (component exists, client directive, IntersectionObserver, rehype-slug, scroll-behavior, monochrome tokens, responsive hiding), research panel (exists, client directive, panel-scoped IntersectionObserver with `root: scrollContainerRef`, `max-w-5xl` for two-column layout, `.toc-scroll` class reuse, hidden below `lg:` breakpoint, no embedded `<TableOfContents>`, monochrome tokens + no `dark:` variants) |
+| `routes.test.ts` (44 tests) | Routes & Layout + TOC + Research Panel | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured, floating TOC (component exists, client directive, IntersectionObserver, rehype-slug, scroll-behavior, monochrome tokens, responsive hiding, h2-only heading queries, no h3), prose content overflow prevention (`overflow-wrap: break-word`), research panel (exists, client directive, panel-scoped IntersectionObserver with `root: scrollContainerRef`, `max-w-5xl` for two-column layout, `.toc-scroll` class reuse, hidden below `lg:` breakpoint, no embedded `<TableOfContents>`, monochrome tokens + no `dark:` variants, h2-only heading queries, viewport-relative `max-h-[calc(100vh-4rem)]` for independent scrolling) |
 
 **Phase 2 — Content Infrastructure (2026-04-10)**
 
@@ -139,7 +139,7 @@ npm run test
 npm run build
 ```
 
-Expected baseline: 0 lint errors, 134 tests passing (5 files), build succeeds with 21 static routes
+Expected baseline: 0 lint errors, 138 tests passing (5 files), build succeeds with 21 static routes
 
 ## Phase 3: Code Review of Current Changes
 

@@ -19,7 +19,6 @@ interface ResearchPanelProps {
 interface TocItem {
   id: string
   text: string
-  level: 2 | 3
 }
 
 export function ResearchPanel({
@@ -61,11 +60,10 @@ export function ResearchPanel({
     const article = container.querySelector('article')
     if (!article) return
 
-    const headings = article.querySelectorAll('h2[id], h3[id]')
+    const headings = article.querySelectorAll('h2[id]')
     const tocItems: TocItem[] = Array.from(headings).map((el) => ({
       id: el.id,
       text: el.textContent || '',
-      level: el.tagName === 'H2' ? 2 : 3,
     }))
     setItems(tocItems)
 
@@ -173,16 +171,14 @@ export function ResearchPanel({
                 </div>
 
                 {items.length > 0 && (
-                  <nav className="hidden lg:block sticky top-0 self-start w-48 max-h-full overflow-y-auto toc-scroll pt-[2.5rem] text-xs">
+                  <nav className="hidden lg:block sticky top-0 self-start w-48 max-h-[calc(100vh-4rem)] overflow-y-auto toc-scroll pt-[2.5rem] text-xs">
                     <ul className="border-l border-[var(--border)] space-y-1.5">
                       {items.map((item) => (
                         <li key={item.id}>
                           <a
                             href={`#${item.id}`}
                             onClick={(e) => handleTocClick(e, item.id)}
-                            className={`block transition-colors leading-snug ${
-                              item.level === 3 ? 'pl-6' : 'pl-3'
-                            } ${
+                            className={`block transition-colors leading-snug pl-3 ${
                               activeId === item.id
                                 ? 'text-[var(--foreground)]'
                                 : 'text-[var(--muted)] hover:text-[var(--foreground)]'

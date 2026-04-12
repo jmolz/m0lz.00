@@ -39,7 +39,7 @@ export default async function ResearchPage({
   const relatedPosts = getAllPosts().filter((p) => p.project === meta.project)
 
   return (
-    <div className="max-w-3xl mx-auto px-6 py-16">
+    <div className="max-w-3xl mx-auto px-6 py-16 overflow-x-hidden">
       <header className="mb-8">
         <Link
           href="/research"
