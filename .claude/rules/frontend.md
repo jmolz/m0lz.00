@@ -107,7 +107,7 @@ This guarantees zero flash: CSS dark tokens apply immediately from the static HT
 
 The `branch-mark.tsx` component renders the generative logo system:
 
-- Accepts a `variant` prop: `'personal'`, `'blog-agent'`, `'pice'`, `'mcp-guard'`
+- Accepts a `variant` prop: `'personal'`, `'blog-agent'`, `'pice'`, `'mcp-guard'`, `'case-pilot'`
 - Accepts a `size` prop for scaling (must be legible from 16px to 64px+)
 - Automatically adapts colors to current theme (foreground/background swap)
 - Renders as inline SVG for crisp scaling

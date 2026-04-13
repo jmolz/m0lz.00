@@ -148,7 +148,7 @@ The blog agent (m0lz.01, separate repo) publishes posts by committing MDX files 
 - **Location**: `__tests__/regression/` for cumulative regression suite
 - **Run**: `npm run test` (140 tests, 5 files)
 - **Regression suite**: Grows with every shipped feature, never shrinks. See `.claude/rules/testing.md` for conventions.
-- **Current coverage**: Design constraints (16), theme system (10), branch mark (19), routes & layout (44), content pipeline (49)
+- **Current coverage**: Design constraints (16), theme system (10), branch mark (21), routes & layout (44), content pipeline (49)
 
 ---
 
