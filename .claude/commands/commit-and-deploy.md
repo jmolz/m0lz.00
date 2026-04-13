@@ -20,7 +20,7 @@ npm run lint
 npm run test
 ```
 
-Expected: 134 tests passing across 5 files. All must pass before committing.
+Expected: 148 tests passing across 5 files. All must pass before committing.
 
 ### 3. Build
 
@@ -39,6 +39,15 @@ Before committing, check if any of these need updating:
 3. **`.claude/rules/`** — Update if patterns or conventions changed
 4. **`.windsurf/workflows/review.md`** and **`.claude/commands/review.md`** — Update if test files, counts, or source files changed (must stay in sync)
 
+## Determine Context (Worktree or Main)
+
+```bash
+git branch --show-current
+git worktree list
+```
+
+Determine if you're in a **worktree** (feature branch) or on **main**. The remaining phases adapt based on this.
+
 ## Commit
 
 Use the `/commit` workflow for message format. Key rules:
@@ -47,19 +56,64 @@ Use the `/commit` workflow for message format. Key rules:
 - **Scope:** `feat(ui)`, `fix(content)`, `docs(readme)`, `chore(deploy)`
 - **Context section** required if AI layer files changed (CLAUDE.md, .claude/, .windsurf/)
 
+## Merge to Main (Worktree Only)
+
+**Skip this phase if already on main.**
+
+If you committed on a feature branch in a worktree, merge it into main:
+
+```bash
+FEATURE_BRANCH=$(git branch --show-current)
+WORKTREE_PATH=$(pwd)
+MAIN_REPO=$(git worktree list | head -1 | awk '{print $1}')
+cd "$MAIN_REPO"
+git checkout main
+git pull origin main
+git merge "$FEATURE_BRANCH"
+```
+
+If the merge has conflicts:
+
+1. Resolve conflicts — favor the feature branch for new code, preserve main for unrelated changes
+2. Run the full validation suite again after resolving
+3. Commit the merge resolution
+
 ## Deploy
 
 ```bash
+# Push from the main repo directory (not the worktree)
 git push origin main
 ```
 
 **Vercel** auto-deploys on push to `main`. Static site builds in ~1-2 minutes.
 
+## Clean Up Worktree (Worktree Only)
+
+**Skip this phase if you were already on main.**
+
+After a successful merge and push, remove the worktree and feature branch:
+
+```bash
+git worktree remove "$WORKTREE_PATH"
+git branch -d "$FEATURE_BRANCH"
+```
+
+Verify cleanup:
+
+```bash
+git worktree list
+git branch
+git status
+```
+
+If `git branch -d` refuses (branch not fully merged), investigate — do NOT force-delete with `-D` without understanding why.
+
 ## Verify
 
 ```bash
+git log --oneline -5
 git status
-# Expected: "nothing to commit, working tree clean"
+# Expected: on main, clean tree, feature commits visible in log
 ```
 
 After deploy, verify at [m0lz.dev](https://m0lz.dev):
