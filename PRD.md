@@ -229,8 +229,9 @@ Grid of all public projects, divided into sections:
 
 | ID | Description | URL | Tech |
 |----|-------------|-----|------|
-| m0lz.02 | Structured AI coding workflow orchestrator with dual-model adversarial evaluation | github.com/jmolz/pice-framework | Rust |
-| m0lz.03 | Security proxy daemon for MCP servers — auth, rate limiting, PII detection, permissions, audit logging | github.com/jmolz/mcp-guard | TypeScript |
+| m0lz.02 | Structured AI coding workflow orchestrator with dual-model adversarial evaluation | github.com/jmolz/m0lz.02 | Rust |
+| m0lz.03 | Security proxy daemon for MCP servers — auth, rate limiting, PII detection, permissions, audit logging | github.com/jmolz/m0lz.03 | TypeScript |
+| m0lz.04 | AI-powered legal case management for pro se litigants | github.com/jmolz/m0lz.04 | JavaScript |
 
 **Other public projects** (no branch mark, generic icon or no icon):
 
@@ -238,7 +239,7 @@ Grid of all public projects, divided into sections:
 |---------|-------------|-----|------|
 | Alpaka | Value chain intelligence for real estate — Scope 3 carbon emissions ML modeling, supply chain optimization | alpaka.ai | Python ML + TypeScript |
 | Ready Text | Waitlist texting & customer alert platform for restaurants and businesses | ready-text.com | Laravel/PHP |
-| Case Pilot | AI-powered legal case management for pro se litigants | github.com/jmolz/case-pilot | JavaScript |
+| Case Pilot | AI-powered legal case management for pro se litigants | github.com/jmolz/m0lz.04 | JavaScript |
 | Bloom | AI-powered revenue discovery for service businesses | meetbloom.io | TypeScript/Next.js |
 | Investor Matchmaker | Python-based investor-founder matchmaking for Startup Week | github.com/Raleigh-Durham-Startup-Week/investor-matchmaker | Python |
 

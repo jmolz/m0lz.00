@@ -106,6 +106,12 @@ export default function AboutPage() {
               <span className="font-medium">m0lz.03</span> — MCP-Guard
             </span>
           </div>
+          <div className="flex items-center gap-3">
+            <BranchMark variant="case-pilot" size={24} />
+            <span>
+              <span className="font-medium">m0lz.04</span> — Case Pilot
+            </span>
+          </div>
         </div>
       </section>
 

@@ -57,14 +57,14 @@ npm run test -- \
 | --- | --- | --- |
 | `design-constraints.test.ts` (16 tests) | Design System + ESLint Config | Monochrome-only colors, no font-weight 600/700, no tailwind.config.*, no inline styles, CSS tokens defined, ESLint config registers react-hooks plugin and enforces rules-of-hooks + exhaustive-deps as errors |
 | `theme-system.test.ts` (10 tests) | Theme System | Blocking script logic, dark class baked into HTML, suppressHydrationWarning, CSS light/dark tokens, ThemeProvider/useTheme exports |
-| `branch-mark.test.ts` (19 tests) | Branch Mark | All 4 variants defined with distinct patterns, proportional scaling math, currentColor/var(--background) theme awareness, favicon exists and valid |
+| `branch-mark.test.ts` (21 tests) | Branch Mark | All 5 variants defined with distinct patterns, proportional scaling math, currentColor/var(--background) theme awareness, favicon exists and valid |
 | `routes.test.ts` (44 tests) | Routes & Layout + TOC + Research Panel | All 5 route stubs exist with default exports, layout has fonts/theme/nav/footer, nav links to all routes, footer has GitHub/RSS links, metadata configured, floating TOC (component exists, client directive, IntersectionObserver, rehype-slug, scroll-behavior, monochrome tokens, responsive hiding, h2-only heading queries, no h3), prose content overflow prevention (`overflow-wrap: break-word`), research panel (exists, client directive, panel-scoped IntersectionObserver with `root: scrollContainerRef`, `max-w-5xl` for two-column layout, `.toc-scroll` class reuse, hidden below `lg:` breakpoint, no embedded `<TableOfContents>`, monochrome tokens + no `dark:` variants, h2-only heading queries, viewport-relative `max-h-[calc(100vh-4rem)]` for independent scrolling) |
 
 **Phase 2 — Content Infrastructure (2026-04-10)**
 
 | Test File | Feature | What It Validates |
 | --- | --- | --- |
-| `content-pipeline.test.ts` (49 tests) | Content Pipeline | Post utilities (getAllPosts sort/filter, getPost, getAdjacentPosts, readingTime, slug matching, unpublished throw), MDX compilation exports, frontmatter schema (required fields, date format, tags array), project data (9 projects, 4 catalog variants, required fields, no duplicates), component exports (PostCard, ProjectCard, CodeBlock, mdxComponents), dynamic post route (exists, generateStaticParams, async params, conditional nav), page wiring (writing index, projects sections, landing page PostCard/ProjectCard, post limit), code block CSS (dual theme, title tabs), about page content (bio, background, education, GitHub/LinkedIn links, metadata), research placeholder (descriptive, not bare), all pages metadata descriptions, OG image infrastructure (lib/og, opengraph-image convention, generateStaticParams), RSS feed (route handler, static-compatible GET, no Request dependency), enhanced layout metadata (metadataBase, openGraph, twitter) |
+| `content-pipeline.test.ts` (49 tests) | Content Pipeline | Post utilities (getAllPosts sort/filter, getPost, getAdjacentPosts, readingTime, slug matching, unpublished throw), MDX compilation exports, frontmatter schema (required fields, date format, tags array), project data (9 projects, 5 catalog variants, required fields, no duplicates), component exports (PostCard, ProjectCard, CodeBlock, mdxComponents), dynamic post route (exists, generateStaticParams, async params, conditional nav), page wiring (writing index, projects sections, landing page PostCard/ProjectCard, post limit), code block CSS (dual theme, title tabs), about page content (bio, background, education, GitHub/LinkedIn links, metadata), research placeholder (descriptive, not bare), all pages metadata descriptions, OG image infrastructure (lib/og, opengraph-image convention, generateStaticParams), RSS feed (route handler, static-compatible GET, no Request dependency), enhanced layout metadata (metadataBase, openGraph, twitter) |
 
 ### Source files these tests protect
 
@@ -78,7 +78,7 @@ npm run test -- \
 - `app/about/page.tsx` — About route stub
 - `components/theme-provider.tsx` — ThemeProvider context, useTheme hook, blocking themeScript
 - `components/theme-toggle.tsx` — Dark/light mode toggle button
-- `components/branch-mark.tsx` — SVG branch mark with 4 variants and proportional scaling
+- `components/branch-mark.tsx` — SVG branch mark with 5 variants and proportional scaling
 - `components/nav.tsx` — Site navigation with BranchMark, NavLinks, ThemeToggle
 - `components/nav-links.tsx` — Client nav links with active state and mobile menu
 - `components/footer.tsx` — Footer with GitHub, LinkedIn, RSS links
@@ -139,7 +139,7 @@ npm run test
 npm run build
 ```
 
-Expected baseline: 0 lint errors, 138 tests passing (5 files), build succeeds with 21 static routes
+Expected baseline: 0 lint errors, 140 tests passing (5 files), build succeeds with 21 static routes
 
 ## Phase 3: Code Review of Current Changes
 

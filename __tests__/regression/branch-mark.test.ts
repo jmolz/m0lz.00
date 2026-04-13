@@ -11,19 +11,19 @@ describe('Branch Mark', () => {
   )
 
   describe('Variant definitions', () => {
-    const variants = ['personal', 'blog-agent', 'pice', 'mcp-guard'] as const
+    const variants = ['personal', 'blog-agent', 'pice', 'mcp-guard', 'case-pilot'] as const
 
     it.each(variants)('defines the "%s" variant', (variant) => {
       expect(source).toContain(`'${variant}'`)
     })
 
-    it('has exactly 4 variants in the type union', () => {
+    it('has exactly 5 variants in the type union', () => {
       const typeMatch = source.match(
         /variant:\s*(['"][^'"]+['"]\s*\|\s*)*['"][^'"]+['"]/,
       )
       expect(typeMatch).toBeTruthy()
       const variantCount = typeMatch![0].split('|').length
-      expect(variantCount).toBe(4)
+      expect(variantCount).toBe(5)
     })
   })
 
@@ -50,6 +50,12 @@ describe('Branch Mark', () => {
       const block = extractVariantBlock(source, "'mcp-guard'")
       const branchCount = (block.match(/trunk:/g) || []).length
       expect(branchCount).toBe(2)
+    })
+
+    it('case-pilot has 4 branches', () => {
+      const block = extractVariantBlock(source, "'case-pilot'")
+      const branchCount = (block.match(/trunk:/g) || []).length
+      expect(branchCount).toBe(4)
     })
 
     it('personal and mcp-guard have different y positions', () => {

@@ -23,7 +23,7 @@ export const projects: ProjectData[] = [
   {
     name: 'PICE',
     description: 'Structured AI coding workflow orchestrator. Plan → Implement → Contract-Evaluate with dual-model adversarial evaluation, WISC context management, and tiered verification.',
-    url: 'https://github.com/jmolz/pice-framework',
+    url: 'https://github.com/jmolz/m0lz.02',
     tech: 'Rust / TypeScript',
     public: true,
     catalogId: 'm0lz.02',
@@ -32,7 +32,7 @@ export const projects: ProjectData[] = [
   {
     name: 'MCP-Guard',
     description: 'Security proxy daemon for MCP servers. Authentication, rate limiting, PII detection, permission scoping, audit logging. 97% detection rate across 7,095 attack scenarios.',
-    url: 'https://github.com/jmolz/mcp-guard',
+    url: 'https://github.com/jmolz/m0lz.03',
     tech: 'TypeScript',
     public: true,
     catalogId: 'm0lz.03',
@@ -55,9 +55,11 @@ export const projects: ProjectData[] = [
   {
     name: 'Case Pilot',
     description: 'AI-powered legal case management for pro se litigants. Court filing monitor, deadline tracker, citation verification, red team analysis, and DOCX export. Local-first, privacy-focused.',
-    url: 'https://github.com/jmolz/case-pilot',
+    url: 'https://github.com/jmolz/m0lz.04',
     tech: 'JavaScript / Claude API',
     public: true,
+    catalogId: 'm0lz.04',
+    variant: 'case-pilot',
   },
   {
     name: 'Bloom',

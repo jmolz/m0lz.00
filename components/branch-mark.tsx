@@ -1,5 +1,5 @@
 export interface BranchMarkProps {
-  variant: 'personal' | 'blog-agent' | 'pice' | 'mcp-guard'
+  variant: 'personal' | 'blog-agent' | 'pice' | 'mcp-guard' | 'case-pilot'
   size?: number
   className?: string
 }
@@ -28,6 +28,12 @@ const variantBranches: Record<BranchMarkProps['variant'], Branch[]> = {
   'mcp-guard': [
     { trunk: 'left', side: 'left', y: 0.5 },
     { trunk: 'right', side: 'right', y: 0.5 },
+  ],
+  'case-pilot': [
+    { trunk: 'left', side: 'left', y: 0.35 },
+    { trunk: 'left', side: 'left', y: 0.65 },
+    { trunk: 'right', side: 'right', y: 0.35 },
+    { trunk: 'right', side: 'right', y: 0.65 },
   ],
 }
 
