@@ -8,7 +8,7 @@ import { projects } from '@/data/projects'
 export const metadata: Metadata = {
   title: 'm0lz — Technical Research & Engineering',
   description:
-    'Technical research & engineering by Jacob Molz. AI coding workflows, MCP security, and agentic systems.',
+    'Research-driven AI engineering by Jacob Molz. Every claim benchmarked, every tool shipped.',
 }
 
 export default function HomePage() {
@@ -25,8 +25,7 @@ export default function HomePage() {
           Building tools for the<br />agentic engineering stack
         </h1>
         <p className="text-[var(--muted)]">
-          AI coding workflows, MCP security, and agentic systems.
-          Written and shipped by Jacob Molz.
+          Research-driven AI engineering. Every claim benchmarked, every tool shipped.
         </p>
       </section>
 

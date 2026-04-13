@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://m0lz.dev'),
   title: 'm0lz',
   description:
-    'Technical research & engineering by Jacob Molz. AI coding workflows, MCP security, and agentic systems.',
+    'Research-driven AI engineering by Jacob Molz. Every claim benchmarked, every tool shipped.',
   icons: {
     icon: '/favicon.svg',
   },
