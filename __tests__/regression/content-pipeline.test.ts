@@ -494,6 +494,105 @@ describe('Catalog Identity', () => {
   })
 })
 
+describe('Catalog Identity in Content', () => {
+  const postsDir = path.join(ROOT, 'content/posts')
+  const researchDir = path.join(ROOT, 'content/research')
+
+  it('post titles for catalog projects start with catalog ID', () => {
+    const slugs = fs
+      .readdirSync(postsDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+
+    for (const slug of slugs) {
+      const filePath = path.join(postsDir, slug, 'index.mdx')
+      if (!fs.existsSync(filePath)) continue
+      const raw = fs.readFileSync(filePath, 'utf-8')
+      const { data } = matter(raw)
+      if (data.project && data.project.startsWith('m0lz.')) {
+        expect(data.title).toMatch(
+          new RegExp(`^${data.project.replace('.', '\\.')}`)
+        )
+      }
+    }
+  })
+
+  it('research page titles for catalog projects start with catalog ID', () => {
+    if (!fs.existsSync(researchDir)) return
+    const slugs = fs
+      .readdirSync(researchDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+
+    for (const slug of slugs) {
+      const filePath = path.join(researchDir, slug, 'index.mdx')
+      if (!fs.existsSync(filePath)) continue
+      const raw = fs.readFileSync(filePath, 'utf-8')
+      const { data } = matter(raw)
+      if (data.project && data.project.startsWith('m0lz.')) {
+        expect(data.title).toMatch(
+          new RegExp(`^${data.project.replace('.', '\\.')}`)
+        )
+      }
+    }
+  })
+
+  it('no old brand names as post title prefixes', () => {
+    const oldPrefixes = ['PICE:', 'MCP-Guard:', 'Case Pilot:']
+    const slugs = fs
+      .readdirSync(postsDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+
+    for (const slug of slugs) {
+      const filePath = path.join(postsDir, slug, 'index.mdx')
+      if (!fs.existsSync(filePath)) continue
+      const raw = fs.readFileSync(filePath, 'utf-8')
+      const { data } = matter(raw)
+      for (const prefix of oldPrefixes) {
+        expect(data.title).not.toMatch(new RegExp(`^${prefix}`))
+      }
+    }
+  })
+
+  it('no standalone old brand names in post body text', () => {
+    const slugs = fs
+      .readdirSync(postsDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+
+    for (const slug of slugs) {
+      const filePath = path.join(postsDir, slug, 'index.mdx')
+      if (!fs.existsSync(filePath)) continue
+      const raw = fs.readFileSync(filePath, 'utf-8')
+      const { content } = matter(raw)
+      // PICE uppercase (not lowercase CLI commands like pice plan)
+      expect(content).not.toMatch(/\bPICE\b/)
+      // MCP-Guard (not mcp-guard CLI commands)
+      expect(content).not.toMatch(/\bMCP-Guard\b/)
+      // Case Pilot
+      expect(content).not.toMatch(/Case Pilot/i)
+    }
+  })
+
+  it('no standalone old brand names in research body text', () => {
+    if (!fs.existsSync(researchDir)) return
+    const slugs = fs
+      .readdirSync(researchDir, { withFileTypes: true })
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name)
+
+    for (const slug of slugs) {
+      const filePath = path.join(researchDir, slug, 'index.mdx')
+      if (!fs.existsSync(filePath)) continue
+      const raw = fs.readFileSync(filePath, 'utf-8')
+      const { content } = matter(raw)
+      expect(content).not.toMatch(/\bPICE\b/)
+      expect(content).not.toMatch(/\bMCP-Guard\b/)
+    }
+  })
+})
+
 describe('Code Block Styling', () => {
   it('globals.css has rehype-pretty-code dual theme rules', () => {
     const content = fs.readFileSync(

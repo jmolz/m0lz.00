@@ -1,6 +1,6 @@
 ---
-title: "MCP-Guard Research"
-description: "Benchmark methodology, threat modeling, and security analysis for the MCP-Guard proxy daemon."
+title: "m0lz.03 Research"
+description: "Benchmark methodology, threat modeling, and security analysis for the m0lz.03 security proxy daemon."
 project: "m0lz.03"
 author: "Jacob Molz"
 date: "2026-04-10"
@@ -13,23 +13,23 @@ sections:
 
 ## Benchmark Methodology
 
-MCP-Guard's benchmark suite is open-source and fully reproducible: `pnpm benchmark` runs the complete suite, `pnpm benchmark:quick` runs a stratified sample in ~30 seconds. Every generator, mock server, and expected decision is readable in `benchmarks/`. Detection rates are deterministic (seeded RNG in generators); latency varies by machine.
+m0lz.03's benchmark suite is open-source and fully reproducible: `pnpm benchmark` runs the complete suite, `pnpm benchmark:quick` runs a stratified sample in ~30 seconds. Every generator, mock server, and expected decision is readable in `benchmarks/`. Detection rates are deterministic (seeded RNG in generators); latency varies by machine.
 
 ## Scope and Threat Model
 
-MCP-Guard is a transport-layer security proxy. Its interceptor pipeline performs deterministic checks on MCP messages: regex pattern matching (PII), hash/set lookups (permissions, denied tools), counter checks (rate limits), and policy evaluation (sampling guard). These are O(1) or O(n) operations where n is the number of patterns (~20), completing in microseconds.
+m0lz.03 is a transport-layer security proxy. Its interceptor pipeline performs deterministic checks on MCP messages: regex pattern matching (PII), hash/set lookups (permissions, denied tools), counter checks (rate limits), and policy evaluation (sampling guard). These are O(1) or O(n) operations where n is the number of patterns (~20), completing in microseconds.
 
 This detection scope explains the benchmark results as a coherent story:
 
 - **Sub-millisecond latency** — the pipeline performs the same class of operations as firewall rule evaluation (~0.1ms), not WAF/IDS analysis (~1-10ms) or ML inference (~5-50ms). The latency *tells you what the tool does*.
-- **High detection on in-scope attacks** — the patterns being matched are explicit and well-defined. When MCP-Guard is looking for a denied tool name or a regex-matched SSN, it finds it.
+- **High detection on in-scope attacks** — the patterns being matched are explicit and well-defined. When m0lz.03 is looking for a denied tool name or a regex-matched SSN, it finds it.
 - **Low false positives** — the checks are narrow and deterministic. A string either matches a PII regex or it doesn't. There's no probabilistic classification to produce false hits.
 
 These three results are *consistent with each other*, not "too good to be true." Heavier analysis (semantic PII detection, prompt injection classification) would add latency and false positives — that work belongs at the application or agent layer, not the transport proxy.
 
 ### Related Work
 
-[MCPSecBench](https://arxiv.org/abs/2508.13220) (17 attack types across 4 attack surfaces) and [MSB](https://arxiv.org/abs/2510.15994) (12 attack types, 2,000 instances, ICLR 2026) test a complementary but different threat model: whether LLM agents resist malicious MCP server instructions. Those benchmarks measure agent-layer resilience — can the LLM refuse to follow a harmful tool response? MCP-Guard operates at the transport layer *before* the LLM sees the message, like comparing a network firewall to endpoint detection. Different layers, both needed.
+[MCPSecBench](https://arxiv.org/abs/2508.13220) (17 attack types across 4 attack surfaces) and [MSB](https://arxiv.org/abs/2510.15994) (12 attack types, 2,000 instances, ICLR 2026) test a complementary but different threat model: whether LLM agents resist malicious MCP server instructions. Those benchmarks measure agent-layer resilience — can the LLM refuse to follow a harmful tool response? m0lz.03 operates at the transport layer *before* the LLM sees the message, like comparing a network firewall to endpoint detection. Different layers, both needed.
 
 ## Attack Scenario Generation
 
@@ -52,7 +52,7 @@ Total: 4,500+ attack scenarios plus 10,168 legitimate requests across 8 mock ser
 
 ## Self-Testing: Honesty About Our Own Test Suite
 
-**This benchmark tests MCP-Guard against its own scenario generators.** We are aware that this is the most common source of inflated security claims. Rather than downplaying this, we want to explain how we mitigate it and why we believe the results are still informative.
+**This benchmark tests m0lz.03 against its own scenario generators.** We are aware that this is the most common source of inflated security claims. Rather than downplaying this, we want to explain how we mitigate it and why we believe the results are still informative.
 
 **Mitigations:**
 
@@ -68,7 +68,7 @@ Total: 4,500+ attack scenarios plus 10,168 legitimate requests across 8 mock ser
 
 Mapping MCPSecBench's attack taxonomy to our 10 categories:
 
-| MCPSecBench Category | MCP-Guard Coverage | Notes |
+| MCPSecBench Category | m0lz.03 Coverage | Notes |
 |---------------------|--------------------|-------|
 | Tool poisoning | Partial (permissions) | We block unauthorized tool calls; we don't analyze tool description content |
 | Data exfiltration | Covered (PII detect) | Bidirectional regex scanning on request and response content |
@@ -109,19 +109,19 @@ This means: we are 95% confident that the true false positive rate is below 0.03
 
 ## Cross-Validation
 
-We investigated cross-validating MCP-Guard against GenTelLab's MCP-AttackBench (the largest published MCP security dataset at 70K+ samples). The dataset is incompatible with protocol-layer evaluation:
+We investigated cross-validating m0lz.03 against GenTelLab's MCP-AttackBench (the largest published MCP security dataset at 70K+ samples). The dataset is incompatible with protocol-layer evaluation:
 
 - **96.77% of samples are jailbreak/prompt injection strings** — flat natural language text designed for agent-layer text classification, not structured JSON-RPC messages.
-- **Threat model mismatch** — MCP-AttackBench evaluates whether a model can be tricked into making malicious calls. MCP-Guard evaluates whether a malicious call (regardless of origin) gets blocked at the protocol layer. These are complementary defenses at different layers, not competing approaches to the same problem.
+- **Threat model mismatch** — MCP-AttackBench evaluates whether a model can be tricked into making malicious calls. m0lz.03 evaluates whether a malicious call (regardless of origin) gets blocked at the protocol layer. These are complementary defenses at different layers, not competing approaches to the same problem.
 - **No published JSON-RPC samples** — the dataset does not include structured MCP tool_call payloads, permission probes, or PII exfiltration attempts in protocol message format.
 
-MCP-Guard's benchmark suite remains self-generated. We mitigate this with: open-source reproducibility (`pnpm benchmark`), programmatic generation with documented methodology, per-category transparency (showing 92.4%–100% range rather than a single aggregate), and explicit limitations disclosure.
+m0lz.03's benchmark suite remains self-generated. We mitigate this with: open-source reproducibility (`pnpm benchmark`), programmatic generation with documented methodology, per-category transparency (showing 92.4%–100% range rather than a single aggregate), and explicit limitations disclosure.
 
 We welcome external benchmark suites targeting protocol-layer MCP security. If one emerges, we will cross-validate and publish results.
 
 ## Sources
 
-**Complementary MCP security benchmarks.** These two papers evaluate agent-layer resilience against malicious MCP server instructions — a distinct but neighboring threat model to MCP-Guard's transport-layer proxy scope.
+**Complementary MCP security benchmarks.** These two papers evaluate agent-layer resilience against malicious MCP server instructions — a distinct but neighboring threat model to m0lz.03's transport-layer proxy scope.
 
 - **MCPSecBench** — *A Comprehensive Benchmark for Evaluating MCP Security.* 17 attack types across 4 attack surfaces. [arxiv.org/abs/2508.13220](https://arxiv.org/abs/2508.13220)
 - **MSB (MCP Security Bench)** — *Benchmarking LLM Agent Robustness Against Malicious MCP Servers.* 12 attack types, 2,000 instances. ICLR 2026. [arxiv.org/abs/2510.15994](https://arxiv.org/abs/2510.15994)

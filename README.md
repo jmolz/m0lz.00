@@ -13,7 +13,7 @@
 
 ## Overview
 
-Static-only blog and portfolio site. Austere black/white design with a generative branch mark identity system. Content published by the [m0lz.01 blog agent](https://github.com/jmolz/blog-agent) via MDX commits — this repo renders, it doesn't generate.
+Static-only blog and portfolio site. Austere black/white design with a generative branch mark identity system. Content published by the [m0lz.01 blog agent](https://github.com/jmolz/m0lz.01) via MDX commits — this repo renders, it doesn't generate.
 
 ## Tech Stack
 
@@ -23,7 +23,7 @@ Static-only blog and portfolio site. Austere black/white design with a generativ
 | Styling | Tailwind CSS 4, 4 monochrome color tokens |
 | Content | MDX via `@mdx-js/mdx`, `rehype-pretty-code` (Shiki) |
 | Fonts | Geist Sans (400, 500) |
-| Testing | Vitest — 140 regression tests |
+| Testing | Vitest — 153 regression tests |
 | Deploy | Vercel (static) |
 
 ## Development
@@ -32,7 +32,7 @@ Static-only blog and portfolio site. Austere black/white design with a generativ
 npm install
 npm run dev       # Start dev server on localhost:3000
 npm run build     # Static export to out/
-npm run test      # Run 140 regression tests
+npm run test      # Run 153 regression tests
 npm run lint      # ESLint
 npm run format    # Prettier
 ```

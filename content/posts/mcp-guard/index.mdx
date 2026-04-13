@@ -1,6 +1,6 @@
 ---
-title: "MCP-Guard: Security for MCP Servers"
-description: "A security proxy daemon that adds authentication, rate limiting, PII detection, and audit logging to any MCP server. 97% detection rate across 7,095 attack scenarios."
+title: "m0lz.03 — MCP Security Proxy"
+description: "Security proxy daemon for MCP servers — authentication, rate limiting, PII detection, and audit logging. 97% detection rate across 7,095 attack scenarios."
 date: "2026-04-07"
 tags: ["security", "mcp", "ai", "open-source"]
 canonical: "https://m0lz.dev/writing/mcp-guard"
@@ -9,13 +9,13 @@ project: "m0lz.03"
 published: true
 ---
 
-MCP servers have no security layer. An agent can read your `.env`, exfiltrate API keys, and there's no authentication, no audit trail, and no one knows it happened. MCP-Guard fixes this.
+MCP servers have no security layer. An agent can read your `.env`, exfiltrate API keys, and there's no authentication, no audit trail, and no one knows it happened. m0lz.03 fixes this.
 
 ---
 
 ## The problem
 
-Without MCP-Guard:
+Without m0lz.03:
 
 ```
 Agent asks to read /home/user/.env via filesystem MCP server
@@ -24,11 +24,11 @@ Agent asks to read /home/user/.env via filesystem MCP server
   → No authentication. No audit trail.
 ```
 
-With MCP-Guard:
+With m0lz.03:
 
 ```
 Agent asks to read /home/user/.env via filesystem MCP server
-  → MCP-Guard intercepts the response
+  → m0lz.03 intercepts the response
   → PII detector matches AWS key pattern → BLOCK
   → Audit log records: blocked response, pii_type=aws_key
   → Agent receives: "Request blocked by security policy"
@@ -38,7 +38,7 @@ Agent asks to read /home/user/.env via filesystem MCP server
 
 ## Architecture
 
-MCP-Guard uses **terminate, inspect, re-originate** — it fully owns both the client and upstream connections. The interceptor pipeline is fail-closed: any error blocks the request.
+m0lz.03 uses **terminate, inspect, re-originate** — it fully owns both the client and upstream connections. The interceptor pipeline is fail-closed: any error blocks the request.
 
 Three components:
 
@@ -63,7 +63,7 @@ Three components:
 
 ## Benchmark results
 
-The benchmark suite tests MCP-Guard's interceptor pipeline against 7,095 programmatically generated attack scenarios across 10 categories and 10,168 legitimate requests.
+The benchmark suite tests m0lz.03's interceptor pipeline against 7,095 programmatically generated attack scenarios across 10 categories and 10,168 legitimate requests.
 
 | Metric | Result | Target |
 |--------|--------|--------|
@@ -82,14 +82,14 @@ Config merge uses **floor-based semantics**: personal configs can restrict but n
 
 ### Scope boundaries
 
-MCP-Guard operates at the MCP protocol layer — it inspects JSON-RPC messages between client and server. It does not address:
+m0lz.03 operates at the MCP protocol layer — it inspects JSON-RPC messages between client and server. It does not address:
 
 - LLM prompt injection (agent-layer concern)
 - Model jailbreaking (model-layer concern)
 - Network-layer attacks (use standard network security)
 - Malicious server implementations (source remediation)
 
-MCP-Guard is the protocol-layer firewall. It complements agent-layer and network-layer defenses.
+m0lz.03 is the protocol-layer firewall. It complements agent-layer and network-layer defenses.
 
 ---
 
@@ -100,6 +100,6 @@ npm install -g @jacobmolz/mcpguard
 mcp-guard init    # Auto-discover existing MCP configs
 ```
 
-Then point your MCP client at MCP-Guard instead of the upstream server.
+Then point your MCP client at m0lz.03 instead of the upstream server.
 
 Source: [github.com/jmolz/m0lz.03](https://github.com/jmolz/m0lz.03)

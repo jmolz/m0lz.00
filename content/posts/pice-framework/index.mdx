@@ -1,6 +1,6 @@
 ---
-title: "PICE: Structured AI Coding Workflows"
-description: "Plan → Implement → Contract-Evaluate — a methodology for AI-assisted engineering with dual-model adversarial evaluation and WISC context management."
+title: "m0lz.02 — Structured AI Coding Workflows"
+description: "Plan → Implement → Contract-Evaluate — a structured AI coding methodology with dual-model adversarial evaluation and WISC context management."
 date: "2026-04-06"
 tags: ["ai", "developer-tools", "methodology", "open-source"]
 canonical: "https://m0lz.dev/writing/pice-framework"
@@ -9,9 +9,9 @@ project: "m0lz.02"
 published: true
 ---
 
-PICE is a structured methodology for AI-assisted engineering. It breaks AI coding sessions into three phases — **Plan**, **Implement**, **Contract-Evaluate** — with formal contracts between human and AI defining "done" before any code is generated.
+m0lz.02 is a structured methodology for AI-assisted engineering. It breaks AI coding sessions into three phases — **Plan**, **Implement**, **Contract-Evaluate** — with formal contracts between human and AI defining "done" before any code is generated.
 
-The problem it solves: AI coding tools are powerful but chaotic. Without structure, sessions drift, context degrades, and quality is unmeasurable. PICE adds the missing discipline.
+The problem it solves: AI coding tools are powerful but chaotic. Without structure, sessions drift, context degrades, and quality is unmeasurable. m0lz.02 adds the missing discipline.
 
 ---
 
@@ -50,7 +50,7 @@ Claude grades each criterion with a numeric score against a threshold. A separat
 
 ## WISC Context Management
 
-Context is the most precious resource in AI-assisted development. PICE uses WISC — **Write, Isolate, Select, Compress** — to manage it:
+Context is the most precious resource in AI-assisted development. m0lz.02 uses WISC — **Write, Isolate, Select, Compress** — to manage it:
 
 - **Write** — Capture decisions, constraints, and patterns as persistent artifacts (CLAUDE.md, rules, plans)
 - **Isolate** — Each phase runs in a fresh session. No context bleed between planning and implementation.
@@ -71,7 +71,7 @@ Evaluation scales with the significance of the change:
 
 ## Architecture
 
-PICE CLI is built in Rust with a provider architecture that separates the core from AI provider implementations. The Rust core handles argument parsing, state management, configuration, metrics, and process orchestration. AI providers are separate TypeScript processes communicating over JSON-RPC on stdio.
+m0lz.02's CLI is built in Rust with a provider architecture that separates the core from AI provider implementations. The Rust core handles argument parsing, state management, configuration, metrics, and process orchestration. AI providers are separate TypeScript processes communicating over JSON-RPC on stdio.
 
 This means community-built providers can support any AI coding tool without modifying the core binary.
 

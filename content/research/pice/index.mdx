@@ -1,6 +1,6 @@
 ---
-title: "PICE Research Library"
-description: "Research papers supporting the PICE roadmap — seam analysis, convergence theory, verification frameworks, and architectural investigation."
+title: "m0lz.02 Research Library"
+description: "Research papers supporting the m0lz.02 roadmap — seam analysis, convergence theory, verification frameworks, and architectural investigation."
 project: "m0lz.02"
 author: "Jacob Molz"
 date: "2026-04-10"
@@ -12,9 +12,9 @@ sections:
   - id: "originality-analysis"
     title: "Stack Loops and Arch Experts: Originality Analysis"
   - id: "self-evolving-verification"
-    title: "Self-Evolving Verification Frameworks: State of the Art and Blueprint for PICE"
+    title: "Self-Evolving Verification Frameworks: State of the Art and Blueprint for m0lz.02"
   - id: "claude-code-integration"
-    title: "Claude Code Agent Teams: A Technical Deep-Dive for PICE"
+    title: "Claude Code Agent Teams: A Technical Deep-Dive for m0lz.02"
   - id: "sdk-licensing"
     title: "Claude Agent SDK Licensing: Analysis for Open Source Integration"
   - id: "v02-gap-analysis"
@@ -33,7 +33,7 @@ sections:
 
 Software systems fail overwhelmingly at the boundaries between components — not inside them. Google's analysis of thousands of postmortems reveals that 68% of all outages are triggered by configuration and binary pushes at integration points. AI coding agents make this worse: SWE-Bench Pro shows models achieving only ~23% on multi-file tasks vs. >70% on single-file tasks. Yet the entire verification tooling landscape — from contract testing to architecture analysis to formal methods — systematically underserves these boundaries. The most dangerous failures occur where Component A assumes something about Component B that Component B never explicitly guarantees, and no tool in existence can automatically detect this asymmetry.
 
-This report synthesizes research across seven domains to identify what would make PICE's seam verification genuinely novel and differentiated.
+This report synthesizes research across seven domains to identify what would make m0lz.02's seam verification genuinely novel and differentiated.
 
 -----
 
@@ -193,7 +193,7 @@ WunderGraph's analysis captures it: "There is no widely adopted solution that ma
 
 In chip design, the Verification IP (VIP) ecosystem provides pre-built, reusable protocol verification libraries for every major bus standard (AMBA AXI, PCIe, USB, etc.). Synopsys and Cadence sell VIP modules encoding all protocol rules as executable assertions running continuously at interface boundaries. A synthesizable AMBA AXI protocol checker encodes 44 rules for verifying on-chip communication. SystemVerilog's `interface` construct bundles signals, protocol assertions, bus functional models, and coverage metrics into a single reusable component — verification logic travels with the interface definition.
 
-**Software has no equivalent.** There is no "OpenAPI VIP" or "gRPC VIP" that comprehensively validates every protocol rule at integration boundaries. PICE builds this: seam checks are protocol-specific verification modules that travel with layer boundary definitions.
+**Software has no equivalent.** There is no "OpenAPI VIP" or "gRPC VIP" that comprehensively validates every protocol rule at integration boundaries. m0lz.02 builds this: seam checks are protocol-specific verification modules that travel with layer boundary definitions.
 
 ### Distributed systems formal methods
 
@@ -223,35 +223,35 @@ After exhaustive research across all domains, five critical capabilities do not 
 
 No tool can automatically discover that Component A assumes X about Component B while Component B doesn't guarantee X. Daikon infers invariants within a single component. Pact tests explicitly written contracts. Garlan et al. identified this as "architectural mismatch" in 1995, but proposed documentation, not automated detection.
 
-**PICE's approach:** Adversarial dual-model evaluation. One model infers consumer assumptions; the other infers provider guarantees. PICE flags asymmetries.
+**m0lz.02's approach:** Adversarial dual-model evaluation. One model infers consumer assumptions; the other infers provider guarantees. m0lz.02 flags asymmetries.
 
 ### Gap 2: Automated cross-service implicit contract inference
 
 Daikon-style invariant detection has never been applied at service boundaries using distributed traces. No tool takes production traffic between two services and infers behavioral contracts: "this field is never null in practice," "responses always arrive within 150ms," "this endpoint is always called after that one."
 
-**PICE's approach:** Analyze distributed traces at service boundaries, cluster behavioral patterns, and surface implicit contracts that no one declared.
+**m0lz.02's approach:** Analyze distributed traces at service boundaries, cluster behavioral patterns, and surface implicit contracts that no one declared.
 
 ### Gap 3: Seam drift detection
 
 No tool establishes a behavioral baseline at an integration point and monitors for gradual divergence: response time distributions shifting, optional fields becoming always-present, ordering guarantees weakening.
 
-**PICE's approach:** SLO monitoring for discovered (not declared) behavioral properties.
+**m0lz.02's approach:** SLO monitoring for discovered (not declared) behavioral properties.
 
 ### Gap 4: Change impact analysis against implicit contracts
 
 No tool evaluates a proposed code change against the corpus of inferred implicit contracts to predict which downstream assumptions it might violate.
 
-**PICE's approach:** Pre-deployment gate that warns "this change moves p95 latency from 180ms to 250ms, and Service B assumes responses within 200ms."
+**m0lz.02's approach:** Pre-deployment gate that warns "this change moves p95 latency from 180ms to 250ms, and Service B assumes responses within 200ms."
 
 ### Gap 5: Adversarial integration test generation
 
 No tool mines implicit assumptions from production behavior and generates targeted tests probing those specific assumptions — "Service A assumes this field is never null; here's a test that sends null."
 
-**PICE's approach:** Targeted assumption validation, not random fuzzing.
+**m0lz.02's approach:** Targeted assumption validation, not random fuzzing.
 
 -----
 
-## 7. How This Maps to PICE
+## 7. How This Maps to m0lz.02
 
 **Stack Loops** target the twelve failure categories at each technology layer — not just "does the code work" but "do the seams between layers hold." Each Stack Loop iteration includes a seam verification pass checking integration contracts with adjacent layers.
 
@@ -261,7 +261,7 @@ No tool mines implicit assumptions from production behavior and generates target
 
 **Self-Evolving Verification** (v0.5) tracks which seam checks catch real issues, which generate noise, and which failure categories are most common in each project — then uses that data to prioritize, tune, and evolve the verification strategy over time.
 
-The differentiation is clear: while every other AI coding tool optimizes for generating correct code within components, PICE is the first to systematically verify that the spaces between components actually hold.
+The differentiation is clear: while every other AI coding tool optimizes for generating correct code within components, m0lz.02 is the first to systematically verify that the spaces between components actually hold.
 
 -----
 
@@ -275,7 +275,7 @@ The differentiation is clear: while every other AI coding tool optimizes for gen
 
 ## Executive Summary
 
-How many evaluation passes does PICE need per layer to reach a target confidence level? The mathematically grounded answer: **3–5 passes reach the practical confidence ceiling for dual-model LLM verification, and no amount of additional passes can breach ~97% accuracy when evaluator correlation is ρ ≈ 0.3.** This hard limit, derived from the correlated Condorcet Jury Theorem and confirmed by empirical scaling laws from Stanford, DeepMind, and ICML 2025 research, means PICE's strategic advantage lies not in maximizing pass count but in *adaptively allocating* passes based on accumulated evidence. Three novel algorithms emerge from cross-domain synthesis — Bayesian-SPRT adaptive halting, adversarial divergence-triggered scaling, and verification entropy convergence — none of which have been applied to multi-model code verification.
+How many evaluation passes does m0lz.02 need per layer to reach a target confidence level? The mathematically grounded answer: **3–5 passes reach the practical confidence ceiling for dual-model LLM verification, and no amount of additional passes can breach ~97% accuracy when evaluator correlation is ρ ≈ 0.3.** This hard limit, derived from the correlated Condorcet Jury Theorem and confirmed by empirical scaling laws from Stanford, DeepMind, and ICML 2025 research, means m0lz.02's strategic advantage lies not in maximizing pass count but in *adaptively allocating* passes based on accumulated evidence. Three novel algorithms emerge from cross-domain synthesis — Bayesian-SPRT adaptive halting, adversarial divergence-triggered scaling, and verification entropy convergence — none of which have been applied to multi-model code verification.
 
 -----
 
@@ -305,13 +305,13 @@ The damage from correlation is quantified by the effective sample size:
 n_eff = n / (1 + (n−1)ρ)
 ```
 
-As n → ∞, this converges to **1/ρ**. With ρ = 0.3 (a conservative estimate for Claude-GPT correlation on code evaluation), n_eff caps at ~3.3 regardless of how many passes PICE runs. With ρ = 0.35, it caps at ~2.9.
+As n → ∞, this converges to **1/ρ**. With ρ = 0.3 (a conservative estimate for Claude-GPT correlation on code evaluation), n_eff caps at ~3.3 regardless of how many passes m0lz.02 runs. With ρ = 0.35, it caps at ~2.9.
 
 This is not an engineering limitation. It is an information-theoretic bound. Running 100 evaluation passes with correlated models provides the same information as ~3 independent passes.
 
 ### The confidence curve
 
-For PICE's dual-model architecture with individual evaluator accuracy p = 0.88 (typical frontier LLM evaluation accuracy on code review tasks) and inter-model correlation ρ = 0.35:
+For m0lz.02's dual-model architecture with individual evaluator accuracy p = 0.88 (typical frontier LLM evaluation accuracy on code review tasks) and inter-model correlation ρ = 0.35:
 
 ```
 Confidence(N) ≈ C_max · (1 − e^{−λ·N_eff})
@@ -351,7 +351,7 @@ The ceiling is specific to *homogeneous LLM evaluation*. Three strategies push b
 
 **1. Maximize evaluator diversity.** The Knowledge Divergence theory (Kaplan et al., 2025) proves that debate advantage depends on the principal angles between models' representation subspaces — with a phase transition from negligible to essential benefit as knowledge diversity increases. Using architecturally distinct models (transformer vs. SSM), models trained on different data distributions, or domain-specific fine-tuned evaluators reduces effective ρ.
 
-**2. Incorporate orthogonal verification signals.** Unit test execution, static analysis, type checking, and formal verification are essentially uncorrelated with LLM judgment errors. Each orthogonal signal resets the correlation structure, potentially dropping effective ρ toward zero for the combined system. This is why PICE's Tier 3 combines AI evaluation with formal verification — not redundancy, but information-theoretic necessity.
+**2. Incorporate orthogonal verification signals.** Unit test execution, static analysis, type checking, and formal verification are essentially uncorrelated with LLM judgment errors. Each orthogonal signal resets the correlation structure, potentially dropping effective ρ toward zero for the combined system. This is why m0lz.02's Tier 3 combines AI evaluation with formal verification — not redundancy, but information-theoretic necessity.
 
 **3. Decompose evaluation into independent sub-problems.** Evaluating correctness, security, performance, and style separately — each with its own evaluator committee — exploits the fact that error correlation varies by evaluation dimension. The Krogh-Vedelsby decomposition makes this precise: E_ensemble = E_avg − Ambiguity. Ensemble error improves only when evaluators disagree.
 
@@ -383,13 +383,13 @@ The curve is sharply logarithmic — most gain in the first 5–10 samples. A 20
 
 ### AlphaCode: the extreme case
 
-DeepMind's AlphaCode generated up to 1 million code samples per problem. Solve rate scaled log-linearly with sample count. But AlphaCode 2 achieved equivalent performance with **10,000× fewer samples** by using better models and selection — reinforcing that algorithm quality dominates brute-force scaling. This directly validates PICE's emphasis on adaptive algorithms over raw pass count.
+DeepMind's AlphaCode generated up to 1 million code samples per problem. Solve rate scaled log-linearly with sample count. But AlphaCode 2 achieved equivalent performance with **10,000× fewer samples** by using better models and selection — reinforcing that algorithm quality dominates brute-force scaling. This directly validates m0lz.02's emphasis on adaptive algorithms over raw pass count.
 
 ### Weaver: ensemble verification
 
 Stanford/UW-Madison/Together AI's Weaver system (2025) closed the generation-verification gap by 14.5% using weighted ensembles of 33 diverse weak verifiers. Individual verifier accuracy: 43–62%. Collective accuracy when 20+ agree: 91%. Key insight: **verifier diversity matters far more than verifier count**.
 
-This directly validates PICE's architecture: diverse Arch Experts (each with different domain knowledge) are mathematically superior to multiple passes from the same model.
+This directly validates m0lz.02's architecture: diverse Arch Experts (each with different domain knowledge) are mathematically superior to multiple passes from the same model.
 
 -----
 
@@ -440,7 +440,7 @@ In clinical trials, O'Brien-Fleming (1979) group sequential designs distribute t
 | 4                    | 2.28                        |
 | 5                    | 2.04                        |
 
-Early analyses use extreme thresholds (z ≥ 4.56 at first look), preserving most discriminative power for later analyses. For PICE: this means pass 1 can only accept/reject code with very high confidence. Passes 2–3 use progressively relaxed thresholds. Final passes use near-nominal thresholds. This prevents premature acceptance of subtly flawed code while allowing rapid rejection of obviously broken submissions.
+Early analyses use extreme thresholds (z ≥ 4.56 at first look), preserving most discriminative power for later analyses. For m0lz.02: this means pass 1 can only accept/reject code with very high confidence. Passes 2–3 use progressively relaxed thresholds. Final passes use near-nominal thresholds. This prevents premature acceptance of subtly flawed code while allowing rapid rejection of obviously broken submissions.
 
 ### Bayesian sequential analysis
 
@@ -473,7 +473,7 @@ SE = −Σ_c p_c · log(p_c)
 
 Low SE = high certainty (all outputs mean the same thing). High SE = high uncertainty (outputs disagree semantically).
 
-The deeper innovation for PICE: decompose SE into **epistemic** and **aleatoric** components. High epistemic uncertainty (models don't understand) → more diverse passes help. High aleatoric uncertainty (spec is ambiguous) → more passes cannot help → escalate to human review.
+The deeper innovation for m0lz.02: decompose SE into **epistemic** and **aleatoric** components. High epistemic uncertainty (models don't understand) → more diverse passes help. High aleatoric uncertainty (spec is ambiguous) → more passes cannot help → escalate to human review.
 
 ### Psychometric adaptive testing (IRT)
 
@@ -494,7 +494,7 @@ After each observation, select the next item maximizing information at current �
 SE(θ̂) = 1/√(Σ I_i(θ̂))
 ```
 
-PROMIS CATs use SE &lt; 0.3 with 4–12 items. Translated to PICE: 4–12 targeted evaluation dimensions, with adaptive selection of which quality dimensions to probe next based on current uncertainty.
+PROMIS CATs use SE &lt; 0.3 with 4–12 items. Translated to m0lz.02: 4–12 targeted evaluation dimensions, with adaptive selection of which quality dimensions to probe next based on current uncertainty.
 
 -----
 
@@ -506,7 +506,7 @@ A fusion of Bayesian belief updating with Wald's Sequential Probability Ratio Te
 
 ### Prior art
 
-ConSol (Lee et al., March 2025) applied SPRT to single-model self-consistency for reasoning tasks. This is the closest precedent but differs critically: ConSol uses a single model's self-consistency (homogeneous samples), while PICE uses heterogeneous evaluators (Claude + GPT) with different error characteristics and model-specific reliability weights.
+ConSol (Lee et al., March 2025) applied SPRT to single-model self-consistency for reasoning tasks. This is the closest precedent but differs critically: ConSol uses a single model's self-consistency (homogeneous samples), while m0lz.02 uses heterogeneous evaluators (Claude + GPT) with different error characteristics and model-specific reliability weights.
 
 ### How it works
 
@@ -561,9 +561,9 @@ An orchestration layer that uses inter-model disagreement as the control signal 
 
 ### Theoretical foundation
 
-The Knowledge Divergence theory (Kaplan et al., 2025) proves that debate advantage depends on the principal angles between models' representation subspaces — with a phase transition from quadratic (negligible benefit) to linear (essential benefit) as knowledge diversity increases. For PICE: disagreement between Claude and GPT is not noise to be averaged away but **signal about where additional evaluation is most valuable**.
+The Knowledge Divergence theory (Kaplan et al., 2025) proves that debate advantage depends on the principal angles between models' representation subspaces — with a phase transition from quadratic (negligible benefit) to linear (essential benefit) as knowledge diversity increases. For m0lz.02: disagreement between Claude and GPT is not noise to be averaged away but **signal about where additional evaluation is most valuable**.
 
-Du et al. (2024) confirmed empirically that mixed-model debates outperform same-model debates, and performance plateaus after ~4 rounds — directly informing PICE's tier boundaries.
+Du et al. (2024) confirmed empirically that mixed-model debates outperform same-model debates, and performance plateaus after ~4 rounds — directly informing m0lz.02's tier boundaries.
 
 ### How it works
 
@@ -640,7 +640,7 @@ If the system doesn't converge after the maximum allocated passes, decompose the
 
 - **Aleatoric entropy** — Evaluators reach different conclusions because the specification is genuinely ambiguous. Signal: adding evaluators doesn't shift the semantic clusters, but the clusters remain balanced. Response: escalate to human review. More AI passes cannot resolve what the spec doesn't define.
 
-This decomposition is the critical innovation. It prevents PICE from wasting passes on problems that LLMs fundamentally cannot resolve — a direct response to the irreducible error findings showing that shared biases create a hard ceiling.
+This decomposition is the critical innovation. It prevents m0lz.02 from wasting passes on problems that LLMs fundamentally cannot resolve — a direct response to the irreducible error findings showing that shared biases create a hard ceiling.
 
 ### Connection to adaptive testing
 
@@ -650,9 +650,9 @@ The stopping criterion is analogous to PROMIS CAT (computerized adaptive testing
 SE(θ̂) = 1/√(Σ I_i(θ̂))    →    stop when SE < 0.3
 ```
 
-In PICE: each evaluation dimension (correctness, security, performance, style, integration) has Fisher Information I_i that depends on how well the evaluators can discriminate quality at the current estimate. The system adaptively selects which dimension to evaluate next based on which would provide the most information — then stops when the overall Standard Error drops below threshold.
+In m0lz.02: each evaluation dimension (correctness, security, performance, style, integration) has Fisher Information I_i that depends on how well the evaluators can discriminate quality at the current estimate. The system adaptively selects which dimension to evaluate next based on which would provide the most information — then stops when the overall Standard Error drops below threshold.
 
-PROMIS CATs typically require 4–12 items for convergence. Translated to PICE: **4–12 targeted evaluation passes** for complex, multi-dimensional code review, with the adaptive selection dramatically reducing this for routine changes.
+PROMIS CATs typically require 4–12 items for convergence. Translated to m0lz.02: **4–12 targeted evaluation passes** for complex, multi-dimensional code review, with the adaptive selection dramatically reducing this for routine changes.
 
 -----
 
@@ -729,7 +729,7 @@ adjusted by the correlation ceiling: N_min is capped at 1/ρ effective independe
 | 97% | 10+ | ⚠️ At ceiling | Add orthogonal signals |
 | 99% | N/A from LLMs alone | ❌ | Requires formal verification |
 
-**The critical design insight: beyond ~97%, PICE should escalate to orthogonal verification (tests, static analysis, formal methods) rather than adding LLM passes. This is the mathematically correct strategy, not a fallback.**
+**The critical design insight: beyond ~97%, m0lz.02 should escalate to orthogonal verification (tests, static analysis, formal methods) rather than adding LLM passes. This is the mathematically correct strategy, not a fallback.**
 
 -----
 
@@ -771,15 +771,15 @@ With Haiku at ~$0.001/pass, Sonnet at ~$0.01/pass, Opus at ~$0.10/pass:
 
 -----
 
-## 9. What This Means for PICE's Roadmap
+## 9. What This Means for m0lz.02's Roadmap
 
 1. **The confidence table belongs in every `pice status` output.** Users should see not just PASS/FAIL but the posterior confidence — "PASS at 94.2% confidence (3 passes, $0.03)."
 
-2. **The ADTS tiers map directly to PICE's existing Tier 1/2/3 system.** This isn't a new concept to add; it's a mathematical foundation for the tiers that already exist.
+2. **The ADTS tiers map directly to m0lz.02's existing Tier 1/2/3 system.** This isn't a new concept to add; it's a mathematical foundation for the tiers that already exist.
 
 3. **The self-evolving loop has a clear training signal.** The Bayesian-SPRT's prediction accuracy (did the posterior correctly predict the final verdict?) is a direct metric for tuning priors, model weights, and thresholds.
 
-4. **99% confidence is achievable but not from LLMs alone.** PICE should make this explicit: Tier 3 evaluations that need >97% confidence should integrate formal verification, property-based testing, or human review — and communicate why.
+4. **99% confidence is achievable but not from LLMs alone.** m0lz.02 should make this explicit: Tier 3 evaluations that need >97% confidence should integrate formal verification, property-based testing, or human review — and communicate why.
 
 5. **The convergence math validates small expert teams.** 2–3 diverse experts provide nearly as much information as 10 similar ones. The Krogh-Vedelsby decomposition proves that diversity, not count, drives ensemble improvement.
 
@@ -795,7 +795,7 @@ With Haiku at ~$0.001/pass, Sonnet at ~$0.01/pass, Opus at ~$0.10/pass:
 
 ## Executive Summary
 
-Neither "Stack Loops" nor "Arch Experts" exists as a pre-existing named concept, pattern, or framework anywhere in the surveyed landscape of software engineering, multi-agent AI systems, or AI-assisted development. After systematic searches across academic papers, framework documentation, developer blogs, and community discussions for all major platforms — CrewAI, AutoGen, LangGraph, MetaGPT, Claude Code, Cursor, and Windsurf — zero instances of either term used as a formal named concept were found. Both terms are **novel coinages by the PICE framework author**, though the underlying ideas they describe have significant conceptual overlap with existing work published under different names.
+Neither "Stack Loops" nor "Arch Experts" exists as a pre-existing named concept, pattern, or framework anywhere in the surveyed landscape of software engineering, multi-agent AI systems, or AI-assisted development. After systematic searches across academic papers, framework documentation, developer blogs, and community discussions for all major platforms — CrewAI, AutoGen, LangGraph, MetaGPT, Claude Code, Cursor, and Windsurf — zero instances of either term used as a formal named concept were found. Both terms are **novel coinages by the m0lz.02 framework author**, though the underlying ideas they describe have significant conceptual overlap with existing work published under different names.
 
 -----
 
@@ -829,7 +829,7 @@ Searches across every relevant domain — DevOps, CI/CD, AI coding workflows, mu
 
 ### Nearest existing terms
 
-**"Loop Stack" (inverted word order)** — Coined by Duncan Krebs at KrebsNet as a recursive orchestration pattern for multi-agent AI. A product called Loopstack AI also exists as a TypeScript/YAML workflow framework. Neither describes what PICE's "Stack Loops" means — per-layer verification loops across a technology stack.
+**"Loop Stack" (inverted word order)** — Coined by Duncan Krebs at KrebsNet as a recursive orchestration pattern for multi-agent AI. A product called Loopstack AI also exists as a TypeScript/YAML workflow framework. Neither describes what m0lz.02's "Stack Loops" means — per-layer verification loops across a technology stack.
 
 **Claude Code "Loops" feature** — Introduced in March 2026 via the `/loop` command for autonomous recurring tasks. Unrelated to per-layer stack verification. The term "loops" in the Claude Code context refers to iterative task execution, not layered architecture verification.
 
@@ -852,7 +852,7 @@ The individual building blocks behind Stack Loops are well-established. What's n
 The specific combination that no prior work captures:
 
 1. **Technology stack layers** (backend, database, API, infrastructure, deployment) rather than test type layers (unit, integration, E2E)
-2. **Independent PICE loops per layer** — each layer runs its own Plan→Implement→Contract-Evaluate cycle
+2. **Independent m0lz.02 loops per layer** — each layer runs its own Plan→Implement→Contract-Evaluate cycle
 3. **Always-run layers** — infrastructure, deployment, and observability cannot be skipped regardless of change scope
 4. **Seam verification between layers** — checking integration contracts at layer boundaries, not just within layers
 5. **Dependency ordering** — layers run sequentially based on architectural dependencies
@@ -917,9 +917,9 @@ No existing system combines architecture discovery with dynamic agent generation
 
 -----
 
-## 4. Additional Novel Concepts in PICE
+## 4. Additional Novel Concepts in m0lz.02
 
-Beyond Stack Loops and Arch Experts, PICE introduces several other concepts that appear to be original:
+Beyond Stack Loops and Arch Experts, m0lz.02 introduces several other concepts that appear to be original:
 
 ### Seam Verification
 
@@ -935,7 +935,7 @@ The synthesis of Daikon-style invariant detection + spec mining + distributed tr
 
 ### Bayesian-SPRT Adaptive Halting, ADTS, and VEC (v0.2 algorithms)
 
-Three algorithms for adaptive evaluation depth. ConSol (March 2025) applied SPRT to single-model self-consistency. PICE's Bayesian-SPRT extends this to heterogeneous multi-model evaluation with Bayesian priors. ADTS and VEC have no direct precedent in AI code verification.
+Three algorithms for adaptive evaluation depth. ConSol (March 2025) applied SPRT to single-model self-consistency. m0lz.02's Bayesian-SPRT extends this to heterogeneous multi-model evaluation with Bayesian priors. ADTS and VEC have no direct precedent in AI code verification.
 
 ### Self-Evolving Verification (v0.5)
 
@@ -945,11 +945,11 @@ The combination of MAPE-K + predictive test selection + DSPy-style prompt optimi
 
 ## 5. Conceptual Predecessor Map
 
-The table below maps each PICE concept to its closest known parallels, highlighting what's borrowed and what's new:
+The table below maps each m0lz.02 concept to its closest known parallels, highlighting what's borrowed and what's new:
 
-| PICE Concept | Closest Existing Work | What's Borrowed | What's New |
+| m0lz.02 Concept | Closest Existing Work | What's Borrowed | What's New |
 |---|---|---|---|
-| Stack Loops | Speed Hierarchy of Feedback (2025) | Layered verification ordering | Technology stack layers, independent PICE loops per layer, always-run layers, seam checks |
+| Stack Loops | Speed Hierarchy of Feedback (2025) | Layered verification ordering | Technology stack layers, independent m0lz.02 loops per layer, always-run layers, seam checks |
 | Stack Loops | Test Pyramid (2009) | Layered testing concept | Iterative loop mechanics, adaptive pass count, dependency ordering |
 | Stack Loops | Verification Loops (Spotify, 2025) | Feedback loops for AI agents | Per-layer structure, seam verification, tier-scaled depth |
 | Arch Experts | AutoAgents (2023) | Dynamic expert agent generation | Architecture-file inference (vs. task-content inference), seam ownership |
@@ -983,7 +983,7 @@ This is the pattern of real innovation: synthesizing mature ideas from multiple 
 
 ---
 
-## Self-Evolving Verification Frameworks: State of the Art and Blueprint for PICE
+## Self-Evolving Verification Frameworks: State of the Art and Blueprint for m0lz.02
 
 
 
@@ -991,7 +991,7 @@ This is the pattern of real innovation: synthesizing mature ideas from multiple 
 
 ## Executive Summary
 
-No production system today fully implements a closed-loop, self-evolving verification framework — one that genuinely learns from its own execution history to rewrite verification criteria, reallocate resources, and compound in value over time. But the building blocks exist across five distinct fields: predictive test selection (Meta, Google, Develocity), observability-driven development (Honeycomb, Tracetest), self-improving AI agents (Reflexion, DSPy, SICA), autonomic computing (MAPE-K), and evolutionary test optimization (EvoSuite). PICE's opportunity is to be the first system that integrates these patterns into a unified architecture where every evaluation makes the next one smarter, more targeted, and cheaper.
+No production system today fully implements a closed-loop, self-evolving verification framework — one that genuinely learns from its own execution history to rewrite verification criteria, reallocate resources, and compound in value over time. But the building blocks exist across five distinct fields: predictive test selection (Meta, Google, Develocity), observability-driven development (Honeycomb, Tracetest), self-improving AI agents (Reflexion, DSPy, SICA), autonomic computing (MAPE-K), and evolutionary test optimization (EvoSuite). m0lz.02's opportunity is to be the first system that integrates these patterns into a unified architecture where every evaluation makes the next one smarter, more targeted, and cheaper.
 
 -----
 
@@ -1008,7 +1008,7 @@ Results:
 - Effectively doubles infrastructure efficiency
 - The model retrains regularly on fresh results, adapting automatically as the codebase evolves
 
-The feature set that drives predictions: which files changed, which tests historically fail on those files, recency of failures, developer identity, time of day, and commit metadata. This is directly analogous to the data PICE's SQLite metrics engine already collects — check outcomes, file associations, layer information, model used, evaluation confidence.
+The feature set that drives predictions: which files changed, which tests historically fail on those files, recency of failures, developer identity, time of day, and commit metadata. This is directly analogous to the data m0lz.02's SQLite metrics engine already collects — check outcomes, file associations, layer information, model used, evaluation confidence.
 
 ### Meta's Sapienz
 
@@ -1018,7 +1018,7 @@ Companion system using search-based software engineering to generate automated t
 
 Processes **over 150 million test executions daily** across 4 billion individual test cases. Their ML-driven test selection reduced computational waste by over 30% while maintaining 99.9% regression safety confidence.
 
-A surprising finding: algorithms based on the **number of distinct developers** committing code that triggers particular tests outperformed algorithms based on recent execution history. Social and organizational signals are unexpectedly powerful predictors of failure. This suggests PICE's metrics engine should consider who's making changes, not just what's changing.
+A surprising finding: algorithms based on the **number of distinct developers** committing code that triggers particular tests outperformed algorithms based on recent execution history. Social and organizational signals are unexpectedly powerful predictors of failure. This suggests m0lz.02's metrics engine should consider who's making changes, not just what's changing.
 
 ### Develocity (formerly Gradle Enterprise)
 
@@ -1031,16 +1031,16 @@ Commercialized predictive test selection. Used by Netflix, LinkedIn, Airbnb. Net
 
 Demonstrated that running **20% of tests achieves 90% confidence** in catching failures, with models trained several times per week on fresh data. The 80/20 rule of verification — the minority of checks that catch the majority of issues can be identified from historical data.
 
-### Direct lesson for PICE
+### Direct lesson for m0lz.02
 
-The data PICE already collects in its SQLite metrics engine — check outcomes, file associations, layer information, model used, evaluation confidence — is precisely the feature set these systems use. The feedback loop is straightforward:
+The data m0lz.02 already collects in its SQLite metrics engine — check outcomes, file associations, layer information, model used, evaluation confidence — is precisely the feature set these systems use. The feedback loop is straightforward:
 
 1. Train a model on historical check outcomes
 2. For each new code change, predict which checks are most likely to catch issues
 3. Run those checks first, skip checks with zero historical hit rate
 4. Continuously retrain as new data arrives
 
-The expected outcome: PICE runs fewer checks, catches the same or more issues, at lower cost and latency. The self-evolving loop makes this automatic.
+The expected outcome: m0lz.02 runs fewer checks, catches the same or more issues, at lower cost and latency. The self-evolving loop makes this automatic.
 
 -----
 
@@ -1056,7 +1056,7 @@ Observability-Driven Development (ODD), championed by Charity Majors (CTO of Hon
 - O11y 1.0: Separate pillars of metrics, logs, and traces in isolated tools. Pre-defined queries. Dashboard-centric.
 - O11y 2.0: Unified storage of wide structured log events in columnar databases. Arbitrary high-cardinality slicing. You can slice by build ID, feature flag, user ID, or any dimension without pre-defining queries.
 
-**Latest position (2026):** AI agents writing code need observability even more than humans, since their ability to validate changes determines the ROI of AI investment. This directly validates PICE's v0.5 architecture — the self-evolving loop needs production signals to close the feedback cycle.
+**Latest position (2026):** AI agents writing code need observability even more than humans, since their ability to validate changes determines the ROI of AI investment. This directly validates m0lz.02's v0.5 architecture — the self-evolving loop needs production signals to close the feedback cycle.
 
 ### Tools closing the production-to-development loop
 
@@ -1068,13 +1068,13 @@ Observability-Driven Development (ODD), championed by Charity Majors (CTO of Hon
 
 **Harness Continuous Verification** — The most mature product explicitly implementing production-data-driven verification. Queries health sources (Prometheus, Datadog, Splunk) automatically during deployment. Uses ML to learn normal behavior. Triggers **automatic rollback** when anomalies are detected.
 
-### The key metric for PICE: evaluation-to-production correlation
+### The key metric for m0lz.02: evaluation-to-production correlation
 
-The single most important signal for PICE's self-evolution: **do verification verdicts predict production incidents?**
+The single most important signal for m0lz.02's self-evolution: **do verification verdicts predict production incidents?**
 
 Track two things:
-1. Code that PICE passed → did it cause production incidents? (false negative rate)
-2. Code that PICE flagged → would it have caused incidents if shipped? (true positive validation)
+1. Code that m0lz.02 passed → did it cause production incidents? (false negative rate)
+2. Code that m0lz.02 flagged → would it have caused incidents if shipped? (true positive validation)
 
 Over time, this correlation score becomes the ultimate ground truth for tuning the entire system. Checks that predict production issues get amplified. Checks that don't get deprioritized. The framework learns what actually matters — not what looked important in theory.
 
@@ -1094,7 +1094,7 @@ The key architectural insight is the **"semantic gradient"**: natural-language r
 - Composable (new reflections build on old ones)
 - Reversible (bad reflections can be identified and removed)
 
-For PICE: after each verification session, the framework can append discovered patterns ("this project's Docker builds fail when new dependencies aren't added to the multi-stage builder's first stage") to a persistent knowledge base. Future evaluations condition on this growing library.
+For m0lz.02: after each verification session, the framework can append discovered patterns ("this project's Docker builds fail when new dependencies aren't added to the multi-stage builder's first stage") to a persistent knowledge base. Future evaluations condition on this growing library.
 
 ### DSPy (Stanford NLP)
 
@@ -1113,7 +1113,7 @@ DSPy's optimizers automatically construct and refine prompts based on execution 
 
 Reported gains: GPT-4o-mini scores from **66% to 87%** on classification tasks through automated prompt optimization alone.
 
-For PICE: the Arch Expert system prompts and dual-model evaluation prompts are exactly the kind of structured LLM pipelines DSPy optimizes. Rather than manually tuning "You are a RunPod expert...", PICE can define metrics (did this expert catch real issues? what was its false positive rate?) and let DSPy-style optimization search the prompt space using accumulated evaluation traces.
+For m0lz.02: the Arch Expert system prompts and dual-model evaluation prompts are exactly the kind of structured LLM pipelines DSPy optimizes. Rather than manually tuning "You are a RunPod expert...", m0lz.02 can define metrics (did this expert catch real issues? what was its false positive rate?) and let DSPy-style optimization search the prompt space using accumulated evaluation traces.
 
 ### SICA — Self-Improving Coding Agent (ICLR 2025)
 
@@ -1126,13 +1126,13 @@ Key design:
 
 Results: **17–53% performance improvement** on SWE-Bench Verified.
 
-For PICE: the concept of maintaining a versioned archive of verification configurations — including prompt versions, threshold settings, and check definitions — with tracked performance metrics per version. The system can test new configurations against historical data before deploying them.
+For m0lz.02: the concept of maintaining a versioned archive of verification configurations — including prompt versions, threshold settings, and check definitions — with tracked performance metrics per version. The system can test new configurations against historical data before deploying them.
 
 ### Darwin Gödel Machine (Sakana AI, 2025)
 
 Extends SICA with open-ended evolutionary search. Automatically improved SWE-bench performance from **20.0% to 50.0%** through a growing archive of diverse agent variants. The most aggressive self-improvement approach: the system literally rewrites its own architecture.
 
-For PICE: too aggressive for production verification (you don't want your safety system rewriting itself without guardrails), but validates the principle that automated self-improvement works. PICE can apply the concept with human-in-the-loop oversight — propose improvements, simulate against historical data, deploy with monitoring.
+For m0lz.02: too aggressive for production verification (you don't want your safety system rewriting itself without guardrails), but validates the principle that automated self-improvement works. m0lz.02 can apply the concept with human-in-the-loop oversight — propose improvements, simulate against historical data, deploy with monitoring.
 
 ### The AGENTS.md / CLAUDE.md pattern
 
@@ -1144,7 +1144,7 @@ The most practical, widely-adopted approach for coding agents to learn without w
 
 After each task, learnings are appended. Future iterations ingest this file. This four-channel memory approach (git history, progress log, task state, knowledge base) is simple but effective.
 
-For PICE: the equivalent is `.pice/learnings.md` or `.pice/knowledge.md` — a growing file the framework reads and appends to across executions. Over time, it accumulates project-specific verification intelligence: "this project's Docker builds always need the builder stage to include openssl-dev," "the RunPod handler timeout needs to be 2x the p99 latency of the ML model."
+For m0lz.02: the equivalent is `.pice/learnings.md` or `.pice/knowledge.md` — a growing file the framework reads and appends to across executions. Over time, it accumulates project-specific verification intelligence: "this project's Docker builds always need the builder stage to include openssl-dev," "the RunPod handler timeout needs to be 2x the p99 latency of the ML model."
 
 -----
 
@@ -1154,37 +1154,37 @@ For PICE: the equivalent is `.pice/learnings.md` or `.pice/knowledge.md` — a g
 
 IBM's MAPE-K loop (Monitor → Analyze → Plan → Execute, over a shared Knowledge base) is the canonical reference architecture for self-adaptive systems, introduced by Kephart & Chess in 2003. Over 6,000 research papers cite it.
 
-**Monitor** — Collects raw telemetry from the managed system. For PICE: per-check pass/fail, confidence scores, token counts, latency, model used, environmental context (file changed, layer, component, developer).
+**Monitor** — Collects raw telemetry from the managed system. For m0lz.02: per-check pass/fail, confidence scores, token counts, latency, model used, environmental context (file changed, layer, component, developer).
 
-**Analyze** — Processes raw data into actionable insights. For PICE: rolling averages, trend detection, statistical process control, Bayesian updating of check effectiveness, anomaly detection (sudden changes in failure patterns).
+**Analyze** — Processes raw data into actionable insights. For m0lz.02: rolling averages, trend detection, statistical process control, Bayesian updating of check effectiveness, anomaly detection (sudden changes in failure patterns).
 
-**Plan** — Generates adaptation decisions. For PICE: which checks to enable/disable, which model to assign per check, prompt refinement candidates, budget allocation across tiers.
+**Plan** — Generates adaptation decisions. For m0lz.02: which checks to enable/disable, which model to assign per check, prompt refinement candidates, budget allocation across tiers.
 
-**Execute** — Applies changes to the managed system. For PICE: update `.pice/config.toml`, adjust model routing, deploy new prompt versions, modify thresholds.
+**Execute** — Applies changes to the managed system. For m0lz.02: update `.pice/config.toml`, adjust model routing, deploy new prompt versions, modify thresholds.
 
-**Knowledge** — Shared data store accessible to all phases. For PICE: the SQLite metrics engine plus `.pice/learnings.md`.
+**Knowledge** — Shared data store accessible to all phases. For m0lz.02: the SQLite metrics engine plus `.pice/learnings.md`.
 
 ### Recent critiques and extensions
 
 **"Breaking the Loop: AWARE is the New MAPE-K"** (FSE 2025) argues the sequential, reactive, centralized MAPE-K loop struggles with modern complex systems — lacking proactivity, scalability, and continuous learning integration. The AWARE framework proposes replacing the loop with an event-driven, distributed architecture.
 
-For PICE: the critique is valid for runtime systems but less applicable to verification frameworks where sequential processing is acceptable. However, the proactivity critique applies — PICE should not just react to failures but proactively predict which checks will be most valuable for each change.
+For m0lz.02: the critique is valid for runtime systems but less applicable to verification frameworks where sequential processing is acceptable. However, the proactivity critique applies — m0lz.02 should not just react to failures but proactively predict which checks will be most valuable for each change.
 
 **LLM-enhanced MAPE-K** (ECSA 2025) proposes integrating LLM-based agentic AI for the Analyze and Plan phases. The LLM handles natural-language reasoning about why patterns are emerging and what adaptation strategies might work.
 
-For PICE: this is already the architecture. PICE's AI evaluators serve as both the managed system AND the Analyze/Plan intelligence. The self-evolving loop uses the same AI capabilities that perform verification to also reason about how to improve verification.
+For m0lz.02: this is already the architecture. m0lz.02's AI evaluators serve as both the managed system AND the Analyze/Plan intelligence. The self-evolving loop uses the same AI capabilities that perform verification to also reason about how to improve verification.
 
 ### Control theory foundations
 
-Cangussu et al. developed a closed-loop feedback control model of the software test process grounded in automatic control theory. Key concepts that apply to PICE:
+Cangussu et al. developed a closed-loop feedback control model of the software test process grounded in automatic control theory. Key concepts that apply to m0lz.02:
 
-**Setpoints** — Target values the system maintains. For PICE: target FPR &lt; 5%, cost per evaluation &lt; $X, confidence > 95% for Tier 2.
+**Setpoints** — Target values the system maintains. For m0lz.02: target FPR &lt; 5%, cost per evaluation &lt; $X, confidence > 95% for Tier 2.
 
-**Error signals** — Difference between current and target metrics. For PICE: current FPR is 12% vs. target 5% → error signal of 7%.
+**Error signals** — Difference between current and target metrics. For m0lz.02: current FPR is 12% vs. target 5% → error signal of 7%.
 
-**Controller gain** — How aggressively the system responds to error signals. Too high → oscillation (checks flip between enabled and disabled). Too low → slow adaptation. PICE should use conservative gain with damping.
+**Controller gain** — How aggressively the system responds to error signals. Too high → oscillation (checks flip between enabled and disabled). Too low → slow adaptation. m0lz.02 should use conservative gain with damping.
 
-**Stability margins** — Preventing harmful oscillations. PICE should require metrics to be consistently outside target for N consecutive evaluation cycles before adapting, preventing noise-driven changes.
+**Stability margins** — Preventing harmful oscillations. m0lz.02 should require metrics to be consistently outside target for N consecutive evaluation cycles before adapting, preventing noise-driven changes.
 
 **Dead bands** — Minimum error thresholds to prevent constant small adjustments. If FPR is 5.1% vs. target 5.0%, don't adapt — that's within noise.
 
@@ -1200,7 +1200,7 @@ Chris Argyris and Donald Schön (1978) distinguished two modes of organizational
 
 **Double-loop learning** questions the rules themselves. Why 68°F? Should it be 72°F in winter and 66°F in summer? Should we use a thermostat at all, or a more sophisticated climate control system?
 
-### Application to PICE
+### Application to m0lz.02
 
 **Inner loop (single-loop):** Adjusts parameters within existing verification criteria.
 - Tune thresholds: change the Bayesian-SPRT acceptance boundary from 0.95 to 0.93
@@ -1241,13 +1241,13 @@ Hybridizes LLM test generation with evolutionary search:
 2. Genetic algorithm refines through selection, crossover, and mutation (exploiting systematic optimization)
 3. Outperforms either approach alone
 
-For PICE: the concept of evolutionary check generation. Generate candidate checks using AI, then evaluate their fitness (hit rate, FPR, cost, value score) over a probation period, and evolve the check population using selection pressure from real-world outcomes.
+For m0lz.02: the concept of evolutionary check generation. Generate candidate checks using AI, then evaluate their fitness (hit rate, FPR, cost, value score) over a probation period, and evolve the check population using selection pressure from real-world outcomes.
 
 ### DeepVerifier (2025)
 
 Self-evolving verification agents that iteratively verify outputs using rubrics derived from an automatically constructed failure taxonomy. Outperformed agent-as-judge baselines by **12–48% in meta-evaluation F1 score**.
 
-Key principle: **exploit the asymmetry of verification** — checking correctness is easier than generation. PICE's entire architecture is built on this asymmetry: the evaluation agents are simpler and cheaper than the implementation agents, but the verification framework that orchestrates them adds the compound value.
+Key principle: **exploit the asymmetry of verification** — checking correctness is easier than generation. m0lz.02's entire architecture is built on this asymmetry: the evaluation agents are simpler and cheaper than the implementation agents, but the verification framework that orchestrates them adds the compound value.
 
 ### ReVeal (2025)
 
@@ -1257,15 +1257,15 @@ Multi-turn RL framework for self-evolving code agents where generation and verif
 
 Closes the generation-verification gap using ensemble verification with learned verifier reliabilities: 30+ verifiers with probabilistic aggregation achieve **91% collective accuracy** when 20+ agree, despite individual accuracy of 43–62%.
 
-Direct validation of PICE's dual-model approach — and suggests expanding to more evaluators with learned reliability weights. The ensemble's power comes not from count but from diversity and calibrated weighting.
+Direct validation of m0lz.02's dual-model approach — and suggests expanding to more evaluators with learned reliability weights. The ensemble's power comes not from count but from diversity and calibrated weighting.
 
 ### The Generator-Verifier-Updater framework
 
-Chojecki (2025) unified self-play approaches under a Generator-Verifier-Updater (GVU) operator, showing that STaR, SPIN, Reflexion, GANs, and AlphaZero are specific topological realizations of the same fundamental pattern. This suggests PICE's dual-model adversarial setup is an instance of a **deeply general self-improvement mechanism** — not a specific technique but a manifestation of a universal pattern.
+Chojecki (2025) unified self-play approaches under a Generator-Verifier-Updater (GVU) operator, showing that STaR, SPIN, Reflexion, GANs, and AlphaZero are specific topological realizations of the same fundamental pattern. This suggests m0lz.02's dual-model adversarial setup is an instance of a **deeply general self-improvement mechanism** — not a specific technique but a manifestation of a universal pattern.
 
 -----
 
-## 7. Minimum Viable Telemetry for PICE's Closed Loop
+## 7. Minimum Viable Telemetry for m0lz.02's Closed Loop
 
 ### Phase 1: Seven core metrics (minimum viable)
 
@@ -1379,7 +1379,7 @@ SQLite with WAL mode and proper indexing handles millions of rows with zero oper
 
 ## 8. The Complete Self-Evolving Architecture
 
-Synthesizing all prior art, PICE's evolution from v0.1 metrics engine to a genuinely self-evolving verification framework combines five proven patterns:
+Synthesizing all prior art, m0lz.02's evolution from v0.1 metrics engine to a genuinely self-evolving verification framework combines five proven patterns:
 
 ### Pattern 1: MAPE-K skeleton
 
@@ -1426,7 +1426,7 @@ Despite rich prior art in each individual domain, no system combines:
 | Versioned configuration archive | SICA | Applied to coding agents, not verification frameworks |
 | Production correlation feedback | Harness CV | Detects anomalies, doesn't feed back into verification criteria |
 | Evolutionary criterion generation | EvoSuite | Generates test cases, not verification criteria |
-| **All of the above in one system** | **Nothing** | **PICE v0.5** |
+| **All of the above in one system** | **Nothing** | **m0lz.02 v0.5** |
 
 The gap is clear. The building blocks are mature. The integration is the novel contribution.
 
@@ -1434,7 +1434,7 @@ The gap is clear. The building blocks are mature. The integration is the novel c
 
 ---
 
-## Claude Code Agent Teams: A Technical Deep-Dive for PICE
+## Claude Code Agent Teams: A Technical Deep-Dive for m0lz.02
 
 
 
@@ -1442,13 +1442,13 @@ The gap is clear. The building blocks are mature. The integration is the novel c
 
 ## Executive Summary
 
-Claude Code offers two distinct multi-agent systems that PICE can leverage — but with critical caveats. The stable **subagent system** (via the `Agent` tool) provides isolated, per-role context windows with configurable system prompts and model selection, making it directly applicable to Stack Loops and Arch Experts. The experimental **Agent Teams** feature (since v2.1.32, February 2026) adds peer-to-peer messaging and shared task lists but remains too unstable for production orchestration. For PICE, the recommended integration path is **CLI subprocess invocation** (`claude --bare -p`), which avoids SDK licensing concerns while providing full access to subagent orchestration via JSON-lines over stdio.
+Claude Code offers two distinct multi-agent systems that m0lz.02 can leverage — but with critical caveats. The stable **subagent system** (via the `Agent` tool) provides isolated, per-role context windows with configurable system prompts and model selection, making it directly applicable to Stack Loops and Arch Experts. The experimental **Agent Teams** feature (since v2.1.32, February 2026) adds peer-to-peer messaging and shared task lists but remains too unstable for production orchestration. For m0lz.02, the recommended integration path is **CLI subprocess invocation** (`claude --bare -p`), which avoids SDK licensing concerns while providing full access to subagent orchestration via JSON-lines over stdio.
 
 -----
 
 ## 1. Two Multi-Agent Systems, Not One
 
-Claude Code contains two architecturally distinct delegation mechanisms that are often conflated in community discussions. Understanding the difference is essential for PICE's design.
+Claude Code contains two architecturally distinct delegation mechanisms that are often conflated in community discussions. Understanding the difference is essential for m0lz.02's design.
 
 ### Subagents (stable, always available)
 
@@ -1494,11 +1494,11 @@ Internal tools powering teams: `TeamCreateTool`, `TeammateTool`, `SendMessageToo
 
 ### Coordinator Mode
 
-A third system, feature-flagged as `COORDINATOR_MODE`, also exists in the codebase. It creates an asymmetric architecture where the coordinator relinquishes all filesystem/shell tools and exclusively manages workers via `Agent` tool calls with `subagent_type: "worker"`. This pattern — a pure orchestrator with no direct execution capability — maps closely to PICE's proposed coordinator role.
+A third system, feature-flagged as `COORDINATOR_MODE`, also exists in the codebase. It creates an asymmetric architecture where the coordinator relinquishes all filesystem/shell tools and exclusively manages workers via `Agent` tool calls with `subagent_type: "worker"`. This pattern — a pure orchestrator with no direct execution capability — maps closely to m0lz.02's proposed coordinator role.
 
-### Why PICE uses subagents, not Agent Teams
+### Why m0lz.02 uses subagents, not Agent Teams
 
-Agent Teams' peer-to-peer messaging is unnecessary for PICE's hierarchical verification model. PICE's architecture is inherently parent→child: the Rust coordinator spawns each layer's evaluator, collects results, and makes decisions. Lateral communication between evaluators would compromise the context isolation that Stack Loops require.
+Agent Teams' peer-to-peer messaging is unnecessary for m0lz.02's hierarchical verification model. m0lz.02's architecture is inherently parent→child: the Rust coordinator spawns each layer's evaluator, collects results, and makes decisions. Lateral communication between evaluators would compromise the context isolation that Stack Loops require.
 
 More critically, Agent Teams have known stability issues:
 - No session resume capability
@@ -1531,13 +1531,13 @@ isolation: worktree
 You are a security expert. Focus on OWASP top 10...
 ```
 
-### Key fields for PICE
+### Key fields for m0lz.02
 
 **`model`** — Supports per-agent model assignment, including full model IDs like `claude-opus-4-6`. Critical for cost optimization: Haiku for simple layer checks ($0.001/pass), Sonnet for implementation review ($0.01/pass), Opus for complex coordination ($0.10/pass).
 
 **`tools`** — Restricts what each agent can do. Critical for Stack Loop evaluation agents that should be read-only: `tools: [Read, Grep, Glob]` with no `Write`, `Edit`, or `Bash`. Prevents evaluators from modifying the code they're evaluating.
 
-**`isolation: worktree`** — Gives agents their own git worktree, preventing file conflicts between concurrent agents. Useful if PICE ever adopts parallel layer execution.
+**`isolation: worktree`** — Gives agents their own git worktree, preventing file conflicts between concurrent agents. Useful if m0lz.02 ever adopts parallel layer execution.
 
 **`maxTurns`** — Caps agent loop iterations. Essential for cost control — prevents a confused evaluator from running indefinitely. Recommended: 25 for standard evaluation, 10 for simple checks, 50 for complex Tier 3 analysis.
 
@@ -1547,7 +1547,7 @@ The body of the markdown file becomes the agent's **system prompt** — enabling
 
 ### Resolution priority
 
-Subagent definitions follow a priority order: managed settings (org-wide) → `--agents` CLI flag → `.claude/agents/` → `~/.claude/agents/` → plugin directories. Custom agents can override built-in agents by sharing the same name — PICE could replace the default `Explore` agent with a domain-specialized version.
+Subagent definitions follow a priority order: managed settings (org-wide) → `--agents` CLI flag → `.claude/agents/` → `~/.claude/agents/` → plugin directories. Custom agents can override built-in agents by sharing the same name — m0lz.02 could replace the default `Explore` agent with a domain-specialized version.
 
 -----
 
@@ -1567,7 +1567,7 @@ Both SDKs' README files contain identical language: use is governed by Anthropic
 
 ### How the SDK works
 
-Both SDKs **spawn the Claude Code CLI as a subprocess** and communicate via **JSON-lines over stdio** — newline-delimited JSON objects streaming bidirectionally. This is structurally similar to PICE's JSON-RPC over stdio provider architecture, though the wire format differs (JSON-lines vs. JSON-RPC 2.0 framing).
+Both SDKs **spawn the Claude Code CLI as a subprocess** and communicate via **JSON-lines over stdio** — newline-delimited JSON objects streaming bidirectionally. This is structurally similar to m0lz.02's JSON-RPC over stdio provider architecture, though the wire format differs (JSON-lines vs. JSON-RPC 2.0 framing).
 
 The TypeScript SDK's core `query()` function accepts inline agent definitions:
 
@@ -1600,17 +1600,17 @@ The Python SDK exposes an abstract `Transport` base class (`connect()`, `write()
 
 -----
 
-## 4. Integration Options for PICE
+## 4. Integration Options for m0lz.02
 
 Four options exist, ranked by feasibility for an open-source project:
 
 ### Option A: TypeScript SDK directly
 
-Import `@anthropic-ai/claude-agent-sdk` in PICE's TypeScript layer. Define `AgentDefinition` objects for each PICE role. Stream `SDKMessage` objects for real-time progress. Use hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop`) for control flow.
+Import `@anthropic-ai/claude-agent-sdk` in m0lz.02's TypeScript layer. Define `AgentDefinition` objects for each m0lz.02 role. Stream `SDKMessage` objects for real-time progress. Use hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop`) for control flow.
 
 **Pros:** Richest API, typed interfaces, lifecycle hooks.
 **Cons:** Proprietary license. Bundling or depending on this package creates licensing concerns for an open-source project.
-**Verdict:** Not recommended for PICE.
+**Verdict:** Not recommended for m0lz.02.
 
 ### Option B: CLI subprocess (recommended)
 
@@ -1620,7 +1620,7 @@ Spawn `claude --bare -p` as a subprocess from Rust. Use:
 - `--resume <session_id>` for session continuity
 
 **Pros:** No compile-time dependency on proprietary packages. Same integration as any program invoking any CLI tool. The TypeScript SDK itself does this internally.
-**Cons:** PICE must parse JSON-lines output directly. No typed interfaces.
+**Cons:** m0lz.02 must parse JSON-lines output directly. No typed interfaces.
 **Verdict:** Recommended. Cleanest licensing posture for open-source distribution.
 
 ### Option C: Python SDK bridge
@@ -1629,24 +1629,24 @@ Use the MIT-licensed `claude-agent-sdk` Python package. Declare as an optional d
 
 **Pros:** MIT license is compatible with any open-source license. Full SDK capabilities.
 **Cons:** Requires a Python bridge layer in a Rust project. The bundled CLI binary is still proprietary.
-**Verdict:** Good alternative if PICE adds a Python layer. Declare as optional dependency.
+**Verdict:** Good alternative if m0lz.02 adds a Python layer. Declare as optional dependency.
 
 ### Option D: MCP Server Mode
 
-Run `claude mcp serve` to expose Claude Code's tools via JSON-RPC 2.0 over stdio — directly compatible with PICE's architecture. However, this mode does not support agent team orchestration and doesn't pass through Claude Code's own MCP server connections.
+Run `claude mcp serve` to expose Claude Code's tools via JSON-RPC 2.0 over stdio — directly compatible with m0lz.02's architecture. However, this mode does not support agent team orchestration and doesn't pass through Claude Code's own MCP server connections.
 
 **Pros:** Native JSON-RPC 2.0 compatibility.
 **Cons:** No subagent orchestration. No agent definitions.
-**Verdict:** Too limited for PICE's needs.
+**Verdict:** Too limited for m0lz.02's needs.
 
 -----
 
 ## 5. Concrete Integration Architecture
 
-### How PICE orchestrates a Stack Loop evaluation
+### How m0lz.02 orchestrates a Stack Loop evaluation
 
 ```
-PICE Rust Core (sole orchestrator)
+m0lz.02 Rust Core (sole orchestrator)
 │
 ├─ Spawn: claude --bare -p --output-format stream-json --agents <json>
 │  │
@@ -1677,12 +1677,12 @@ PICE Rust Core (sole orchestrator)
 │  ├─ D moderate → Additional targeted passes (Tier 2)
 │  └─ D > τ_high → Escalate + VEC (Tier 3)
 │
-└─ PICE merges results → layer verdict + seam verdict + confidence
+└─ m0lz.02 merges results → layer verdict + seam verdict + confidence
 ```
 
-### How PICE spawns Arch Experts
+### How m0lz.02 spawns Arch Experts
 
-PICE constructs `AgentDefinition` objects at runtime from architecture discovery results:
+m0lz.02 constructs `AgentDefinition` objects at runtime from architecture discovery results:
 
 ```
 pice plan "add user auth"
@@ -1711,30 +1711,30 @@ The `--agents` CLI flag and SDK `agents` parameter offer agent definition withou
 
 ### Streaming output parsing
 
-PICE parses the JSON-lines stream from Claude Code to:
+m0lz.02 parses the JSON-lines stream from Claude Code to:
 - Track subagent progress in real-time
 - Extract intermediate results for the ADTS divergence calculation
 - Detect completion and collect final verdicts
 - Monitor token usage for cost tracking
 - Capture timing data for the metrics engine
 
-Each line is a self-contained JSON object. PICE filters for result messages, tool use events, and error conditions.
+Each line is a self-contained JSON object. m0lz.02 filters for result messages, tool use events, and error conditions.
 
 ### Hooks for control flow
 
 The Claude Code hook system provides programmatic control points:
 
-- **`PreToolUse`** — Before each tool invocation. PICE can use this to enforce read-only constraints.
-- **`PostToolUse`** — After each tool invocation. PICE can capture tool results for seam analysis.
-- **`SubagentStart`** — When a subagent is spawned. PICE logs start time and configuration.
-- **`SubagentStop`** — When a subagent completes. PICE captures the result and updates the Bayesian posterior.
-- **`TaskCompleted`** — When the overall task finishes. PICE triggers the ADTS decision logic.
+- **`PreToolUse`** — Before each tool invocation. m0lz.02 can use this to enforce read-only constraints.
+- **`PostToolUse`** — After each tool invocation. m0lz.02 can capture tool results for seam analysis.
+- **`SubagentStart`** — When a subagent is spawned. m0lz.02 logs start time and configuration.
+- **`SubagentStop`** — When a subagent completes. m0lz.02 captures the result and updates the Bayesian posterior.
+- **`TaskCompleted`** — When the overall task finishes. m0lz.02 triggers the ADTS decision logic.
 
 When using CLI subprocess integration (Option B), hooks are configured via `.claude/settings.json` or command-line flags rather than programmatic callbacks.
 
 -----
 
-## 6. What PICE Can and Cannot Do with Claude Code
+## 6. What m0lz.02 Can and Cannot Do with Claude Code
 
 ### Can do: Stack Loops
 
@@ -1757,24 +1757,24 @@ The custom agent definition system serves Arch Experts well:
 
 ### Cannot do: Cross-provider adversarial evaluation
 
-The Agent SDK only supports Anthropic models. There is no cross-provider support through the subagent system. PICE must orchestrate dual-model adversarial evaluation at its own layer:
+The Agent SDK only supports Anthropic models. There is no cross-provider support through the subagent system. m0lz.02 must orchestrate dual-model adversarial evaluation at its own layer:
 - Claude-side evaluation via Claude Code subagents
 - GPT-side evaluation via separate OpenAI API connection
-- PICE's Rust core merges results and runs ADTS/VEC algorithms
+- m0lz.02's Rust core merges results and runs ADTS/VEC algorithms
 
-This is architecturally clean — it keeps cross-provider logic independent of any single vendor's agent system. PICE is the decision engine; Claude Code is one of its execution substrates.
+This is architecturally clean — it keeps cross-provider logic independent of any single vendor's agent system. m0lz.02 is the decision engine; Claude Code is one of its execution substrates.
 
 ### Cannot do: Recursive nesting
 
-Subagents cannot spawn their own subagents. All agent orchestration must happen at a single level — PICE's coordinator must be the sole parent. This is not a limitation for Stack Loops (which require flat orchestration) but would prevent, e.g., an Arch Expert from delegating sub-tasks to its own specialist agents.
+Subagents cannot spawn their own subagents. All agent orchestration must happen at a single level — m0lz.02's coordinator must be the sole parent. This is not a limitation for Stack Loops (which require flat orchestration) but would prevent, e.g., an Arch Expert from delegating sub-tasks to its own specialist agents.
 
 ### Cannot do: Agent Teams for reliability
 
-Agent Teams' instability (no session resume, race conditions, task status lag) makes them unsuitable for a production verification framework. If PICE needs lateral agent communication in the future, it should implement this at its own orchestration layer.
+Agent Teams' instability (no session resume, race conditions, task status lag) makes them unsuitable for a production verification framework. If m0lz.02 needs lateral agent communication in the future, it should implement this at its own orchestration layer.
 
 -----
 
-## 7. Community Patterns Validating PICE's Architecture
+## 7. Community Patterns Validating m0lz.02's Architecture
 
 ### The "plan → parallelize" two-step
 
@@ -1797,13 +1797,13 @@ Community measurements show 3–7× token usage for agent teams vs. single sessi
 
 ### The 3–5 teammate sweet spot
 
-Community consensus on diminishing returns. John Kim: "Anything more than three feels like overkill." Official docs recommend 5–6 tasks per teammate. For PICE, this aligns with the convergence analysis: the Krogh-Vedelsby decomposition shows ensemble improvement requires diversity, not count, and the correlated evaluator ceiling caps effective independent evaluators at ~3.
+Community consensus on diminishing returns. John Kim: "Anything more than three feels like overkill." Official docs recommend 5–6 tasks per teammate. For m0lz.02, this aligns with the convergence analysis: the Krogh-Vedelsby decomposition shows ensemble improvement requires diversity, not count, and the correlated evaluator ceiling caps effective independent evaluators at ~3.
 
 -----
 
 ## 8. Cost Control Strategy
 
-PICE enforces cost discipline through multiple mechanisms:
+m0lz.02 enforces cost discipline through multiple mechanisms:
 
 **Model tiering.** Match model capability to task complexity:
 - Haiku (~$0.001/pass): Simple layer checks, syntax validation, basic seam checks
@@ -1832,7 +1832,7 @@ If Claude Code's Agent Teams feature stabilizes — specifically:
 - ✅ Consistent task status propagation
 - ✅ Production-grade reliability
 
-Then PICE could adopt Agent Teams for **parallel Tier 3 layer evaluation** — running multiple layer evaluators concurrently rather than sequentially. This would reduce wall-clock time for full-stack evaluation without changing the architecture (each teammate is still an isolated evaluator, results still merge at the PICE coordinator).
+Then m0lz.02 could adopt Agent Teams for **parallel Tier 3 layer evaluation** — running multiple layer evaluators concurrently rather than sequentially. This would reduce wall-clock time for full-stack evaluation without changing the architecture (each teammate is still an isolated evaluator, results still merge at the m0lz.02 coordinator).
 
 This is a watch-and-wait item, not a planned integration. Monitor the `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` feature flag and Claude Code release notes for stabilization signals.
 
@@ -1848,7 +1848,7 @@ This is a watch-and-wait item, not a planned integration. Monitor the `CLAUDE_CO
 
 ## Executive Summary
 
-The Claude Agent SDK has a complex, layered licensing structure that creates real constraints for PICE's open source distribution. The Python SDK wrapper code carries a standard MIT license, but the TypeScript SDK is proprietary, and both packages bundle the proprietary Claude Code CLI binary. PICE's recommended approach — CLI subprocess invocation — sidesteps SDK licensing concerns entirely by treating Claude Code as an external tool invoked over stdio, the same way any program invokes any CLI utility.
+The Claude Agent SDK has a complex, layered licensing structure that creates real constraints for m0lz.02's open source distribution. The Python SDK wrapper code carries a standard MIT license, but the TypeScript SDK is proprietary, and both packages bundle the proprietary Claude Code CLI binary. m0lz.02's recommended approach — CLI subprocess invocation — sidesteps SDK licensing concerns entirely by treating Claude Code as an external tool invoked over stdio, the same way any program invokes any CLI utility.
 
 -----
 
@@ -1861,7 +1861,7 @@ The Claude Agent SDK has a complex, layered licensing structure that creates rea
 **License file:** Standard MIT License — the full permissive text granting rights to "use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies." Copyright 2025 Anthropic, PBC.
 **PyPI classifier:** `OSI Approved :: MIT License`
 
-The Python SDK's wrapper code — the Python interface layer that communicates with the Claude Code CLI — is genuinely open source under MIT. PICE can freely depend on, modify, and redistribute this code.
+The Python SDK's wrapper code — the Python interface layer that communicates with the Claude Code CLI — is genuinely open source under MIT. m0lz.02 can freely depend on, modify, and redistribute this code.
 
 **Historical note:** The predecessor package `claude-code-sdk` (now deprecated, last version 0.0.25) was also MIT-licensed. When Anthropic rebranded to `claude-agent-sdk`, the Python wrapper retained MIT.
 
@@ -1926,51 +1926,51 @@ GitHub issue #8517 flagged that Claude Code binaries contain Apache-2.0-licensed
 
 ## 3. Anthropic's Commercial Terms of Service
 
-### Key provisions affecting PICE
+### Key provisions affecting m0lz.02
 
-**API key requirement.** Anthropic explicitly prohibits third-party developers from offering `claude.ai` login or routing requests through Free, Pro, or Max plan credentials. PICE users must authenticate with their own API keys through Claude Console or a supported cloud provider (AWS Bedrock, Google Cloud Vertex AI).
+**API key requirement.** Anthropic explicitly prohibits third-party developers from offering `claude.ai` login or routing requests through Free, Pro, or Max plan credentials. m0lz.02 users must authenticate with their own API keys through Claude Console or a supported cloud provider (AWS Bedrock, Google Cloud Vertex AI).
 
 **Branding restrictions.** Partners may use:
 - ✅ "Claude Agent" or "&#123;YourAgentName&#125; Powered by Claude"
 - ❌ "Claude Code" or "Claude Code Agent" branding
 - ❌ Claude Code-branded ASCII art
 
-PICE must not present itself as a Claude Code product or use Anthropic's trademarks.
+m0lz.02 must not present itself as a Claude Code product or use Anthropic's trademarks.
 
 **Usage Policy compliance.** All users must comply with Anthropic's Usage Policy, which prohibits:
 - Model scraping or distillation
 - Jailbreaking or bypassing safety guardrails
 - Using API outputs to train competing AI models without authorization
 
-PICE's integration must not facilitate any of these uses.
+m0lz.02's integration must not facilitate any of these uses.
 
-**Copyright indemnity.** Anthropic defends commercial customers against copyright infringement claims for authorized API use. This protection applies to PICE users who access Claude through the API with their own keys.
+**Copyright indemnity.** Anthropic defends commercial customers against copyright infringement claims for authorized API use. This protection applies to m0lz.02 users who access Claude through the API with their own keys.
 
-**Data collection.** The SDK collects usage telemetry including code acceptance/rejection rates, conversation data, and user feedback. PICE's documentation should disclose this to users.
+**Data collection.** The SDK collects usage telemetry including code acceptance/rejection rates, conversation data, and user feedback. m0lz.02's documentation should disclose this to users.
 
 ### Claude for Open Source program
 
-Anthropic runs a "Claude for Open Source" program offering eligible OSS maintainers free Claude Max access for six months. This concerns *using* Claude as a tool, not open-sourcing Claude's own code. PICE maintainers could apply for this program to support development.
+Anthropic runs a "Claude for Open Source" program offering eligible OSS maintainers free Claude Max access for six months. This concerns *using* Claude as a tool, not open-sourcing Claude's own code. m0lz.02 maintainers could apply for this program to support development.
 
 -----
 
-## 4. PICE's Recommended Approach
+## 4. m0lz.02's Recommended Approach
 
 ### Option B: CLI subprocess (chosen)
 
-PICE spawns `claude --bare -p` as a subprocess from Rust, communicating via JSON-lines over stdio. This is the same mechanism the TypeScript SDK uses internally, but without taking a dependency on the SDK package.
+m0lz.02 spawns `claude --bare -p` as a subprocess from Rust, communicating via JSON-lines over stdio. This is the same mechanism the TypeScript SDK uses internally, but without taking a dependency on the SDK package.
 
 **Why this works for open source:**
 
-1. **No compile-time dependency on proprietary code.** PICE's codebase contains zero lines of Anthropic-proprietary code. The integration is purely a runtime invocation of an external CLI tool — identical in legal character to a script that invokes `git`, `docker`, or `curl`.
+1. **No compile-time dependency on proprietary code.** m0lz.02's codebase contains zero lines of Anthropic-proprietary code. The integration is purely a runtime invocation of an external CLI tool — identical in legal character to a script that invokes `git`, `docker`, or `curl`.
 
-2. **No redistribution of proprietary binaries.** PICE does not ship the Claude Code CLI. Users install it independently via `npm install -g @anthropic-ai/claude-code`, accepting Anthropic's terms in the process.
+2. **No redistribution of proprietary binaries.** m0lz.02 does not ship the Claude Code CLI. Users install it independently via `npm install -g @anthropic-ai/claude-code`, accepting Anthropic's terms in the process.
 
-3. **PICE works without Claude Code.** The integration is an optional provider. The core PICE framework — Stack Loops, seam verification, adaptive algorithms, metrics engine — functions independently. Claude Code is one of potentially many execution substrates.
+3. **m0lz.02 works without Claude Code.** The integration is an optional provider. The core m0lz.02 framework — Stack Loops, seam verification, adaptive algorithms, metrics engine — functions independently. Claude Code is one of potentially many execution substrates.
 
-4. **Clean license boundary.** PICE's license (MIT or Apache 2.0) applies to PICE's code. Anthropic's Commercial Terms apply to Claude Code's code. The boundary is clear: they interact over stdio, not through linked libraries.
+4. **Clean license boundary.** m0lz.02's license (MIT or Apache 2.0) applies to m0lz.02's code. Anthropic's Commercial Terms apply to Claude Code's code. The boundary is clear: they interact over stdio, not through linked libraries.
 
-### If PICE later wants an SDK dependency
+### If m0lz.02 later wants an SDK dependency
 
 The Python SDK (`claude-agent-sdk`) is the safer choice:
 - Its wrapper code is MIT-licensed — compatible with any open source license
@@ -1982,19 +1982,19 @@ The TypeScript SDK should be avoided for any direct dependency due to its propri
 
 ### Documentation requirements
 
-PICE's documentation must clearly state:
+m0lz.02's documentation must clearly state:
 
-1. Using PICE's Claude Code integration requires a separate Claude Code installation and Anthropic API key
+1. Using m0lz.02's Claude Code integration requires a separate Claude Code installation and Anthropic API key
 2. Claude Code is proprietary software governed by Anthropic's Commercial Terms of Service
 3. Users are responsible for compliance with Anthropic's Usage Policy
 4. The Claude Code CLI collects usage telemetry
-5. PICE is not affiliated with, endorsed by, or a product of Anthropic
+5. m0lz.02 is not affiliated with, endorsed by, or a product of Anthropic
 
 -----
 
 ## 5. License Compatibility Matrix
 
-| PICE License | Python SDK (MIT) | TypeScript SDK (Proprietary) | CLI Binary (Proprietary) | CLI Subprocess |
+| m0lz.02 License | Python SDK (MIT) | TypeScript SDK (Proprietary) | CLI Binary (Proprietary) | CLI Subprocess |
 |---|---|---|---|---|
 | MIT | ✅ Compatible as optional dep | ❌ Cannot bundle/require | ❌ Cannot redistribute | ✅ No license conflict |
 | Apache 2.0 | ✅ Compatible as optional dep | ❌ Cannot bundle/require | ❌ Cannot redistribute | ✅ No license conflict |
@@ -2010,21 +2010,21 @@ The CLI subprocess approach (Option B) is license-compatible with every open sou
 ### Low risk
 
 - **CLI subprocess invocation.** Well-established legal principle. No court has held that invoking a program via its public CLI creates a license obligation on the invoking program.
-- **Python SDK as optional dependency.** MIT license is maximally permissive. The proprietary binary is installed by the user, not redistributed by PICE.
+- **Python SDK as optional dependency.** MIT license is maximally permissive. The proprietary binary is installed by the user, not redistributed by m0lz.02.
 
 ### Medium risk
 
-- **API changes.** Anthropic could change the CLI's `--bare`, `--output-format`, or `--agents` flags without notice, breaking PICE's integration. Mitigation: pin to known-good CLI versions, implement graceful degradation.
+- **API changes.** Anthropic could change the CLI's `--bare`, `--output-format`, or `--agents` flags without notice, breaking m0lz.02's integration. Mitigation: pin to known-good CLI versions, implement graceful degradation.
 - **Terms of Service changes.** Anthropic could modify its Commercial Terms to restrict CLI subprocess invocation by third-party tools. Unlikely (this would break the entire ecosystem) but theoretically possible.
 
 ### Low but notable risk
 
-- **Branding confusion.** Users might perceive PICE as a Claude Code product. Mitigation: clear branding separation, explicit disclaimers, no Anthropic trademarks in PICE materials.
-- **Telemetry concerns.** Users may not realize the Claude Code CLI collects usage data when PICE invokes it. Mitigation: document in PICE's privacy/data section.
+- **Branding confusion.** Users might perceive m0lz.02 as a Claude Code product. Mitigation: clear branding separation, explicit disclaimers, no Anthropic trademarks in m0lz.02 materials.
+- **Telemetry concerns.** Users may not realize the Claude Code CLI collects usage data when m0lz.02 invokes it. Mitigation: document in m0lz.02's privacy/data section.
 
 ### Mitigated risk
 
-- **Proprietary license contamination.** By using CLI subprocess (not SDK dependency), PICE's codebase remains entirely under its own license. No proprietary code is compiled into, linked with, or distributed alongside PICE.
+- **Proprietary license contamination.** By using CLI subprocess (not SDK dependency), m0lz.02's codebase remains entirely under its own license. No proprietary code is compiled into, linked with, or distributed alongside m0lz.02.
 
 -----
 
@@ -2038,9 +2038,9 @@ Many successful open source projects integrate with proprietary tools via CLI su
 | Docker Compose | Docker Engine | CLI subprocess | No |
 | Homebrew | macOS system tools | CLI subprocess | No |
 | VS Code extensions | VS Code (MIT, but MS-proprietary builds) | Extension API | Debated, generally no |
-| **PICE** | **Claude Code CLI** | **CLI subprocess** | **No** |
+| **m0lz.02** | **Claude Code CLI** | **CLI subprocess** | **No** |
 
-PICE's approach follows the same well-trodden pattern: an open source orchestrator that invokes proprietary tools as external dependencies, with users responsible for installing and licensing those tools independently.
+m0lz.02's approach follows the same well-trodden pattern: an open source orchestrator that invokes proprietary tools as external dependencies, with users responsible for installing and licensing those tools independently.
 
 -----
 
@@ -2048,19 +2048,19 @@ PICE's approach follows the same well-trodden pattern: an open source orchestrat
 
 1. **Use CLI subprocess integration (Option B).** No compile-time dependency on proprietary code. Clean license boundary. Maximum open source compatibility.
 
-2. **Make Claude Code optional.** PICE's core framework must work without Claude Code installed. The integration activates when the CLI is available.
+2. **Make Claude Code optional.** m0lz.02's core framework must work without Claude Code installed. The integration activates when the CLI is available.
 
-3. **Users bring their own installation and API keys.** PICE never distributes the CLI binary. Users install independently and accept Anthropic's terms.
+3. **Users bring their own installation and API keys.** m0lz.02 never distributes the CLI binary. Users install independently and accept Anthropic's terms.
 
-4. **If an SDK dependency is needed later, use Python.** MIT-licensed wrapper is compatible with any PICE license. Declare as optional.
+4. **If an SDK dependency is needed later, use Python.** MIT-licensed wrapper is compatible with any m0lz.02 license. Declare as optional.
 
 5. **Avoid the TypeScript SDK.** Proprietary license creates redistribution and bundling concerns for open source.
 
-6. **Maintain clear branding separation.** No Anthropic trademarks. Explicit disclaimer that PICE is independent.
+6. **Maintain clear branding separation.** No Anthropic trademarks. Explicit disclaimer that m0lz.02 is independent.
 
-7. **Document the data implications.** Users should know the CLI collects telemetry when PICE invokes it.
+7. **Document the data implications.** Users should know the CLI collects telemetry when m0lz.02 invokes it.
 
-8. **Consider applying for Claude for Open Source.** Free Claude Max access for PICE maintainers could support development without licensing concerns.
+8. **Consider applying for Claude for Open Source.** Free Claude Max access for m0lz.02 maintainers could support development without licensing concerns.
 
 -----
 
@@ -2107,7 +2107,7 @@ None of these produce the "backend layer, database layer, API layer" decompositi
 
 ### Resolution
 
-PICE uses a **six-level heuristic detection stack** with mandatory manual override:
+m0lz.02 uses a **six-level heuristic detection stack** with mandatory manual override:
 
 1. Manifest files → runtime, framework, dependencies
 2. Directory patterns → conventional locations (app/, api/, infra/, deploy/)
@@ -2118,7 +2118,7 @@ PICE uses a **six-level heuristic detection stack** with mandatory manual overri
 
 Fullstack frameworks use **file-level layer tagging**: files belong to multiple layers, each evaluated through a different contract lens. Monorepos are treated as multiple stacks with cross-stack seam checks on shared dependencies. Polyrepos are the acknowledged limitation — deferred to v0.4's distributed trace analysis for cross-repo seam inference, with `.pice/external-contracts.toml` for manual declaration in the interim.
 
-Auto-detection generates a proposed `layers.toml` on `pice init`. The developer reviews, adjusts, and commits. This balances automation with human oversight — the human makes the architectural judgment call, PICE automates the verification that follows.
+Auto-detection generates a proposed `layers.toml` on `pice init`. The developer reviews, adjusts, and commits. This balances automation with human oversight — the human makes the architectural judgment call, m0lz.02 automates the verification that follows.
 
 -----
 
@@ -2143,7 +2143,7 @@ Standard build systems — Nx, Turborepo, Bazel — all assume **unidirectional 
 
 ### Resolution
 
-PICE implements a **bidirectional dependency graph with contract-based change pruning**:
+m0lz.02 implements a **bidirectional dependency graph with contract-based change pruning**:
 
 - Forward edges model standard dependency flow (database → API → frontend)
 - Each layer's verification is linked to the contract versions it consumes and produces
@@ -2151,7 +2151,7 @@ PICE implements a **bidirectional dependency graph with contract-based change pr
 - When a fix changes a layer's consumed contract (upstream layer's output changed), backward edges trigger upstream re-verification
 - When a fix doesn't change any contracts (same hash), no propagation occurs — the most common case
 
-The verification manifest tracks which contract version each layer was verified against. After a fix, PICE compares the new contract hash against the stored hash. In practice, most fixes don't change contracts — they fix implementation bugs that don't alter the interface. Contract-based pruning skips re-verification in the majority of cases.
+The verification manifest tracks which contract version each layer was verified against. After a fix, m0lz.02 compares the new contract hash against the stored hash. In practice, most fixes don't change contracts — they fix implementation bugs that don't alter the interface. Contract-based pruning skips re-verification in the majority of cases.
 
 -----
 
@@ -2237,7 +2237,7 @@ Contracts declare which flags affect which layers. Only affected layers are re-e
 
 ### Resolution: deployment transitions
 
-PICE models deployment transitions with **version-aware seams**:
+m0lz.02 models deployment transitions with **version-aware seams**:
 
 - Database migrations use the expand-and-contract pattern: schema changes are decomposed into additive (expand) and subtractive (contract) phases, each independently verifiable
 - `pice evaluate --transition` explicitly tests both the current production version and the incoming version against shared contracts
@@ -2271,7 +2271,7 @@ IaC is modeled as a **meta-layer** with `type = "meta"` in `.pice/layers.toml`. 
 
 - **Multi-cloud** gets a two-dimensional model: layers × cloud providers. A single API layer on AWS and Azure has different IAM, networking, and failure modes. Contracts at each intersection are evaluated independently.
 
-The IaC testing pyramid is well-established (Terraform's native test framework since 1.7, Terratest, Checkov, tfsec). PICE integrates with these tools rather than replacing them — the meta-layer contract can reference external tool outputs as verification evidence.
+The IaC testing pyramid is well-established (Terraform's native test framework since 1.7, Terratest, Checkov, tfsec). m0lz.02 integrates with these tools rather than replacing them — the meta-layer contract can reference external tool outputs as verification evidence.
 
 -----
 
@@ -2316,9 +2316,9 @@ Semantic versioning with explicit compatibility declarations enables automated c
 
 ### Resolution
 
-PICE defines a unified contract format in YAML with JSON Schema validation. The `failure_category` field links each check to the twelve empirically validated failure categories from the seam blindspot research. Contracts support environment-specific sections, feature flag indexing, and metadata tracking for auto-generation and manual refinement. See the roadmap's "Cross-layer contract format" section for the full schema.
+m0lz.02 defines a unified contract format in YAML with JSON Schema validation. The `failure_category` field links each check to the twelve empirically validated failure categories from the seam blindspot research. Contracts support environment-specific sections, feature flag indexing, and metadata tracking for auto-generation and manual refinement. See the roadmap's "Cross-layer contract format" section for the full schema.
 
-Specmatic (using OpenAPI + AsyncAPI + gRPC proto as executable contracts, with an MCP server for Claude Code integration) is the closest existing tool. But Specmatic covers no database layer, no UI component contracts, no concept of chained layer-to-layer contracts, and no seam verification between layers. PICE's contract format fills this gap.
+Specmatic (using OpenAPI + AsyncAPI + gRPC proto as executable contracts, with an MCP server for Claude Code integration) is the closest existing tool. But Specmatic covers no database layer, no UI component contracts, no concept of chained layer-to-layer contracts, and no seam verification between layers. m0lz.02's contract format fills this gap.
 
 -----
 
@@ -2358,9 +2358,9 @@ Anthropic's rate limits use a token bucket algorithm with per-minute quotas. A 5
 
 ### Gap 7.4: Crash recovery
 
-If PICE verifies 10 layers and crashes on layer 7, it must not re-verify layers 1–6.
+If m0lz.02 verifies 10 layers and crashes on layer 7, it must not re-verify layers 1–6.
 
-**Resolution:** Verification manifest — a JSON checkpoint file recording completed layers, their contract hashes, model versions, and confidence scores. On resume, PICE reads the manifest, skips completed layers whose content hashes haven't changed, and continues from the last incomplete layer. Each layer verification is idempotent.
+**Resolution:** Verification manifest — a JSON checkpoint file recording completed layers, their contract hashes, model versions, and confidence scores. On resume, m0lz.02 reads the manifest, skips completed layers whose content hashes haven't changed, and continues from the last incomplete layer. Each layer verification is idempotent.
 
 -----
 
@@ -2411,7 +2411,7 @@ This is validated across every competitor analyzed:
 
 **Qodo** (formerly CodiumAI) — Raised $70M Series B in March 2026 for "code integrity." Generates tests and does "system-wide impact analysis" but does not decompose by architectural layer. Positions itself as "quality-first code gen" rather than post-generation verification. Could pivot toward layer awareness with their funding.
 
-**SonarSource** — Introduced the "Agent Centric Development Cycle" (AC/DC) framework: Guide → Generate → Verify → Solve. The most conceptually similar to PICE — verification as a first-class concern in the AI coding loop. But SonarQube verifies by *code quality dimensions* (bugs, vulnerabilities, code smells), not *architectural layers*. No seam concept.
+**SonarSource** — Introduced the "Agent Centric Development Cycle" (AC/DC) framework: Guide → Generate → Verify → Solve. The most conceptually similar to m0lz.02 — verification as a first-class concern in the AI coding loop. But SonarQube verifies by *code quality dimensions* (bugs, vulnerabilities, code smells), not *architectural layers*. No seam concept.
 
 **IronBee** — "The Verification and Intelligence Layer for AI Coding Agents." Uses runtime tracing through 7 sequential verification phases. The closest structural analog to Stack Loops but focuses on runtime behavior verification rather than architectural seam verification. Pre-seed stage.
 
@@ -2430,7 +2430,7 @@ This is validated across every competitor analyzed:
 - EU AI Act becomes fully applicable for high-risk systems **August 2026**
 - Werner Vogels coined **"verification debt"** as the defining challenge
 
-Every major player — Anthropic, Sonar, Qodo, Augment — now frames verification as the critical bottleneck. The phrase has entered mainstream DevOps vocabulary. But nobody has built per-layer, seam-aware verification. PICE occupies this position alone.
+Every major player — Anthropic, Sonar, Qodo, Augment — now frames verification as the critical bottleneck. The phrase has entered mainstream DevOps vocabulary. But nobody has built per-layer, seam-aware verification. m0lz.02 occupies this position alone.
 
 ### The window
 
@@ -2474,7 +2474,7 @@ The research above draws on work across software engineering, machine learning, 
 - **Nygard, M.** — *Release It! Design and Deploy Production-Ready Software.* Pragmatic Bookshelf. Source of the "integration point amplifier" pattern.
 - **AWS** — US-EAST-1 DynamoDB cascading failure postmortem (October 2025) and US-EAST-1 monitoring failover incident (December 2021).
 
-**Contract verification, invariant inference, and protocol formalisms.** Research lineages PICE's seam verification combines.
+**Contract verification, invariant inference, and protocol formalisms.** Research lineages m0lz.02's seam verification combines.
 
 - **Ernst, M. D. et al.** — *Dynamically Discovering Likely Program Invariants.* Daikon, 2001. Behavioral property inference for single components; never extended to cross-service distributed traces.
 - **Pact** — Consumer-driven contract testing framework. Open source, 2013. Concrete request/response pairs generated from consumer tests.
@@ -2491,8 +2491,8 @@ The research above draws on work across software engineering, machine learning, 
 - **Wang, X. et al.** — *Self-Consistency Improves Chain of Thought Reasoning in Language Models.* 2022. Established self-consistency gains on PaLM-540B / GSM8K.
 - **Weaver** — Stanford / UW-Madison / Together AI, 2025. Weighted ensembles of 33 diverse weak verifiers closed the generation–verification gap by 14.5%; verifier diversity dominates verifier count.
 - **DeepMind** — AlphaCode and AlphaCode 2. Solve rate scales log-linearly with sample count, but AlphaCode 2 achieved equivalent performance with ~10,000× fewer samples through better models and selection.
-- **Kuhn, L., Gal, Y., & Farquhar, S.** — *Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation.* ICLR 2023. Basis for PICE's Verification Entropy Convergence algorithm.
-- **Lee et al.** — *ConSol: Sequential Probability Ratio Testing for Self-Consistency in LLMs.* March 2025. SPRT applied to single-model self-consistency on reasoning tasks; closest precedent to PICE's Bayesian-SPRT.
+- **Kuhn, L., Gal, Y., & Farquhar, S.** — *Semantic Uncertainty: Linguistic Invariances for Uncertainty Estimation in Natural Language Generation.* ICLR 2023. Basis for m0lz.02's Verification Entropy Convergence algorithm.
+- **Lee et al.** — *ConSol: Sequential Probability Ratio Testing for Self-Consistency in LLMs.* March 2025. SPRT applied to single-model self-consistency on reasoning tasks; closest precedent to m0lz.02's Bayesian-SPRT.
 - **Du, Y. et al.** — *Improving Factuality and Reasoning in Language Models through Multiagent Debate.* 2024. Mixed-model debates outperform same-model; performance plateaus after ~4 rounds.
 - **Choi, S. W. et al.** — Psychometric adaptive testing with Predicted Standard Error Reduction. 2010. Source of the PSER stopping criterion adapted for VEC.
 - **Krogh, A. & Vedelsby, J.** — *Neural Network Ensembles, Cross Validation, and Active Learning.* NIPS 1994. The ambiguity decomposition: E_ensemble = E_avg − Ambiguity.
@@ -2508,7 +2508,7 @@ The research above draws on work across software engineering, machine learning, 
 - **SICA** — *Self-Improving Coding Agent.* ICLR 2025. LLM proposes modifications to its own source code (prompts, heuristics, architecture) based on benchmark performance.
 - **Khattab, O. et al.** — *DSPy: Compiling Declarative Language Model Calls into Self-Improving Pipelines.* Stanford NLP, 2024. Prompt optimization from execution traces.
 
-**Self-evolving verification, control theory, and predictive test selection.** The building blocks for PICE's closed loop.
+**Self-evolving verification, control theory, and predictive test selection.** The building blocks for m0lz.02's closed loop.
 
 - **Memon, A. et al.** — *Taming Google-Scale Continuous Testing.* Google TAP platform, ICSE-SEIP 2017. Production predictive test selection at scale.
 - **Machalica, M. et al.** — *Predictive Test Selection.* Meta, ICSE-SEIP 2019. Gradient-boosted decision trees catching >99.9% of faulty changes with one-third the tests.

@@ -146,9 +146,9 @@ The blog agent (m0lz.01, separate repo) publishes posts by committing MDX files 
 
 - **Framework**: Vitest (lightweight, Vite-compatible, good TypeScript support)
 - **Location**: `__tests__/regression/` for cumulative regression suite
-- **Run**: `npm run test` (148 tests, 5 files)
+- **Run**: `npm run test` (153 tests, 5 files)
 - **Regression suite**: Grows with every shipped feature, never shrinks. See `.claude/rules/testing.md` for conventions.
-- **Current coverage**: Design constraints (16), theme system (10), branch mark (21), routes & layout (44), content pipeline + catalog identity (57)
+- **Current coverage**: Design constraints (16), theme system (10), branch mark (21), routes & layout (44), content pipeline + catalog identity (62)
 
 ---
 
