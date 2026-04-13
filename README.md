@@ -85,9 +85,9 @@ m0lz.00 uses the **personal** variant — two vertical trunks with one left bran
 This is **m0lz.00** — the foundation site. Part of the m0lz project catalog:
 
 - **m0lz.00** — This site ([m0lz.dev](https://m0lz.dev))
-- **m0lz.01** — Blog Agent (autonomous content publishing)
-- **m0lz.02** — PICE (structured AI coding workflow orchestrator)
-- **m0lz.03** — MCP-Guard (security proxy for MCP servers)
+- **m0lz.01** — automated content publishing
+- **m0lz.02** — AI coding workflow orchestrator
+- **m0lz.03** — MCP security proxy daemon
 
 ## License
 

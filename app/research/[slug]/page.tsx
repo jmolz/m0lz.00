@@ -35,7 +35,7 @@ export default async function ResearchPage({
   const { slug } = await params
   const { meta, content } = getResearch(slug)
   const Content = await compileMDX(content)
-  const project = projects.find((p) => p.catalogId === meta.project)
+  const project = projects.find((p) => p.name === meta.project)
   const relatedPosts = getAllPosts().filter((p) => p.project === meta.project)
 
   return (
@@ -54,11 +54,8 @@ export default async function ResearchPage({
               <BranchMark variant={project.variant} size={28} />
             )}
             <div>
-              <p className="text-sm font-medium">
+              <p className={`text-sm font-medium ${project.variant ? 'font-mono' : ''}`}>
                 {project.name}
-                <span className="text-xs font-mono text-[var(--muted)] ml-2">
-                  {project.catalogId}
-                </span>
               </p>
             </div>
           </div>

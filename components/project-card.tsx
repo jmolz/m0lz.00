@@ -13,14 +13,9 @@ export function ProjectCard({ project }: { project: ProjectData }) {
         <BranchMark variant={project.variant} size={36} />
       )}
       <div className="min-w-0">
-        <div className="flex items-baseline gap-2">
-          <p className="text-sm font-medium">{project.name}</p>
-          {project.catalogId && (
-            <span className="text-xs font-mono text-[var(--muted)]">
-              {project.catalogId}
-            </span>
-          )}
-        </div>
+        <p className={`text-sm font-medium ${project.variant ? 'font-mono' : ''}`}>
+          {project.name}
+        </p>
         <p className="text-xs text-[var(--muted)] mt-1">
           {project.description}
         </p>

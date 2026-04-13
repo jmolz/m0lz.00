@@ -75,11 +75,11 @@ This module handles:
 
 Project cards are defined as a typed array. Two categories:
 
-1. **m0lz catalog** — projects with `catalogId` (e.g., `m0lz.02`) and a `variant` (BranchMark variant)
-2. **Other projects** — projects with just a name, description, URL, and tech stack
+1. **m0lz catalog** — projects with a `variant` (BranchMark variant) whose `name` is their catalog ID (e.g., `m0lz.02`)
+2. **Other projects** — projects with a display name, description, URL, and tech stack
 
 Each project entry must include: `name`, `description`, `url`, `tech`
-m0lz projects additionally include: `catalogId`, `variant`
+m0lz projects additionally include: `variant`
 
 ## OG Image Generation (`lib/og.tsx`)
 

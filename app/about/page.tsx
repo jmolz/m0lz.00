@@ -91,25 +91,25 @@ export default function AboutPage() {
           <div className="flex items-center gap-3">
             <BranchMark variant="blog-agent" size={24} />
             <span>
-              <span className="font-medium">m0lz.01</span> — Blog Agent
+              <span className="font-medium">m0lz.01</span> — automated content publishing
             </span>
           </div>
           <div className="flex items-center gap-3">
             <BranchMark variant="pice" size={24} />
             <span>
-              <span className="font-medium">m0lz.02</span> — PICE Framework
+              <span className="font-medium">m0lz.02</span> — AI coding workflow orchestrator
             </span>
           </div>
           <div className="flex items-center gap-3">
             <BranchMark variant="mcp-guard" size={24} />
             <span>
-              <span className="font-medium">m0lz.03</span> — MCP-Guard
+              <span className="font-medium">m0lz.03</span> — MCP security proxy daemon
             </span>
           </div>
           <div className="flex items-center gap-3">
             <BranchMark variant="case-pilot" size={24} />
             <span>
-              <span className="font-medium">m0lz.04</span> — Case Pilot
+              <span className="font-medium">m0lz.04</span> — AI legal case management
             </span>
           </div>
         </div>

@@ -27,7 +27,7 @@ export default function ResearchIndexPage() {
       {research.length > 0 ? (
         <div className="space-y-10">
           {research.map((r) => {
-            const project = projects.find((p) => p.catalogId === r.project)
+            const project = projects.find((p) => p.name === r.project)
 
             return (
               <Link
@@ -42,9 +42,9 @@ export default function ResearchIndexPage() {
                   <div>
                     <p className="text-sm font-medium">
                       {r.title}
-                      {project?.catalogId && (
+                      {project?.variant && (
                         <span className="text-xs font-mono text-[var(--muted)] ml-2">
-                          {project.catalogId}
+                          {project.name}
                         </span>
                       )}
                     </p>

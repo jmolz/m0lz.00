@@ -39,7 +39,7 @@ export default async function PostPage({
   const { prev, next } = getAdjacentPosts(slug)
 
   const project = meta.project
-    ? projects.find((p) => p.catalogId === meta.project)
+    ? projects.find((p) => p.name === meta.project)
     : null
   const researchMeta = meta.project
     ? getAllResearch().find((r) => r.project === meta.project)
@@ -78,11 +78,8 @@ export default async function PostPage({
                 {project.variant && (
                   <BranchMark variant={project.variant} size={16} />
                 )}
-                <span className="text-xs font-medium">
+                <span className={`text-xs font-medium ${project.variant ? 'font-mono' : ''}`}>
                   {project.name}
-                  <span className="font-mono text-[var(--muted)] ml-2">
-                    {project.catalogId}
-                  </span>
                 </span>
               </div>
             )}

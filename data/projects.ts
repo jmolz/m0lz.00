@@ -6,36 +6,35 @@ export interface ProjectData {
   url: string
   tech: string
   public: boolean
-  catalogId?: string
   variant?: BranchMarkProps['variant']
 }
 
 export const projects: ProjectData[] = [
   {
-    name: 'm0lz.dev',
+    name: 'm0lz.00',
     description: 'Monochrome developer blog & portfolio. Static-only Next.js 16 site with MDX content pipeline, generative branch mark identity system, and dark/light theme.',
     url: 'https://github.com/jmolz/m0lz.00',
     tech: 'Next.js / TypeScript',
     public: true,
-    catalogId: 'm0lz.00',
+
     variant: 'personal',
   },
   {
-    name: 'PICE',
+    name: 'm0lz.02',
     description: 'Structured AI coding workflow orchestrator. Plan → Implement → Contract-Evaluate with dual-model adversarial evaluation, WISC context management, and tiered verification.',
     url: 'https://github.com/jmolz/m0lz.02',
     tech: 'Rust / TypeScript',
     public: true,
-    catalogId: 'm0lz.02',
+
     variant: 'pice',
   },
   {
-    name: 'MCP-Guard',
+    name: 'm0lz.03',
     description: 'Security proxy daemon for MCP servers. Authentication, rate limiting, PII detection, permission scoping, audit logging. 97% detection rate across 7,095 attack scenarios.',
     url: 'https://github.com/jmolz/m0lz.03',
     tech: 'TypeScript',
     public: true,
-    catalogId: 'm0lz.03',
+
     variant: 'mcp-guard',
   },
   {
@@ -53,12 +52,12 @@ export const projects: ProjectData[] = [
     public: false,
   },
   {
-    name: 'Case Pilot',
+    name: 'm0lz.04',
     description: 'AI-powered legal case management for pro se litigants. Court filing monitor, deadline tracker, citation verification, red team analysis, and DOCX export. Local-first, privacy-focused.',
     url: 'https://github.com/jmolz/m0lz.04',
     tech: 'JavaScript / Claude API',
     public: true,
-    catalogId: 'm0lz.04',
+
     variant: 'case-pilot',
   },
   {

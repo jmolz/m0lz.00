@@ -64,7 +64,7 @@ npm run test -- \
 
 | Test File | Feature | What It Validates |
 | --- | --- | --- |
-| `content-pipeline.test.ts` (49 tests) | Content Pipeline | Post utilities (getAllPosts sort/filter, getPost, getAdjacentPosts, readingTime, slug matching, unpublished throw), MDX compilation exports, frontmatter schema (required fields, date format, tags array), project data (9 projects, 5 catalog variants, required fields, no duplicates), component exports (PostCard, ProjectCard, CodeBlock, mdxComponents), dynamic post route (exists, generateStaticParams, async params, conditional nav), page wiring (writing index, projects sections, landing page PostCard/ProjectCard, post limit), code block CSS (dual theme, title tabs), about page content (bio, background, education, GitHub/LinkedIn links, metadata), research placeholder (descriptive, not bare), all pages metadata descriptions, OG image infrastructure (lib/og, opengraph-image convention, generateStaticParams), RSS feed (route handler, static-compatible GET, no Request dependency), enhanced layout metadata (metadataBase, openGraph, twitter) |
+| `content-pipeline.test.ts` (57 tests) | Content Pipeline + Catalog Identity | Post utilities (getAllPosts sort/filter, getPost, getAdjacentPosts, readingTime, slug matching, unpublished throw), MDX compilation exports, frontmatter schema (required fields, date format, tags array), project data (8 projects, 5 catalog variants, required fields, no duplicates, catalog names match m0lz.XX format, no old brand names), component exports (PostCard, ProjectCard, CodeBlock, mdxComponents), dynamic post route (exists, generateStaticParams, async params, conditional nav), page wiring (writing index, projects sections, landing page PostCard/ProjectCard, post limit), code block CSS (dual theme, title tabs), about page content (bio, background, education, GitHub/LinkedIn links, metadata), research placeholder (descriptive, not bare), all pages metadata descriptions, OG image infrastructure (lib/og, opengraph-image convention, generateStaticParams), RSS feed (route handler, static-compatible GET, no Request dependency), enhanced layout metadata (metadataBase, openGraph, twitter), catalog identity (no catalogId in interface, no dual name+catalogId display in project cards/writing/research pages, monospace for catalog projects, about page uses descriptions not old brand names) |
 
 ### Source files these tests protect
 
@@ -89,7 +89,7 @@ npm run test -- \
 - `components/mdx-components.tsx` — Custom MDX component overrides (pre, a, h1-h3, code, hr, blockquote, table)
 - `components/post-card.tsx` — Post listing card with date, title, description, tags
 - `components/project-card.tsx` — Project card with optional BranchMark for catalog projects
-- `data/projects.ts` — 9 projects with name, description, url, tech, optional variant/catalogId
+- `data/projects.ts` — 8 projects with name, description, url, tech, optional variant
 - `app/writing/[slug]/page.tsx` — Individual post page with MDX rendering, generateStaticParams
 - `content/posts/hello-world/index.mdx` — Test post exercising full MDX pipeline
 - `lib/og.tsx` — OG image shared layout, font loading, branch mark SVG helper
@@ -139,7 +139,7 @@ npm run test
 npm run build
 ```
 
-Expected baseline: 0 lint errors, 140 tests passing (5 files), build succeeds with 21 static routes
+Expected baseline: 0 lint errors, 148 tests passing (5 files), build succeeds with 21 static routes
 
 ## Phase 3: Code Review of Current Changes
 

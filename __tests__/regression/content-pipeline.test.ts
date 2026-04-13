@@ -172,6 +172,22 @@ describe('Project Data', () => {
     const names = projects.map((p) => p.name)
     expect(new Set(names).size).toBe(names.length)
   })
+
+  it('catalog projects use m0lz.XX format names', () => {
+    const catalogProjects = projects.filter((p) => p.variant)
+    expect(catalogProjects.length).toBeGreaterThanOrEqual(4)
+    for (const project of catalogProjects) {
+      expect(project.name).toMatch(/^m0lz\.\d{2}$/)
+    }
+  })
+
+  it('no old brand names as project names', () => {
+    const oldBrands = ['PICE', 'MCP-Guard', 'Case Pilot']
+    const names = projects.map((p) => p.name)
+    for (const brand of oldBrands) {
+      expect(names).not.toContain(brand)
+    }
+  })
 })
 
 describe('Component Exports', () => {
@@ -419,6 +435,62 @@ describe('OG Images & RSS', () => {
       'utf-8',
     )
     expect(content).toContain('twitter')
+  })
+})
+
+describe('Catalog Identity', () => {
+  it('ProjectData interface has no catalogId field', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'data/projects.ts'),
+      'utf-8',
+    )
+    expect(content).not.toContain('catalogId')
+  })
+
+  it('project card renders name only (no dual display with catalogId)', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'components/project-card.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain('project.name')
+    expect(content).not.toContain('{project.catalogId}')
+  })
+
+  it('project card uses monospace for catalog projects', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'components/project-card.tsx'),
+      'utf-8',
+    )
+    expect(content).toContain("project.variant ? 'font-mono' : ''")
+  })
+
+  it('writing detail page has no separate catalogId label', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/writing/[slug]/page.tsx'),
+      'utf-8',
+    )
+    expect(content).not.toContain('{project.catalogId}')
+  })
+
+  it('research detail page has no separate catalogId label', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/research/[slug]/page.tsx'),
+      'utf-8',
+    )
+    expect(content).not.toContain('{project.catalogId}')
+  })
+
+  it('about page catalog labels use descriptions not old brand names', () => {
+    const content = fs.readFileSync(
+      path.join(ROOT, 'app/about/page.tsx'),
+      'utf-8',
+    )
+    expect(content).not.toContain('— PICE Framework')
+    expect(content).not.toContain('— MCP-Guard')
+    expect(content).not.toContain('— Case Pilot')
+    expect(content).toContain('— AI coding workflow orchestrator')
+    expect(content).toContain('— MCP security proxy daemon')
+    expect(content).toContain('— AI legal case management')
   })
 })
 
