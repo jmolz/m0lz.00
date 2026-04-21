@@ -1,0 +1,111 @@
+---
+title: "m0lz.01: a SHA256-bound plan file binds my `/blog` skill's approved plan to what it runs"
+description: "The m0lz.01 /blog skill proposes a plan; SHA256 binds approved steps to execution. A cooperative-workflow gate, not capability separation."
+date: "2026-04-20"
+tags: ["ai", "developer-tools", "open-source", "methodology"]
+published: false
+canonical: https://m0lz.dev/writing/m0lz-01-launch
+---
+
+{/*
+  Voice rules: .claude-plugin/skills/blog/VOICE.md.
+  Direct declaratives, no hedges, no tricolon stacks, no topic-restatement
+  transitions, no smarmy openers, no undefined jargon, ~1 em dash per 500 words,
+  no emojis.
+*/}
+
+## Letting a Claude Code skill publish on my behalf is either safe or useful — rarely both
+
+m0lz.01 is a local CLI plus a `/blog` Claude Code skill that runs the full idea-to-publish content pipeline: research, draft, adversarial evaluation, publish, distribute. All of it against a single canonical hub site, with fan-out to Dev.to, Hacker News, LinkedIn, Medium, Substack, and GitHub.
+
+The engineering argument is a workflow-level bind between what the skill proposes and what `apply` runs. The `/blog` skill proposes a plan. The operator approves it. A SHA256 hash binds the canonical plan-file bytes to execution; the approval UI renders those bytes as a markdown table, and the operator is trusting the CLI's render to reflect what the hash actually covers. Edit the plan file afterward and `blog agent apply` refuses to run it.
+
+This post ran through the pipeline it describes, and took several rejected evaluation cycles before I was willing to ship it. The current verdict lives in the synthesis report on disk at read time.
+
+## One prompt runs the whole pipeline
+
+Type `/blog launch a new project` and the skill does the rest. Almost.
+
+It runs a preflight, classifies the work along four dimensions (`slug`, `content_type`, `depth`, `venues`), and proposes a step sequence as a markdown table. Each row names a concrete `blog <subcommand>`; the CLI's plan validator rejects anything that isn't a registered leaf command.
+
+The operator approves the plan, or edits it, or aborts. On approval, the CLI sets `approved_at` and computes a `payload_hash`. `verify` dry-runs the plan. `apply` executes step-by-step and writes a receipt with per-step exit codes and stdout tails.
+
+For a fast-path project launch, the step sequence looks like this:
+
+```
+blog benchmark skip <slug>              # skip formal benchmarks
+blog draft init <slug>                  # scaffold MDX
+blog draft complete <slug>              # advance to evaluate
+blog evaluate init <slug>               # open evaluation
+blog evaluate structural-autocheck <slug>  # deterministic lint (blocking)
+blog evaluate record <slug> ...         # record reviewer output
+blog evaluate synthesize <slug>         # compute verdict
+blog evaluate complete <slug>           # gate pass → publish-ready
+blog publish start <slug>               # run the 11-step publish pipeline
+```
+
+Publish fans out where it can. Canonical MDX goes to the site repo as a pull request. Dev.to gets an API cross-post whose *canonical* URL points search engines back at the hub version. HN, LinkedIn, Medium, and Substack get paste-ready Markdown variants written to `.blog-agent/social/<slug>/`, because none of those four have an authoring API stable enough to automate against. The pipeline pauses at the site-PR gate until the operator merges.
+
+## What the approval gate actually gates
+
+Approval hashes the plan. Any edit after that changes the hash, and `blog agent apply` refuses to run a plan whose hash doesn't match the approved one. You can't sneak a step in after the human signs off.
+
+The hash covers the plan file's canonical form, minus the two approval-bookkeeping fields (`approved_at`, `payload_hash`) that approval itself produces. See `src/core/plan-file/hash.ts` for the serialization. The hash does NOT cover the separate workspace config at `.blogrc.yaml`, which is re-read at apply time. Change `site.repo_path` or the venue toggle list between `approve` and `apply` and the hash won't catch it.
+
+Three things about the threat model are worth naming upfront. First, the operator approves a rendered table view of the plan, not the raw JSON; trust that the table reflects the hash depends on the operator trusting the CLI's render, which is documented in `SKILL.md` but not re-shown on each plan. Second, the `/blog` skill's tool grant is `Bash(blog:*) Read Grep Glob`, a capability that authorizes the skill to invoke any `blog` subcommand. Routing destructive subcommands through `blog agent apply` is SKILL.md's prompt instruction, not capability separation; a prompt-injected or misbehaving skill could bypass the gate. Third, an operator at a terminal can also bypass by typing the commands directly.
+
+The intended threat model is a cooperative author running a cooperative skill. Inside that model, the structural property holds. The steps you approved in the table will run with the arguments you approved, against the workspace config current at apply time. For a blog post that's overkill. For anything that writes to a repo or an API, the step-sequence binding is the whole point; the venue-target binding is the next thing to close.
+
+## Six in-progress phases plus two terminal states
+
+The pipeline has six in-progress phases: `ideas`, `research`, `benchmark`, `draft`, `evaluate`, `publish`. `published` is the terminal canonical state. `unpublished` is a slug-reserving rollback, because the canonical URL at `<site.base_url>/writing/<slug>` is permanent.
+
+Phase transitions are one-shot `blog` subcommands. Fast-path project launches skip benchmark via `blog benchmark skip`.
+
+The evaluate phase runs a three-reviewer panel. Structural review is handled by Claude Code against a lint checklist. Adversarial review runs Codex GPT-5.4 at high reasoning and is told to argue against publishing. Methodology review runs Codex GPT-5.4 at xhigh reasoning against a fresh prompt with the draft, the research doc, and the panel rubric. Three things block publish at synthesis time: a consensus cluster, a majority cluster, and any autocheck-fingerprinted finding, even when flagged by only one reviewer. Other single-reviewer findings are advisory.
+
+The same Claude Code stack that drafts and researches is also the structural reviewer. The adversarial and methodology reviewers (both Codex) are independent of the drafting stack, so they carry the cross-check weight. This is internal review with explicit reviewer-independence asymmetry, not a neutral third-party audit.
+
+## This post ran through the pipeline it describes
+
+The research, draft, evaluate, and publish steps for this post all ran through approved plans. Plan and receipt files are single-slot. Each new plan for a slug overwrites the prior file at `.blog-agent/plans/<slug>.{plan,receipt}.json`; earlier cycles live in the `agent_plan_runs` and `agent_plan_steps` SQLite tables, not in files.
+
+Several successive cycles each produced an algorithmic `pass` verdict with HIGH-severity findings that landed as single-reviewer advisories. I rejected every one of them. Cycle after cycle of algorithmic passes with serious findings that I did not want to ship is data about the synthesis-gate design: the clustering heuristic is a Jaccard-overlap match on normalized title+description text, which is too strict against reviewers who phrase the same issue differently. Tightening the clustering is on the v0.3 roadmap.
+
+## What the gate doesn't bind
+
+The plan hash does not bind `.blogrc.yaml` state, so editing the workspace config between `approve` and `apply` can alter publish destinations without changing the hash. The plan carries the venue list explicitly as operator-facing mitigation; a real config-hash bind is on the v0.3 roadmap.
+
+The SQLite state database is authoritative but unprotected. Migrations run automatically on open with no backup step, integrity check, or documented repair flow. Back up `.blog-agent/state.db` before m0lz.01 version upgrades.
+
+The apply lock is cooperative, per-slug, stale-reclaim gated on PID liveness. Two different slugs can publish concurrently by design. The lock does not defend against arbitrary filesystem writes into `.blog-agent/` while apply runs.
+
+Distribution beyond hub and Dev.to is paste-ready only; the CLI tracks nothing past the paste-file handoff. Dev.to's returned URL is auto-captured (`devto_url` on the post record). URLs for the other four venues are not captured at all. Venue URL capture is on the v0.3 roadmap.
+
+## Install it
+
+End-to-end requires Node ≥ 20.1, `git`, `gh auth login`, and Claude Code.
+
+```bash
+# 1. Install the CLI (examples for npm; pnpm root path differs — see docs)
+npm install -g m0lz-01
+
+# 2. Initialize the workspace
+blog init               # creates .blog-agent/, .blogrc.yaml, and .env
+# Edit .blogrc.yaml: site.repo_path, site.base_url, author handles, venue toggles
+#                    (publish.devto is ON by default)
+# Edit .env:         set DEVTO_API_KEY if publish.devto is enabled,
+#                    or disable it in .blogrc.yaml to skip the Dev.to step
+
+# 3. Load the Claude Code plugin (npm-bundled path)
+claude --plugin-dir "$(npm root -g)/m0lz-01/.claude-plugin"
+# Repo-clone and contributor install paths: docs/plugin-install.md
+
+# 4. Optional: Codex CLI for the full three-reviewer evaluation panel
+# Without it, structural review still runs; adversarial + methodology
+# require hand-authored JSON recorded via `blog evaluate record`.
+```
+
+Then in Claude Code: `/blog launch a new project` and the skill takes over.
+
+Source is at [`github.com/jmolz/m0lz.01`](https://github.com/jmolz/m0lz.01). The v0.2 `CHANGELOG` entry documents the adversarial-review hardening cycle that produced the current approval gate. `docs/plugin-install.md` covers the three plugin install paths in detail, including the pnpm and repo-clone variants. SQLite is bundled, so there's no external database to configure.
