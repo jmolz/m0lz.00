@@ -6,7 +6,7 @@ tags: ["ai", "developer-tools", "open-source", "methodology"]
 canonical: "https://m0lz.dev/writing/m0lz-01-launch"
 companion_repo: "https://github.com/jmolz/m0lz.01"
 project: "m0lz.01"
-published: false
+published: true
 ---
 
 {/*
@@ -64,7 +64,7 @@ The pipeline has six in-progress phases: `ideas`, `research`, `benchmark`, `draf
 
 Phase transitions are one-shot `blog` subcommands. Fast-path project launches skip benchmark via `blog benchmark skip`.
 
-The evaluate phase runs a three-reviewer panel. Structural review is handled by Claude Code against a lint checklist. Adversarial review runs Codex GPT-5.4 at high reasoning and is told to argue against publishing. Methodology review runs Codex GPT-5.4 at xhigh reasoning against a fresh prompt with the draft, the research doc, and the panel rubric. Three things block publish at synthesis time: a consensus cluster, a majority cluster, and any autocheck-fingerprinted finding, even when flagged by only one reviewer. Other single-reviewer findings are advisory.
+The evaluate phase runs a three-reviewer panel. Structural review is handled by Claude Code against a lint checklist. Adversarial review runs Codex GPT-5.5 at high reasoning and is told to argue against publishing. Methodology review runs Codex GPT-5.5 at xhigh reasoning against a fresh prompt with the draft, the research doc, and the panel rubric. Three things block publish at synthesis time: a consensus cluster, a majority cluster, and any autocheck-fingerprinted finding, even when flagged by only one reviewer. Other single-reviewer findings are advisory.
 
 The same Claude Code stack that drafts and researches is also the structural reviewer. The adversarial and methodology reviewers (both Codex) are independent of the drafting stack, so they carry the cross-check weight. This is internal review with explicit reviewer-independence asymmetry, not a neutral third-party audit.
 
@@ -72,17 +72,17 @@ The same Claude Code stack that drafts and researches is also the structural rev
 
 The research, draft, evaluate, and publish steps for this post all ran through approved plans. Plan and receipt files are single-slot. Each new plan for a slug overwrites the prior file at `.blog-agent/plans/<slug>.{plan,receipt}.json`; earlier cycles live in the `agent_plan_runs` and `agent_plan_steps` SQLite tables, not in files.
 
-Several successive cycles each produced an algorithmic `pass` verdict with HIGH-severity findings that landed as single-reviewer advisories. I rejected every one of them. Cycle after cycle of algorithmic passes with serious findings that I did not want to ship is data about the synthesis-gate design: the clustering heuristic is a Jaccard-overlap match on normalized title+description text, which is too strict against reviewers who phrase the same issue differently. Tightening the clustering is on the v0.3 roadmap.
+Several successive cycles each produced an algorithmic `pass` verdict with HIGH-severity findings that landed as single-reviewer advisories. I rejected every one of them. Cycle after cycle of algorithmic passes with serious findings that I did not want to ship is data about the synthesis-gate design: the clustering heuristic is a Jaccard-overlap match on normalized title+description text, which is too strict against reviewers who phrase the same issue differently. Tightening the clustering remains on the roadmap.
 
 ## What the gate doesn't bind
 
-The plan hash does not bind `.blogrc.yaml` state, so editing the workspace config between `approve` and `apply` can alter publish destinations without changing the hash. The plan carries the venue list explicitly as operator-facing mitigation; a real config-hash bind is on the v0.3 roadmap.
+The plan hash does not bind `.blogrc.yaml` state, so editing the workspace config between `approve` and `apply` can alter publish destinations without changing the hash. The plan carries the venue list explicitly as operator-facing mitigation; a real config-hash bind remains on the roadmap.
 
 The SQLite state database is authoritative but unprotected. Migrations run automatically on open with no backup step, integrity check, or documented repair flow. Back up `.blog-agent/state.db` before m0lz.01 version upgrades.
 
 The apply lock is cooperative, per-slug, stale-reclaim gated on PID liveness. Two different slugs can publish concurrently by design. The lock does not defend against arbitrary filesystem writes into `.blog-agent/` while apply runs.
 
-Distribution beyond hub and Dev.to is paste-ready only; the CLI tracks nothing past the paste-file handoff. Dev.to's returned URL is auto-captured (`devto_url` on the post record). URLs for the other four venues are not captured at all. Venue URL capture is on the v0.3 roadmap.
+Distribution beyond hub and Dev.to is paste-ready only; the CLI tracks nothing past the paste-file handoff. Dev.to's returned URL is auto-captured (`devto_url` on the post record). URLs for the other four venues are not captured at all. Venue URL capture remains on the roadmap.
 
 ## Install it
 
@@ -110,4 +110,4 @@ claude --plugin-dir "$(npm root -g)/m0lz-01/.claude-plugin"
 
 Then in Claude Code: `/blog launch a new project` and the skill takes over.
 
-Source is at [`github.com/jmolz/m0lz.01`](https://github.com/jmolz/m0lz.01). The v0.2 `CHANGELOG` entry documents the adversarial-review hardening cycle that produced the current approval gate. `docs/plugin-install.md` covers the three plugin install paths in detail, including the pnpm and repo-clone variants. SQLite is bundled, so there's no external database to configure.
+Source is at [`github.com/jmolz/m0lz.01`](https://github.com/jmolz/m0lz.01). The `CHANGELOG` documents the adversarial-review hardening cycle that produced the current approval gate and the v0.3 dogfood fixes from this launch. `docs/plugin-install.md` covers the three plugin install paths in detail, including the pnpm and repo-clone variants. SQLite is bundled, so there's no external database to configure.

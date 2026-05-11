@@ -1,8 +1,19 @@
 ---
-title: "Research: m0lz-01-launch"
+title: "m0lz.01 Research"
 description: "The m0lz.01 /blog skill proposes a plan; SHA256 binds approved steps to execution. A cooperative-workflow gate, not capability separation."
+project: "m0lz.01"
+author: "Jacob Molz"
 date: "2026-04-21"
 tags: ["research", "project-launch"]
+sections:
+  - id: "thesis"
+    title: "Thesis"
+  - id: "key-findings"
+    title: "Key Findings"
+  - id: "methodology"
+    title: "Methodology"
+  - id: "open-questions"
+    title: "Open Questions"
 ---
 
 ## Thesis
@@ -17,7 +28,7 @@ m0lz.01 is a local CLI plus a `/blog` Claude Code skill that runs the full idea-
 - **DB-authoritative per-step state** (schema v4: `agent_plan_runs` + `agent_plan_steps`). The `.receipt.json` sidecar is an audit mirror — receipt tampering is a no-op.
 - **Slug-scoped exclusive apply lock** serializes concurrent runs on the same slug via `O_CREAT|O_EXCL` lockfile; stale reclaim is PID-liveness-only (ESRCH → reclaim; PID reuse requires manual intervention).
 - **Plan-step validation** rejects workspace-global flags (`--workspace`, `--help`, `--version`) embedded in args, namespace-only command smuggling, whitespace-variant commands, and slug mismatches between `plan.slug` and `args[0]` for slug-bearing subcommands.
-- **Adversarial 3-reviewer evaluation panel:** structural (Claude Code), methodology (Codex GPT-5.4 high), adversarial (Codex GPT-5.4 xhigh). Publish is gated behind a synthesized verdict.
+- **Adversarial 3-reviewer evaluation panel:** structural (Claude Code), methodology (Codex GPT-5.5 high), adversarial (Codex GPT-5.5 xhigh). Publish is gated behind a synthesized verdict.
 - **Multi-tier distribution:** hub (canonical MDX to site repo via PR) + Dev.to (API cross-post) + companion repo (GitHub) + paste-ready fallback for HN/LinkedIn/Medium/Substack (no stable authoring APIs).
 - **Subscription-backed AI.** Claude Code + Codex CLIs authenticate against the operator's existing subscriptions. No per-call API billing for interactive work; `ANTHROPIC_API_KEY` is a headless fallback.
 - **Eight agent error codes** with documented exit semantics — `SCHEMA_INVALID`, `NO_APPROVAL`, `HASH_MISMATCH`, `WORKSPACE_MISMATCH`, `UNKNOWN_COMMAND`, `STEP_FAILED`, `RECEIPT_CONFLICT`, `RECEIPT_HASH_MISMATCH` — plus a `CRASH_RECOVERY_REQUIRED` sentinel for interrupted applies.
@@ -30,7 +41,7 @@ m0lz.01 is a local CLI plus a `/blog` Claude Code skill that runs the full idea-
 
 (no benchmark)
 
-[Full methodology and reproduction steps](https://github.com/jmolz/m0lz-01-launch/blob/main/METHODOLOGY.md)
+[Release notes and implementation context](https://github.com/jmolz/m0lz.01/blob/main/CHANGELOG.md)
 
 ## Open Questions
 
@@ -38,9 +49,9 @@ m0lz.01 is a local CLI plus a `/blog` Claude Code skill that runs the full idea-
 - **Framing balance.** Engineering audience engages with the approval-gate architecture; general tech audience wants the "one prompt to publish" narrative. The post needs both without feeling bifurcated. Candidate structure: narrative opener → architecture midsection → dogfood callback → install.
 - **Asciicast inclusion.** A 60s terminal recording of `/blog launch a new project` → approval → publish is the highest-bandwidth demo, but recording/hosting adds friction. Decide before draft phase.
 - **Subscription-backed-AI framing.** Real differentiator (no API billing for interactive work) but risks reading promotional. Proposed: state once as a fact, do not repeat.
-- **v0.2→v0.3 residual risk disclosure.** Plan hash does not bind `.blogrc.yaml` state; editing `.blogrc.yaml` between `approve` and `apply` can alter destinations without changing the plan hash. Disclose upfront in a "known limitations" section, or link CHANGELOG and let curious readers find it?
-- **Companion-repo policy for this post.** The project IS the repo, so `.blogrc.yaml#publish.companion_repo` should be `false` for this slug. Confirm before publish step — default may scaffold an empty companion.
+- **Config-binding residual risk disclosure.** Plan hash does not bind `.blogrc.yaml` state; editing `.blogrc.yaml` between `approve` and `apply` can alter destinations without changing the plan hash. Disclose upfront in a "known limitations" section, or link CHANGELOG and let curious readers find it?
+- **Companion-repo policy for this post.** The project is the repo, so the canonical companion link should point to `jmolz/m0lz.01`, not a generated `m0lz-01-launch` repository.
 
 ---
 
-*This research supports [m0lz-01-launch](/writing/m0lz-01-launch). [companion repo](https://github.com/jmolz/m0lz-01-launch)*
+*This research supports [m0lz-01-launch](/writing/m0lz-01-launch). [companion repo](https://github.com/jmolz/m0lz.01)*
