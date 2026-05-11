@@ -150,8 +150,15 @@ describe('Frontmatter Schema', () => {
 })
 
 describe('Project Data', () => {
-  it('all 8 projects present', () => {
-    expect(projects.length).toBe(8)
+  it('all 9 projects present', () => {
+    expect(projects.length).toBe(9)
+  })
+
+  it('m0lz.01 uses the blog-agent branch mark variant', () => {
+    const project = projects.find((p) => p.name === 'm0lz.01')
+    expect(project).toBeDefined()
+    expect(project?.variant).toBe('blog-agent')
+    expect(project?.url).toBe('https://github.com/jmolz/m0lz.01')
   })
 
   it('public projects have public: true', () => {
@@ -254,6 +261,34 @@ describe('Dynamic Post Route', () => {
       'utf-8',
     )
     expect(content).toContain('(prev || next)')
+  })
+})
+
+describe('Post Asset Route', () => {
+  it('exports content/posts assets under /writing/[slug]/assets/[filename]', () => {
+    const routePath = path.join(
+      ROOT,
+      'app/writing/[slug]/assets/[filename]/route.ts',
+    )
+    expect(fs.existsSync(routePath)).toBe(true)
+    const content = fs.readFileSync(routePath, 'utf-8')
+    expect(content).toContain("export const dynamic = 'force-static'")
+    expect(content).toContain('generateStaticParams')
+    expect(content).toContain('content/posts')
+    expect(content).toContain('Content-Type')
+    expect(content).toContain('Cache-Control')
+  })
+
+  it('m0lz.01 launch Dev.to cover has a stable post asset URL', () => {
+    const coverPath = path.join(
+      ROOT,
+      'content/posts/m0lz-01-launch/assets/devto-cover.webp',
+    )
+    expect(fs.existsSync(coverPath)).toBe(true)
+    const postPath = path.join(ROOT, 'content/posts/m0lz-01-launch/index.mdx')
+    const raw = fs.readFileSync(postPath, 'utf-8')
+    const { data } = matter(raw)
+    expect(data.devto_main_image).toBe('./assets/devto-cover.webp')
   })
 })
 

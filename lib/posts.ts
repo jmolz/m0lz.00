@@ -13,6 +13,7 @@ export interface PostFrontmatter {
   project?: string
   medium_url?: string
   devto_url?: string
+  devto_main_image?: string
 }
 
 export interface PostMeta extends PostFrontmatter {
