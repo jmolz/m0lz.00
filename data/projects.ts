@@ -20,6 +20,15 @@ export const projects: ProjectData[] = [
     variant: 'personal',
   },
   {
+    name: 'm0lz.01',
+    description: 'Local idea-to-distribution pipeline for technical writing. Standalone CLI plus Codex and Claude authoring surfaces for research, drafting, evaluation, publishing, and cross-posting.',
+    url: 'https://github.com/jmolz/m0lz.01',
+    tech: 'TypeScript',
+    public: true,
+
+    variant: 'blog-agent',
+  },
+  {
     name: 'm0lz.02',
     description: 'Structured AI coding workflow orchestrator. Plan → Implement → Contract-Evaluate with dual-model adversarial evaluation, WISC context management, and tiered verification.',
     url: 'https://github.com/jmolz/m0lz.02',
