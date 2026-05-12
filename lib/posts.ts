@@ -15,6 +15,7 @@ export interface PostFrontmatter {
   devto_url?: string
   devto_main_image?: string
   medium_featured_image?: string
+  substack_preview_image?: string
   substack_header_image?: string
 }
 
