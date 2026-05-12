@@ -14,6 +14,8 @@ export interface PostFrontmatter {
   medium_url?: string
   devto_url?: string
   devto_main_image?: string
+  medium_featured_image?: string
+  substack_header_image?: string
 }
 
 export interface PostMeta extends PostFrontmatter {
