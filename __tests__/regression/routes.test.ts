@@ -128,6 +128,62 @@ describe('Route Stubs', () => {
       )
       expect(content).toContain('feed.xml')
     })
+
+    it('footer includes NPM link', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/footer.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('npmjs.com')
+    })
+
+    it('footer includes Dev.to link', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/footer.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('dev.to')
+    })
+
+    it('footer includes Medium link', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/footer.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('medium.com')
+    })
+
+    it('footer includes Substack link', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/footer.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('substack.com')
+    })
+
+    it('footer includes Hacker News link', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/footer.tsx'),
+        'utf-8',
+      )
+      expect(content).toContain('news.ycombinator.com')
+    })
+
+    it('every external footer anchor sets target="_blank" and rel="noopener noreferrer"', () => {
+      const content = fs.readFileSync(
+        path.join(ROOT, 'components/footer.tsx'),
+        'utf-8',
+      )
+      const anchorRegex = /<a\b[\s\S]*?<\/a>/g
+      const externalAnchors = (content.match(anchorRegex) ?? []).filter((tag) =>
+        /href="https?:\/\//.test(tag),
+      )
+      expect(externalAnchors.length).toBeGreaterThanOrEqual(7)
+      for (const tag of externalAnchors) {
+        expect(tag).toMatch(/target="_blank"/)
+        expect(tag).toMatch(/rel="noopener noreferrer"/)
+      }
+    })
   })
 
   describe('Table of Contents', () => {
