@@ -2,19 +2,19 @@
   <img src="public/branch-mark.svg" width="48" height="48" alt="m0lz.00 branch mark — personal variant">
 </p>
 
+<h1 align="center">m0lz.00</h1>
+
+<p align="center">
+  <strong>m0lz.dev</strong> — Monochrome developer blog & portfolio<br>
+  <a href="https://m0lz.dev">m0lz.dev</a>
+</p>
+
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/github/license/jmolz/m0lz.00?style=flat-square&labelColor=404040&color=171717"></a>
   &nbsp;
   <a href="https://m0lz.dev"><img alt="Site status" src="https://img.shields.io/website?url=https%3A%2F%2Fm0lz.dev&style=flat-square&label=m0lz.dev&labelColor=404040&up_color=171717&down_color=171717&up_message=live&down_message=down"></a>
   &nbsp;
   <a href="https://nextjs.org"><img alt="Next.js version" src="https://img.shields.io/github/package-json/dependency-version/jmolz/m0lz.00/next?style=flat-square&label=next&labelColor=404040&color=171717"></a>
-</p>
-
-<h1 align="center">m0lz.00</h1>
-
-<p align="center">
-  <strong>m0lz.dev</strong> — Monochrome developer blog & portfolio<br>
-  <a href="https://m0lz.dev">m0lz.dev</a>
 </p>
 
 ---
