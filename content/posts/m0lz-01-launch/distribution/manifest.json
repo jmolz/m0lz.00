@@ -2,8 +2,8 @@
   "slug": "m0lz-01-launch",
   "canonical_url": "https://m0lz.dev/writing/m0lz-01-launch",
   "source_mode": "backfill",
-  "input_hash": "132b0e374ca5b9f31c0c4b476e4462dcf38ad2c21d9a89fa34e85b8f94fc43e1",
-  "generated_at": "2026-05-14T14:38:32.902Z",
+  "input_hash": "a3c1099a25a425137dba813da06ac5b8511e03df23c9b02a9a03af6b3a169c1b",
+  "generated_at": "2026-05-14T16:02:00.455Z",
   "platforms": [
     "linkedin",
     "hackernews"
@@ -11,7 +11,7 @@
   "text": {
     "linkedin": {
       "path": "linkedin.md",
-      "sha256": "f673f94776604efbdaaf1f333d4adc5165a0e7118e911e85d53daa2b0e914c30"
+      "sha256": "f432fa21edc8c3a4f40eeafaf85ee01195e68647a8e34f1d12b312ae43eb0b77"
     },
     "hackernews": {
       "path": "hackernews.md",
@@ -22,12 +22,18 @@
     "path": "linkedin-image-prompt.md",
     "sha256": "0332afabba37abff480b437be4827e6d593430e69ffc7efcfbf44687b1f622b6"
   },
-  "image": null,
+  "image": {
+    "path": "assets/linkedin-feed.png",
+    "sha256": "2c2826c48d64c46ddae9946c2a99b7800109d77e60f4e230b17ae83a86e99693",
+    "width": 1200,
+    "height": 1200,
+    "bytes": 1989617
+  },
   "image_provider": "openai",
   "image_model": "gpt-image-2-2026-04-21",
   "image_size": "1200x1200",
   "image_quality": "high",
   "image_format": "png",
-  "image_mode": "prompt-only",
+  "image_mode": "generate",
   "reused": false
 }

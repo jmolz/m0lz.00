@@ -6,7 +6,7 @@ Shipped: Built as a durable distribution kit for launch review and reuse.
 
 Read the full post: https://m0lz.dev/writing/m0lz-01-launch
 
-Image prompt: ./distribution/linkedin-image-prompt.md
+Image: ./assets/linkedin-feed.png
 Alt text: m0lz.01: Does it make sense to me? visual for m0lz.01 in a real workspace.
 
 #ai #developertools #opensource #methodology
