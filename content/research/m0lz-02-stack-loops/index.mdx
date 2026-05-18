@@ -1,0 +1,60 @@
+---
+title: "m0lz.02 Research: m0lz-02-stack-loops"
+description: "m0lz.02 runs layer-scoped evaluation for project features so each technology layer has its own contract file and its own layer-run record, with template criteria covering schema, auth, infrastructure, deployment, and observability risk classes; review gates are an opt-in audit step on activated layers, not a per-layer gate by default."
+date: "2026-05-18"
+tags: ["research", "project-launch"]
+project: "m0lz.02"
+---
+
+## Thesis
+
+Feature-level AI code review treats one diff as one contract and reliably misses the seams between technology layers — schema drift, auth handoff, infrastructure config, deployment workflow, observability hooks. Stack Loops, the v0.2 product surface shipped in `@jacobmolz/pice` v0.7.0–v0.8.6, restructures Plan → Implement → Contract-Evaluate (PICE) so a feature passes only when every activated layer passes its own provider-backed contract and the seams between layers pass dedicated checks.
+
+## Key Findings
+
+- **CLI/daemon split is the load-bearing change.** `pice` is now a thin adapter; `pice-daemon` owns orchestration, jobs, manifests, metrics, templates, audit, and provider sessions. Two JSON-RPC boundaries: CLI ↔ daemon over Unix socket (named pipe on Windows), daemon ↔ provider over stdio. Provider failures degrade evaluation but cannot crash the CLI. Provider stdout is reserved for JSON-RPC, with logs forced to stderr.
+- **Stack Loops detect seven canonical layers** — backend, database, api, frontend, infrastructure, deployment, observability — across five reference fixtures (`next-prisma`, `fastapi-postgres`, `rails`, `express-mongo`, `sveltekit-supabase`). All five passed `phase8-reference-projects.mjs` with seven configured layers, seven distinct `layer_runs` rows per feature, and seven latest-evaluation rows.
+- **Always-run layers are policy, not heuristic.** Infrastructure, deployment, and observability run on every feature unless an explicit project override disables them, so silent regressions in `.github/workflows/**`, Terraform, or alerting config cannot escape evaluation by simply having no own diff.
+- **Adaptive halting respects the correlated-evaluator ceiling.** The default algorithm is Bayesian SPRT; confidence reports are clamped to the ρ-bounded ceiling documented in `docs/research/convergence-analysis.md` (≈96.6% at ρ ≈ 0.35), so the workflow does not claim more verification certainty than the theory allows.
+- **Background mode is real.** `pice evaluate --background --wait` dispatches into the daemon and returns a `feature-id`; `pice status --follow --stream-json` and `pice logs --follow --stream-json` tail newline-delimited frames; `pice review-gate` decides pending gates. Manifests persist under `~/.pice/state/{project-hash}/{feature-id}.manifest.json`, with `PICE_STATE_DIR` for isolated CI runs.
+- **Review gates produce an append-only audit trail.** Phase 8 evidence shows a pending infrastructure gate on `fastapi-postgres` resumed cleanly after approval, returning `audit_id: 1` and writing `gate_decisions: 1`. Gate decisions are append-only; reject-with-retry consumes retry budget, approve and skip do not.
+- **Metrics are local SQLite, telemetry is opt-in.** `.pice/metrics.db` records evaluation rows, `pass_events` with `cost_usd`, `seam_findings`, `layer_runs`, and `gate_decisions`. Outbound telemetry is disabled by default and whitelisted to non-sensitive fields (`event_type`, `tier`, `passed`, `score_avg`, `provider_type`, `timestamp`).
+- **Distribution covers npm and Cargo.** `@jacobmolz/pice` is a wrapper that resolves a platform package containing both `pice` and `pice-daemon` and passes the daemon path to the CLI so background mode works without a manual `PATH` edit. `cargo install pice-cli` is the source path.
+- **Tests pass at scale on this checkout.** Local validation at commit `d00ce25` (v0.8.6): `cargo test --workspace --all-targets` 1,262 tests passed; `pnpm test` 125 tests passed (14 vitest files). Release validation evidence at v0.7.0 / `cfcf954` recorded 1,237 Rust tests and 103 TypeScript tests at that point — the suite has continued to grow on the post-release v0.8.x line.
+- **Parallel cohort speedup hits target.** `cargo test -p pice-daemon --test parallel_cohort_speedup_assertion` at v0.7.0 recorded sequential `553.3 ms`, parallel `313.3 ms`, ratio `0.566` against target `≤ 0.625`. Independent DAG cohorts run concurrently when `phases.evaluate.parallel` is enabled, hard-capped at `max_parallelism = 16`.
+- **Codex-primary workflow is an opt-in equal.** `pice init --developer codex` scaffolds `.codex/` plus root `AGENTS.md`. Either provider can be the workflow driver; `[evaluation.primary]` and `[evaluation.adversarial]` are independent of `[provider].name`, so Claude-primary workflows with Codex adversarial review and Codex-primary workflows with Claude primary evaluation are both first-class configs.
+
+## Sources
+
+- [m0lz.02 source repository (`jmolz/m0lz.02`, branch `main` @ `d00ce25`, v0.8.6)](https://github.com/jmolz/m0lz.02)
+- [README — install, architecture, configuration, release evidence](https://github.com/jmolz/m0lz.02/blob/main/README.md)
+- [Stack Loops adoption guide](https://github.com/jmolz/m0lz.02/blob/main/docs/guides/stack-loops.md)
+- [v0.1 → v0.2 migration guide](https://github.com/jmolz/m0lz.02/blob/main/docs/guides/migration-v01-to-v02.md)
+- [Convergence analysis: correlated-evaluator ceiling, Bayesian SPRT, scaling laws](https://github.com/jmolz/m0lz.02/blob/main/docs/research/convergence-analysis.md)
+- [Stack Loops v0.2 gap analysis (37 gaps, 12 production-blocking)](https://github.com/jmolz/m0lz.02/blob/main/docs/research/v02-gap-analysis.md)
+- [v0.7.0 release notes and validation evidence](https://github.com/jmolz/m0lz.02/blob/main/docs/releases/v0.7.0.md)
+- [Phase 8 reference-project evidence (5 fixtures)](https://github.com/jmolz/m0lz.02/blob/main/docs/releases/phase8-reference-evidence.json)
+- [Metrics schema evidence](https://github.com/jmolz/m0lz.02/blob/main/docs/releases/metrics-schema-evidence.json)
+- [Provider protocol reference](https://github.com/jmolz/m0lz.02/blob/main/docs/providers/protocol.md)
+- [`@jacobmolz/pice` on npm](https://www.npmjs.com/package/@jacobmolz/pice)
+
+## Methodology
+
+Fresh benchmark capture passed the release-gate mechanics: parallel cohort ratio 0.504 at or below target 0.625, five PICE-authored reference fixtures passed with seven detected/configured layers each, and fastapi-postgres exercised one infrastructure review gate. Scope is limited to stub-provider reference acceptance on darwin arm64; cargo bench, release artifact smoke, and local linux were not run in this capture.
+
+[Full methodology and reproduction steps](https://github.com/jmolz/m0lz.02/blob/main/METHODOLOGY.md)
+
+## Open Questions
+
+- **Polyrepo seams.** Cross-repo layer detection is the acknowledged limitation in `docs/research/v02-gap-analysis.md` §1.3 — frontend-in-repo-A, API-in-repo-B is unsolved by single-repo scanning. v0.4 plans distributed trace analysis; `.pice/external-contracts.toml` is the manual stopgap. Open: is the trace-analysis approach actually viable on the kinds of polyrepos teams have today, or does it need a more declarative contract bridge?
+- **100-concurrent CI stress.** The v0.2 complete matrix flags "background execution is reliable under 100 concurrent CI evaluations" as not validated in this release branch; existing daemon concurrency tests cover multi-feature dispatch and global semaphores but not a 100-eval stress run. Open: what fails first under that load — socket backlog, SQLite contention on `.pice/metrics.db`, or provider rate limits?
+- **Windows pipe parity beyond CI.** Release evidence covers a `Smoke x86_64-pc-windows-msvc` job and a `Rust (windows-latest)` CI job; that proves shape, not soak. Open: does the named-pipe transport exhibit any edge cases under long-running background dispatch on real Windows developer machines?
+- **Seam-check 12-category coverage.** v0.2 documents 12 seam failure categories (schema drift, OpenAPI compatibility, auth handoff, service discovery, config mismatch, cold-start order, resource exhaustion, etc.), but the Phase 8 fixtures are release-flow fixtures, not 12-failure-category fixtures. Open: which categories still need dedicated reproducer fixtures, and which are covered only by unit-level tests today?
+- **Adversarial diversity in practice.** The correlation ceiling argument assumes Claude/Codex share most inductive biases (ρ ≈ 0.35). Open: do real-world PICE runs measure ρ empirically per-project, or is the ceiling treated as a closed constant? Architecturally-distinct evaluators (SSM, fine-tuned, formal) are flagged as the only way to push ε_irreducible down.
+- **Self-heal trust boundary.** `.codex/commands/self-heal.md` proposes durable rule/doc/tripwire updates after merge, but is manual-trigger only. Open: is there a class of self-heal proposals that should be promoted to a structured contract update (versioned, signed), versus the current free-form markdown patch flow?
+- **Cost telemetry honesty.** Providers that report real per-pass spend must declare `costTelemetry: true`. Open: how does PICE behave when a provider declares it but emits inaccurate cost? Budget halt is a hard control — silent inflation or deflation would invalidate `pass_events.cost_usd` aggregates.
+- **Fail-closed layers vs. brownfield reality.** PICE refuses to mark a layer passed without provider-backed scoring, and `--background` fails closed when `.pice/layers.toml` is missing. Open: in brownfield repos with non-standard structures (the `v02-gap-analysis.md` §1.5 case), how often does the detector produce a layer set so wrong that manual override becomes the dominant path rather than a refinement?
+
+---
+
+*This research supports [m0lz-02-stack-loops](/writing/m0lz-02-stack-loops). [companion repo](https://github.com/jmolz/m0lz.02)*

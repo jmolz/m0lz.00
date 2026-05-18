@@ -1,0 +1,104 @@
+---
+title: m0lz.02 -- Stack Loops
+description: m0lz.02 runs layer-scoped evaluation for project features so each technology layer has its own contract file and its own layer-run record, with template criteria covering schema, auth, infrastructure, deployment, and observability risk classes; review gates are an opt-in audit step on activated layers, not a per-layer gate by default.
+date: "2026-05-15"
+tags:
+  - project-launch
+  - m0lz-02
+  - pice
+  - stack-loops
+  - ai-code-review
+  - contract-evaluation
+  - developer-tools
+  - typescript
+published: false
+canonical: https://m0lz.dev/writing/m0lz-02-stack-loops
+companion_repo: https://github.com/jmolz/m0lz.02
+project: m0lz.02
+devto_main_image: ./assets/devto-cover.png
+medium_featured_image: ./assets/medium-featured.png
+substack_preview_image: ./assets/substack-preview.png
+---
+
+## Introduction
+
+Stack Loops is the m0lz.02 workflow for checking a feature across its technology layers instead of treating the whole diff as one review contract. The failure class is a seam gap: app code, API shape, schema, infrastructure, deployment, and observability can each look acceptable in isolation while their boundary breaks. A frontend field rename that never reaches the API schema, or a new background queue that ships without the deploy/runtime wiring, is the kind of bug this workflow is designed to expose.
+
+This launch post keeps the claim narrow. The current evidence shows that Stack Loops detects and configures the expected layer contracts for the reference projects, persists separate layer runs, surfaces an infrastructure review gate, and executes its parallel evaluator cohort under the published release-gate ratio. It does not claim live-model bug-detection lift over a named commercial reviewer.
+
+## What It Does
+
+Stack Loops turns one feature review into a set of layer-scoped checks. m0lz.02 identifies the layers that matter for a project, writes those contracts into the PICE plan, runs the evaluator cohort per layer, and records a separate layer run for each activated layer before the feature is treated as passed.
+
+The always-run policy matters because many production failures live outside application code. Infrastructure, deployment, and observability layers are configured to stay in the loop when they are active, even if the feature diff looks like a frontend or API change. This benchmark does not compare that policy against an ablated run that omits those layers, and it does not record per-fixture feature-diff scope; it captures the seven-layer set that discovery and configuration produced on the reference fixtures and the persisted layer runs that followed.
+
+The concrete gate example is `fastapi-postgres`. In the captured acceptance run, that fixture hit a pending infrastructure review gate, recorded one gate decision, received approval, and resumed to `passed`. That is the workflow shape Stack Loops needs: pause at the cross-layer contract, make the decision auditable, then continue only after the gate is resolved. The capture does not include a negative-control run where an activated layer fails or a gate is rejected, so the fail-closed pass/fail aggregation is evidenced as plumbing and audit rather than as a refusal at aggregation time.
+
+## How It Works
+
+The workflow starts with layer discovery. m0lz.02 reads project evidence from manifests, framework files, directory layout, config files, and explicit overrides. It then evaluates the feature against the per-layer contract files at `.pice/contracts/{layer}.toml` instead of asking a single reviewer to infer every boundary from one prompt. The per-layer contracts evaluated in this capture are the template contracts that `pice init --upgrade` writes from `templates/pice/contracts/`; their criteria headlines and template hashes are recorded under `results.json.methodology.per_layer_contract_content`. Bespoke per-fixture contracts that customize criteria to the schema/auth/deployment/observability risks of a specific project are out of scope for this launch capture.
+
+Evaluation runs through the daemon. The CLI accepts terminal commands and renders status; `pice-daemon` owns background jobs, provider sessions, manifests, layer-run persistence, metrics, templates, audit rows, and review gates. The CLI talks to the daemon over the local socket. The daemon talks to providers over stdio, with provider stdout reserved for JSON-RPC frames.
+
+That split is the main product boundary. The CLI stays a thin operator surface. The daemon owns orchestration and state, so `status --follow`, `logs --follow`, review-gate approval, and resumed background evaluation all read from the same job record instead of from terminal text.
+
+## Architecture
+
+m0lz.02 is the companion repository for this launch: [https://github.com/jmolz/m0lz.02](https://github.com/jmolz/m0lz.02). It contains the PICE CLI, the headless daemon, provider adapters, reference fixtures, release documentation, and acceptance scripts.
+
+The architecture is built around a CLI/daemon split:
+
+| Boundary | Responsibility |
+| --- | --- |
+| CLI | Parse commands, connect to the daemon socket, display status/log streams, and send operator actions such as review-gate approval. |
+| Daemon | Own background evaluation, provider sessions, manifests, layer runs, metrics, templates, audit records, and gate state. |
+| Provider stdio | Carry JSON-RPC request and response frames between the daemon and the provider process. |
+| SQLite state | Persist evaluations, layer runs, pass events, seam findings, gate decisions, and audit records. |
+
+This matters for Stack Loops because layer evaluation is not a single synchronous terminal response. It needs resumable state, separate layer records, stream-json terminal frames, and human gate decisions that survive process boundaries.
+
+## Benchmark Results
+
+The raw benchmark artifact is `results.json` in the benchmark workspace. The human-readable summary is below.
+
+| Check | Result | Evidence | Boundary |
+| --- | --- | --- | --- |
+| Parallel cohort assertion | passed | Sequential mean `6.238500097s`; parallel mean `3.147005138s`; ratio `0.504` at or below target `0.625`. | Release-gate timing assertion only; three iterations and no confidence interval. |
+| Phase 8 reference projects | passed | Five PICE-authored fixtures passed. Each produced seven detected layers, seven configured layers, seven distinct `layer_runs` rows, terminal exit code zero, and `evaluate_status: passed`. | Reference-fixture mechanics, not external project coverage. |
+| Infrastructure review gate | passed | `fastapi-postgres` recorded `gate_decisions: 1`, `audit_id: 1`, approval, and resumed to `passed`. | Demonstrates gate plumbing and auditability, not general bug-detection lift. |
+| Infrastructure contract tier | recorded | Each fixture reported `infrastructure_contract_tier: 3`. | Tier three means the infrastructure layer used the agent-team evaluation contract configured by the fixture. |
+| Provider mode | stubbed | The acceptance script used provider `stub`, model `stub-model`, and eight `9.5,0.001` stub-score pairs. | Validates Stack Loops mechanics, not live provider judgment quality. |
+
+Three expected release-readiness targets were not run in this capture: the steady-state Criterion benchmark, the release artifact smoke test, and the local Linux CI script. The post therefore treats the capture as benchmark evidence for Stack Loops mechanics on one darwin arm64 machine, not as a complete release certification.
+
+## Methodology
+
+The benchmark workspace now includes `METHODOLOGY.md` beside `results.json` and `environment.json`. That methodology file records the commands, repository revision, environment (including the Rust toolchain that produced the Cargo timing), provider mode, target provenance, omissions, and scope limits.
+
+The speedup assertion is a release-gate check. It compares the sequential evaluator cohort path with the parallel evaluator cohort path and verifies that the ratio remains at or below the inherited target. The harness recorded the means and ratio, but it did not record raw per-iteration timings, variance, standard deviation, or a confidence interval. The ratio target came from the earlier release validation contract; it was not statistically re-derived in this capture.
+
+The Phase 8 acceptance run is also bounded. It used PICE-authored reference fixtures and a stub provider. That is the right harness for checking layer discovery, layer persistence, stream termination, review-gate state, and daemon orchestration. It is not evidence that a live model would catch more real bugs than a single-contract reviewer, and it is not evidence that every framework topology is covered.
+
+The environment snapshot records darwin 25.4.0 on arm64, Apple M3 Max x 16 CPUs, 128 GB memory, Node.js v22.15.0, and npm 11.12.1. The snapshot was captured before the results import, so it should be read as hardware and toolchain context rather than an exact same-process timing envelope.
+
+## Limitations
+
+The comparator in this post is a one-contract-per-feature review workflow, not a named commercial product. That avoids a stronger claim than the evidence supports.
+
+The reference fixtures are authored by the m0lz.02 project. They exercise canonical Next.js, FastAPI, Rails, Express, and SvelteKit shapes, but they do not cover polyrepo discovery, monorepo package-boundary inference, dynamic service-mesh topology, or live-provider disagreement cases.
+
+The always-run layer policy was enforced, not ablated. To prove the policy improves defect detection, m0lz.02 still needs a comparison run that disables infrastructure, deployment, and observability layers against the same task set. The always-run trigger condition is also not separately evidenced in this capture: `results.json` records seven configured and seven persisted layer runs per fixture but does not record each fixture's feature-diff scope, so the artifact supports always-run plumbing and persistence rather than the trigger condition that meta-layers ran despite an otherwise narrower diff.
+
+The fail-closed pass/fail aggregation is not exercised by a negative control in this capture. Every fixture passed under the stub provider, and the one infrastructure gate decision was an approval that resumed to `passed`. A failing-layer, missing-layer-run, or rejected-gate negative-control run would prove that aggregation refuses to mark a feature passed; until that artifact exists, the post bounds the claim to plumbing, persistence, and approved-gate resume behavior.
+
+The per-layer contract content evaluated in this capture is the m0lz.02 template content under `templates/pice/contracts/`, recorded with criteria headlines and template hashes in `results.json.methodology.per_layer_contract_content`. The artifact therefore evidences per-layer contract evaluation against named risk-class criteria, not bespoke per-fixture contracts authored for the schema, auth, deployment, or observability risks of a specific real project.
+
+The seam-failure classes used to motivate the launch (frontend field rename that never reaches the API schema, background queue that ships without deploy/runtime wiring, the schema-to-API and deploy-to-runtime risks named in the conclusion) are not validated by this capture either. The acceptance harness evidences layer mechanics and per-layer template criteria; a seam-failure fixture or seam-finding negative control is the artifact that would prove detection of those specific risk classes.
+
+The current capture is single-machine darwin arm64 evidence. Any Linux, CI, or cross-platform runtime claim needs a separate capture from the omitted release-readiness targets. The Rust toolchain that produced the speedup timing is recorded in `environment.json` under `rust_toolchain` (`rustc 1.94.1`, `cargo 1.94.1`, stable channel, no project toolchain pin, default `dev` test profile) so the Cargo target is reproducible.
+
+## Conclusion
+
+Use Stack Loops when the risk lives between layers: schema to API, code to infrastructure, deploy to runtime, runtime to observability. This launch proves the workflow mechanics on the current reference capture and keeps the broader claim for later evidence.
+
+The next work is clear: replay the same layer contracts with live providers, add harder non-canonical projects, run the omitted release-readiness targets, and publish the comparison only when those artifacts exist.
